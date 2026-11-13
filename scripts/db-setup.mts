@@ -1,0 +1,81 @@
+// Creates the `vishnuit` database + tables and seeds content and the admin user.
+// Run: npm run db:setup        (only fills empty tables)
+//      npm run db:setup -- --reset   (wipes content tables and reseeds; leads/admins kept)
+import mysql from "mysql2/promise";
+import { readFileSync } from "node:fs";
+import { scryptSync, randomBytes } from "node:crypto";
+import { services, plans, testimonials, posts, faqs, brands, settings } from "../src/data/seed.ts";
+import { SERVICE_DETAILS } from "../src/data/service-details.ts";
+
+const projects = JSON.parse(readFileSync(new URL("../src/data/projects.json", import.meta.url), "utf8"));
+const reset = process.argv.includes("--reset");
+const env = process.env;
+const DB = (env.DB_NAME || "vishnuit").replace(/[^a-zA-Z0-9_]/g, "");
+
+function hash(pw: string) {
+  const salt = randomBytes(16).toString("hex");
+  return `scrypt$${salt}$${scryptSync(pw, salt, 64).toString("hex")}`;
+}
+
+const conn = await mysql.createConnection({
+  host: env.DB_HOST || "127.0.0.1",
+  port: Number(env.DB_PORT || 3306),
+  user: env.DB_USER || "root",
+  password: env.DB_PASS || "",
+  multipleStatements: true,
+  ssl: env.DB_SSL === "true"
+    ? env.DB_SSL_CA ? { ca: env.DB_SSL_CA.replace(/\\n/g, "\n"), rejectUnauthorized: true } : { rejectUnauthorized: false }
+    : undefined,
+  connectTimeout: 15000,
+});
+await conn.query("CREATE DATABASE IF NOT EXISTS `" + DB + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+await conn.query("USE `" + DB + "`");
+await conn.query(readFileSync(new URL("../src/lib/schema.sql", import.meta.url), "utf8"));
+console.log(`✓ database "${DB}" and tables ready`);
+
+const j = (v: unknown) => JSON.stringify(v ?? null);
+async function isEmpty(table: string) {
+  if (reset) await conn.query("TRUNCATE TABLE " + table);
+  const [rows] = await conn.query("SELECT COUNT(*) AS c FROM " + table);
+  return Number((rows as { c: number }[])[0].c) === 0;
+}
+
+if (await isEmpty("services"))
+  for (const s of services)
+    await conn.execute(
+      "INSERT INTO services (slug,title,category,icon,short,description,features,process,image,sort) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      [s.slug, s.title, s.category, s.icon, s.short, s.description, j(s.features), j(s.process), s.image ?? SERVICE_DETAILS[s.slug]?.image ?? null, s.sort],
+    );
+if (await isEmpty("projects"))
+  for (const p of projects)
+    await conn.execute(
+      "INSERT INTO projects (slug,title,tagline,category,client,year,role,summary,overview,highlights,tools,url,cover,gallery,featured,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [p.slug, p.title, p.tagline, p.category, p.client, p.year, p.role, p.summary, j(p.overview), j(p.highlights), j(p.tools), p.url, p.cover || null, j(p.gallery), p.featured ? 1 : 0, p.sort],
+    );
+if (await isEmpty("testimonials"))
+  for (const t of testimonials)
+    await conn.execute("INSERT INTO testimonials (name,role,quote,avatar,rating,sort) VALUES (?,?,?,?,?,?)", [t.name, t.role, t.quote, t.avatar, t.rating, t.sort]);
+if (await isEmpty("posts"))
+  for (const p of posts)
+    await conn.execute("INSERT INTO posts (slug,title,category,excerpt,content,cover,published_at) VALUES (?,?,?,?,?,?,?)", [p.slug, p.title, p.category, p.excerpt, p.content, p.cover, p.published_at]);
+if (await isEmpty("plans"))
+  for (const p of plans)
+    await conn.execute("INSERT INTO plans (name,price,suffix,tagline,features,highlighted,cta,sort) VALUES (?,?,?,?,?,?,?,?)", [p.name, p.price, p.suffix, p.tagline, j(p.features), p.highlighted ? 1 : 0, p.cta, p.sort]);
+if (await isEmpty("faqs"))
+  for (const f of faqs) await conn.execute("INSERT INTO faqs (question,answer,sort) VALUES (?,?,?)", [f.question, f.answer, f.sort]);
+if (await isEmpty("brands"))
+  for (const b of brands) await conn.execute("INSERT INTO brands (name,logo,url,kind,sort) VALUES (?,?,?,?,?)", [b.name, b.logo, b.url, b.kind, b.sort]);
+for (const [k, v] of Object.entries(settings))
+  await conn.execute(reset ? "REPLACE INTO settings (k,v) VALUES (?,?)" : "INSERT IGNORE INTO settings (k,v) VALUES (?,?)", [k, j(v)]);
+console.log("✓ content seeded");
+
+const email = env.SEED_ADMIN_EMAIL;
+const pw = env.SEED_ADMIN_PASSWORD;
+if (email && pw) {
+  const [rows] = await conn.execute("SELECT id FROM admins WHERE email=?", [email]);
+  if ((rows as unknown[]).length === 0) {
+    await conn.execute("INSERT INTO admins (email,name,password_hash) VALUES (?,?,?)", [email, "Suraj Pandey", hash(pw)]);
+    console.log(`✓ admin created: ${email}`);
+  } else console.log(`• admin ${email} already exists (password unchanged)`);
+}
+await conn.end();
