@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getPosts, getProjects, getServices } from "@/lib/server/content";
+import { siteUrl } from "@/lib/site";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.vishnuit.co.in";
+const SITE = siteUrl();
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

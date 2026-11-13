@@ -2,6 +2,7 @@ import { Navbar } from "@/components/site/navbar";
 import { Footer } from "@/components/site/footer";
 import { FloatingActions } from "@/components/site/floating-actions";
 import { getServices, getSettings } from "@/lib/server/content";
+import { siteUrl } from "@/lib/site";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [settings, services] = await Promise.all([getSettings(), getServices()]);
@@ -10,7 +11,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
     name: settings.branding.siteName,
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.vishnuit.co.in",
+    url: siteUrl(),
     logo: settings.branding.logoLight,
     telephone: settings.contact.phone,
     email: settings.contact.email,

@@ -544,7 +544,7 @@ export const settings: Record<string, unknown> = {
     description:
       "Vishnu IT Solutions is a Delhi-based digital agency for website design, Next.js & WordPress development, e-commerce, SEO, Google & Meta Ads, branding and UI/UX.",
     keywords: "digital marketing agency delhi, web development company, seo services india, nextjs development, wordpress agency, google ads agency",
-    ogImage: "/projects/vishnu-it-hero.webp",
+    ogImage: "/og.png",
   },
   founder: {
     name: "Suraj Pandey",

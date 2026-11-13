@@ -3,12 +3,13 @@ import { Inter, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSettings } from "@/lib/server/content";
 import "./globals.css";
+import { siteUrl } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap", weight: ["500", "600", "700", "800"] });
 const serif = Instrument_Serif({ subsets: ["latin"], variable: "--font-serif", display: "swap", weight: "400", style: ["normal", "italic"] });
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.vishnuit.co.in";
+const SITE = siteUrl();
 
 export async function generateMetadata(): Promise<Metadata> {
   const { seo, branding } = await getSettings();
