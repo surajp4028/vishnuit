@@ -8,12 +8,12 @@ import { getFaqs, getPlans, getSettings } from "@/lib/server/content";
 export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Pricing — Website & Digital Marketing Packages",
-  description: "Transparent website and digital marketing pricing: Starter from ₹25,000, Growth from ₹50,000 and Enterprise from ₹1,00,000+.",
+  description: "Transparent website and digital marketing pricing: Starter from ₹9,999, Growth from ₹19,999 and Premium from ₹39,999+.",
   alternates: { canonical: "/pricing" },
 };
 
 const MATRIX: [string, (boolean | string)[]][] = [
-  ["Pages", ["Up to 6", "Up to 15", "Unlimited"]],
+  ["Pages", ["Up to 5", "Up to 12", "Unlimited"]],
   ["Responsive premium design", [true, true, true]],
   ["Next.js / WordPress build", [true, true, true]],
   ["Admin dashboard / CMS", [false, true, true]],
@@ -23,7 +23,7 @@ const MATRIX: [string, (boolean | string)[]][] = [
   ["Social media & ads setup", [false, true, true]],
   ["CRM / ERP / API integrations", [false, false, true]],
   ["Dedicated project manager", [false, false, true]],
-  ["Free support", ["1 month", "3 months", "SLA-backed"]],
+  ["Free support", ["1 month", "3 months", "6 months"]],
 ];
 
 export default async function PricingPage() {

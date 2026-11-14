@@ -47,6 +47,64 @@
   "sort": 0
  },
  {
+  "slug": "suraj-dev-portfolio",
+  "title": "Suraj.dev — Personal Portfolio",
+  "tagline": "An animated, premium developer portfolio",
+  "category": "Website",
+  "client": "Personal project",
+  "year": "2025",
+  "role": "Design & Development",
+  "summary": "A premium personal portfolio with an aurora hero, 3D globe, skills marquee, case studies and a contact form with email + WhatsApp alerts.",
+  "overview": [
+   "Suraj.dev is the founder's flagship personal portfolio — built to impress recruiters and clients within the first scroll. It combines bold typography, an animated aurora hero, a 3D globe and smooth Aceternity-style interactions with a fast, SEO-friendly Next.js build.",
+   "Every project has its own case-study page with screenshots, highlights and tech stack, and the contact form delivers enquiries instantly by email (Resend) and WhatsApp. A printable resume page and downloadable PDF CV round it off."
+  ],
+  "highlights": [
+   {
+    "title": "Animated hero",
+    "text": "Aurora background, flip words and a premium dashboard visual."
+   },
+   {
+    "title": "3D globe & bento grid",
+    "text": "Interactive three.js globe and a bento layout of skills and stats."
+   },
+   {
+    "title": "Case studies",
+    "text": "21 projects with dedicated pages, screenshots and tech stacks."
+   },
+   {
+    "title": "Instant lead alerts",
+    "text": "Contact form sends email via Resend and a WhatsApp alert."
+   },
+   {
+    "title": "Light & dark themes",
+    "text": "Every section designed for both modes."
+   },
+   {
+    "title": "Resume & CV",
+    "text": "Printable resume page and downloadable PDF CV."
+   }
+  ],
+  "tools": [
+   "Next.js",
+   "React",
+   "Tailwind CSS",
+   "Aceternity UI",
+   "Three.js",
+   "Resend"
+  ],
+  "url": "https://surajportfolio-coral.vercel.app/",
+  "cover": "/projects/suraj-portfolio-v1-hero.webp",
+  "gallery": [
+   "/projects/suraj-portfolio-v1-bento.webp",
+   "/projects/suraj-portfolio-v1-about.webp",
+   "/projects/suraj-portfolio-v1-skills.webp",
+   "/projects/suraj-portfolio-v1-contact.webp"
+  ],
+  "featured": true,
+  "sort": 1
+ },
+ {
   "slug": "imoneypay-merchant-onboarding",
   "title": "Payment Gateway Merchant Onboarding",
   "tagline": "From merchant sign-up to live payments",
@@ -140,7 +198,7 @@
    "/projects/onboarding-inbox.webp"
   ],
   "featured": true,
-  "sort": 1
+  "sort": 2
  },
  {
   "slug": "skyo-travel",
@@ -194,7 +252,7 @@
    "/projects/skyo-pnr.webp"
   ],
   "featured": false,
-  "sort": 2
+  "sort": 3
  },
  {
   "slug": "astro-kundli-milan",
@@ -249,7 +307,7 @@
    "/projects/kundli-rashifal.webp"
   ],
   "featured": false,
-  "sort": 3
+  "sort": 4
  },
  {
   "slug": "shiv-shringar-sewa-samiti",
@@ -300,7 +358,7 @@
    "/projects/shiv-shringar-event.webp"
   ],
   "featured": false,
-  "sort": 4
+  "sort": 5
  },
  {
   "slug": "house-of-geet",
@@ -344,7 +402,7 @@
   "cover": "/projects/house-of-geet.png",
   "gallery": [],
   "featured": true,
-  "sort": 5
+  "sort": 6
  },
  {
   "slug": "london-school-e-learning",
@@ -389,7 +447,7 @@
   "cover": "/projects/london-school.png",
   "gallery": [],
   "featured": true,
-  "sort": 6
+  "sort": 7
  },
  {
   "slug": "perk-immigration",
@@ -432,7 +490,7 @@
   "cover": "/projects/perk-immigration.png",
   "gallery": [],
   "featured": true,
-  "sort": 7
+  "sort": 8
  },
  {
   "slug": "stanley-growth-consulting",
@@ -475,7 +533,7 @@
   "cover": "/projects/stanley-consulting.png",
   "gallery": [],
   "featured": true,
-  "sort": 8
+  "sort": 9
  },
  {
   "slug": "zodaromatics",
@@ -520,7 +578,7 @@
    "/projects/zodaromatics-2.jpg"
   ],
   "featured": false,
-  "sort": 9
+  "sort": 10
  },
  {
   "slug": "orpheus-financial",
@@ -563,7 +621,7 @@
   "cover": "/projects/orpheus-financial.png",
   "gallery": [],
   "featured": false,
-  "sort": 10
+  "sort": 11
  },
  {
   "slug": "mannat-immigration",
@@ -606,7 +664,7 @@
   "cover": "/projects/mannat-immigration.webp",
   "gallery": [],
   "featured": false,
-  "sort": 11
+  "sort": 12
  },
  {
   "slug": "architecture-cad-institute",
@@ -651,7 +709,7 @@
    "/projects/architecture-cad-2.jpg"
   ],
   "featured": false,
-  "sort": 12
+  "sort": 13
  },
  {
   "slug": "softbytes-seo-agency",
@@ -695,7 +753,7 @@
   "cover": "/projects/softbytes.jpg",
   "gallery": [],
   "featured": false,
-  "sort": 13
+  "sort": 14
  },
  {
   "slug": "mj-nails-salons",
@@ -739,7 +797,7 @@
   "cover": "/projects/mj-nails-salons.jpg",
   "gallery": [],
   "featured": false,
-  "sort": 14
+  "sort": 15
  },
  {
   "slug": "the-detailing-hunter",
@@ -782,7 +840,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 15
+  "sort": 16
  },
  {
   "slug": "unexplore-travel",
@@ -823,7 +881,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 16
+  "sort": 17
  },
  {
   "slug": "brand-print-design",
@@ -867,7 +925,7 @@
    "/projects/brand-hoardings.webp"
   ],
   "featured": false,
-  "sort": 17
+  "sort": 18
  },
  {
   "slug": "payment-gateway-plugins",
@@ -912,7 +970,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 18
+  "sort": 19
  },
  {
   "slug": "kotak-trading-platform",
@@ -956,7 +1014,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 19
+  "sort": 20
  },
  {
   "slug": "onboarding-dashboard-cms",
@@ -1001,7 +1059,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 20
+  "sort": 21
  },
  {
   "slug": "absolute-immigrations",
@@ -1045,7 +1103,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 21
+  "sort": 22
  },
  {
   "slug": "meridian-pr-immigrations",
@@ -1086,7 +1144,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 22
+  "sort": 23
  },
  {
   "slug": "vishnu-it",
@@ -1138,6 +1196,6 @@
    "/projects/vishnu-it-story-hd.webp"
   ],
   "featured": true,
-  "sort": 23
+  "sort": 24
  }
 ]

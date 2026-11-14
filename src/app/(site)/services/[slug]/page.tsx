@@ -137,7 +137,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         <div className="grid gap-px overflow-hidden rounded-[2rem] border border-border bg-border sm:grid-cols-3">
           {[
             { icon: CalendarClock, k: "Timeline", v: d?.timeline ?? "2 – 6 weeks" },
-            { icon: IndianRupee, k: "Starting at", v: d?.startingAt ?? "₹25,000" },
+            { icon: IndianRupee, k: "Starting at", v: d?.startingAt ?? "₹9,999" },
             { icon: Users, k: "Ideal for", v: idealFor[0] },
           ].map((f) => (
             <div key={f.k} className="flex items-center gap-4 bg-card p-6">

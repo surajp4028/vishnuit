@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BUDGETS = ["₹25k – ₹50k", "₹50k – ₹1L", "₹1L – ₹3L", "₹3L+", "Not sure yet"];
+const BUDGETS = ["Under ₹10k", "₹10k – ₹20k", "₹20k – ₹40k", "₹40k – ₹1L", "₹1L+", "Not sure yet"];
 
 const field =
   "w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-4 focus:ring-[var(--ring)]";
@@ -29,6 +29,7 @@ export function ContactForm({ services, defaultService, defaultMessage, compact 
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Something went wrong");
+      (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq?.("track", "Lead", { content_name: String(data.service || "Website enquiry") });
       setState("done");
     } catch (err) {
       setError((err as Error).message);

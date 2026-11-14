@@ -33,6 +33,15 @@ await conn.query("USE `" + DB + "`");
 await conn.query(readFileSync(new URL("../src/lib/schema.sql", import.meta.url), "utf8"));
 console.log(`✓ database "${DB}" and tables ready`);
 
+// Additive migrations (safe to re-run; MySQL 8 has no ADD COLUMN IF NOT EXISTS)
+for (const sql of [
+  "ALTER TABLE leads ADD COLUMN city VARCHAR(80) NULL AFTER budget",
+  "ALTER TABLE leads ADD COLUMN utm TEXT NULL AFTER page",
+]) {
+  try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
+  catch (e) { if ((e as { code?: string }).code !== "ER_DUP_FIELDNAME") throw e; }
+}
+
 const j = (v: unknown) => JSON.stringify(v ?? null);
 async function isEmpty(table: string) {
   if (reset) await conn.query("TRUNCATE TABLE " + table);

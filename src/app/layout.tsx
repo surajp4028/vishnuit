@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MetaPixel } from "@/components/lp/meta-pixel";
 import { getSettings } from "@/lib/server/content";
 import "./globals.css";
 import { siteUrl } from "@/lib/site";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jakarta.variable} ${serif.variable}`}>
       <body className="min-h-dvh font-sans">
         <ThemeProvider>{children}</ThemeProvider>
+        <MetaPixel />
       </body>
     </html>
   );

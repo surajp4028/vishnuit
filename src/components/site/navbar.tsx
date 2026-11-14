@@ -21,7 +21,7 @@ const LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function Navbar({ logoLight, logoDark, name, services }: { logoLight: string; logoDark: string; name: string; services: NavService[] }) {
+export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contact", ctaLabel = "Get a quote" }: { logoLight: string; logoDark: string; name: string; services: NavService[]; ctaHref?: string; ctaLabel?: string }) {
   const pathname = usePathname();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
@@ -80,10 +80,10 @@ export function Navbar({ logoLight, logoDark, name, services }: { logoLight: str
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
-            href="/contact"
+            href={ctaHref}
             className="group hidden items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90 sm:inline-flex"
           >
-            Get a quote
+            {ctaLabel}
             <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
           <button
@@ -174,7 +174,7 @@ export function Navbar({ logoLight, logoDark, name, services }: { logoLight: str
                 </Link>
               ))}
             </div>
-            <Link href="/contact" className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background">
+            <Link href={ctaHref} onClick={() => setOpen(false)} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background">
               Get a free quote <ArrowUpRight className="size-4" />
             </Link>
           </motion.div>

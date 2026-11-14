@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getPosts, getProjects, getServices } from "@/lib/server/content";
+import { LANDING_PAGES } from "@/data/landing-pages";
 import { siteUrl } from "@/lib/site";
 
 const SITE = siteUrl();
@@ -10,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   return [
     ...["", "/about", "/services", "/portfolio", "/pricing", "/blog", "/contact"].map((p) => ({ url: `${SITE}${p}`, lastModified: now, priority: p ? 0.8 : 1 })),
+    ...LANDING_PAGES.map((l) => ({ url: `${SITE}/${l.slug}`, lastModified: now, priority: 0.9 })),
     ...services.map((s) => ({ url: `${SITE}/services/${s.slug}`, lastModified: now, priority: 0.7 })),
     ...projects.map((p) => ({ url: `${SITE}/portfolio/${p.slug}`, lastModified: now, priority: 0.6 })),
     ...posts.map((p) => ({ url: `${SITE}/blog/${p.slug}`, lastModified: new Date(p.published_at), priority: 0.6 })),

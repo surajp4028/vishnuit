@@ -3,6 +3,7 @@ import { exec } from "@/lib/server/db";
 import { sendMail, leadEmail } from "@/lib/server/mail";
 import { rateLimit } from "@/lib/server/auth";
 import { getSettings } from "@/lib/server/content";
+import { appendLead } from "@/lib/server/gsheet";
 
 const clean = (v: unknown, max = 500) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
@@ -55,6 +56,8 @@ export async function POST(req: Request) {
     if (!res.ok) console.error("[contact] email failed:", res.error);
     if (id && emailed) await exec("UPDATE leads SET emailed=1 WHERE id=?", [id]).catch(() => {});
   }
+
+  await appendLead("site", { id, ...lead });
 
   if (!id && !emailed) return Response.json({ error: "Something went wrong. Please WhatsApp or call us." }, { status: 500 });
   return Response.json({ ok: true });

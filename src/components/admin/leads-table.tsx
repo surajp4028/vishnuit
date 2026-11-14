@@ -5,7 +5,7 @@ import { cn, formatDate } from "@/lib/utils";
 
 export type Lead = {
   id: number; name: string; email: string; phone: string; service: string; budget: string; message: string;
-  source: string; page: string; status: string; notes: string | null; emailed: number; created_at: string;
+  source: string; page: string; status: string; city?: string | null; utm?: string | null; notes: string | null; emailed: number; created_at: string;
 };
 const STATUSES = ["new", "contacted", "qualified", "won", "lost"];
 const COLORS: Record<string, string> = {
@@ -85,7 +85,7 @@ export function LeadsTable({ initial }: { initial: Lead[] }) {
                         {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted">{formatDate(l.created_at)}<br />{l.source}</td>
+                    <td className="px-4 py-3 text-xs text-muted">{formatDate(l.created_at)}<br /><span className={l.source?.startsWith("lp:") ? "font-semibold text-[#d4a017]" : ""}>{l.source?.startsWith("lp:") ? "📣 Ad LP" : l.source}</span></td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <button onClick={() => remove(l.id)} className="rounded-lg p-2 text-muted hover:bg-red-500/10 hover:text-red-500" aria-label="Delete"><Trash2 className="size-4" /></button>
                     </td>
@@ -110,7 +110,7 @@ export function LeadsTable({ initial }: { initial: Lead[] }) {
               <a href={open.phone ? `https://wa.me/${open.phone.replace(/\D/g, "")}` : undefined} target="_blank" rel="noopener noreferrer" className={cn("flex flex-col items-center gap-1 rounded-xl border border-border p-3 text-xs hover:border-emerald-500", !open.phone && "pointer-events-none opacity-40")}><MessageCircle className="size-4 text-emerald-500" />WhatsApp</a>
             </div>
             <dl className="mt-6 space-y-3 text-sm">
-              {[["Email", open.email], ["Phone", open.phone], ["Service", open.service], ["Budget", open.budget], ["Source", open.source], ["Page", open.page], ["Email alert", open.emailed ? "Sent ✓" : "Not sent"]].map(([k, v]) => (
+              {[["Email", open.email], ["Phone", open.phone], ["Service", open.service], ["Budget", open.budget], ["City", open.city], ["Source", open.source], ["Page", open.page], ...Object.entries((() => { try { return JSON.parse(open.utm || "{}") as Record<string, string>; } catch { return {}; } })()).filter(([, v]) => v).map(([k, v]) => [k.replace("utm_", "UTM ").replace("fbclid", "FB click ID"), v]), ["Email alert", open.emailed ? "Sent ✓" : "Not sent"]].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4 border-b border-border pb-2"><dt className="text-muted">{k}</dt><dd className="text-right break-all">{v || "—"}</dd></div>
               ))}
             </dl>

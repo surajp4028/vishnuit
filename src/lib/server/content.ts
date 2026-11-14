@@ -187,6 +187,7 @@ export const getSettings = cache(() =>
       const rows = await query<{ k: string; v: unknown }>("SELECT k, v FROM settings");
       const out = structuredClone(seed.settings) as Record<string, unknown>;
       for (const { k, v } of rows) {
+        if (k === "integrations") continue; // secrets never go to public pages
         const val = typeof v === "string" ? JSON.parse(v) : v;
         out[k] = Array.isArray(val) ? val : { ...(out[k] as object), ...(val as object) };
       }

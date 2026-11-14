@@ -34,7 +34,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Requirement & architecture document", "Clickable Figma prototype", "Responsive web application", "Role-based admin dashboard", "REST APIs & integrations", "Database design & migrations", "Deployment on Vercel / VPS / AWS", "Source code, docs & training"],
     timeline: "4 – 10 weeks",
-    startingAt: "₹50,000",
+    startingAt: "₹19,999",
     faqs: [
       { question: "Who owns the source code?", answer: "You do. On final payment we hand over the complete source code, database and documentation." },
       { question: "Can you take over an existing half-built project?", answer: "Yes. We audit the code, fix critical issues and continue development — or recommend a rebuild if that's cheaper long-term." },
@@ -60,7 +60,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Sitemap & content structure", "Homepage + inner page designs", "Responsive development", "Contact form & WhatsApp chat", "Basic on-page SEO", "Google Analytics & Search Console", "SSL, hosting & domain setup", "1 month free support"],
     timeline: "1 – 3 weeks",
-    startingAt: "₹25,000",
+    startingAt: "₹9,999",
     faqs: [
       { question: "Do you write the website content?", answer: "Yes — we can write conversion-focused copy for you, or polish the content you provide." },
       { question: "How many revisions do I get?", answer: "Design goes through structured revision rounds until you're happy before we start development." },
@@ -86,7 +86,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Custom WordPress theme / Elementor build", "Responsive pages", "Blog & CMS setup", "Contact forms & lead integrations", "Security & backup plugins", "SEO plugin configuration", "Speed optimisation", "Training video & handover"],
     timeline: "1 – 3 weeks",
-    startingAt: "₹25,000",
+    startingAt: "₹9,999",
     faqs: [
       { question: "Elementor or custom code?", answer: "Elementor is great if you want drag-and-drop editing; custom code is faster and lighter. We'll suggest the right one for you." },
       { question: "Do you migrate existing WordPress sites?", answer: "Yes — we migrate, redesign or speed up existing WordPress websites with zero downtime." },
@@ -112,7 +112,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Store design & branding", "Product catalogue setup", "Payment gateway integration", "Shipping, tax & GST invoices", "Coupons & offers engine", "Customer accounts & order tracking", "E-commerce analytics & pixels", "Training & launch support"],
     timeline: "3 – 6 weeks",
-    startingAt: "₹50,000",
+    startingAt: "₹19,999",
     faqs: [
       { question: "Shopify or WooCommerce?", answer: "Shopify is quickest to launch with low maintenance; WooCommerce has no monthly platform fees and more flexibility. We'll compare costs for your catalogue." },
       { question: "Can you upload my products?", answer: "Yes — we can bulk-import products from Excel/CSV including images, variants and prices." },
@@ -138,7 +138,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Process mapping workshop", "Portal UX & UI design", "Role-based admin console", "Workflow & approval engine", "CRM / ERP / API integrations", "Reports & data exports", "Security hardening", "Documentation & SLA support"],
     timeline: "6 – 12 weeks",
-    startingAt: "₹1,00,000",
+    startingAt: "₹39,999",
     faqs: [
       { question: "Can it integrate with our existing ERP?", answer: "Yes — through APIs, webhooks or scheduled data syncs, depending on your ERP." },
       { question: "Is the data secure?", answer: "We use role-based permissions, encrypted connections, hashed credentials and audit logs as standard." },
@@ -164,7 +164,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["MVP scope & roadmap", "Brand identity & UI kit", "Web app / platform build", "Admin dashboard", "Auth, payments & notifications", "Landing page & SEO", "Analytics & event tracking", "Post-launch iteration sprint"],
     timeline: "4 – 8 weeks",
-    startingAt: "₹50,000",
+    startingAt: "₹19,999",
     faqs: [
       { question: "Can you work with a tight startup budget?", answer: "Yes — we help you prioritise ruthlessly so the first version fits your budget and proves the idea." },
       { question: "Do you offer equity or revenue-share deals?", answer: "Occasionally, for the right idea. Share your pitch and we'll discuss." },
@@ -190,7 +190,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["App UX flows & UI design", "Cross-platform app / PWA", "Backend APIs & database", "Auth, payments & notifications", "Admin panel", "Store listing assets", "Analytics & crash reporting", "Maintenance plan"],
     timeline: "6 – 12 weeks",
-    startingAt: "₹1,00,000",
+    startingAt: "₹39,999",
     faqs: [
       { question: "PWA or native app?", answer: "A PWA is faster and cheaper to launch and works on all devices; native apps unlock deeper phone features. We'll recommend based on your users." },
       { question: "Do you publish to the app stores?", answer: "Yes — we prepare listings, screenshots and handle the submission process." },
@@ -216,7 +216,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["LMS UX & branding", "Course & lesson builder", "Student & instructor dashboards", "Quizzes & certificates", "Payments & coupons", "Video hosting setup", "Email notifications", "Admin training"],
     timeline: "5 – 10 weeks",
-    startingAt: "₹75,000",
+    startingAt: "₹29,999",
     faqs: [
       { question: "Can videos be protected from download?", answer: "Yes — we use secure video hosting with domain restrictions and signed URLs." },
       { question: "Can students take live classes?", answer: "Yes — Zoom/Google Meet integration or embedded live streaming." },
@@ -242,7 +242,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Brand discovery questionnaire", "3 logo concepts", "Final logo suite (all formats)", "Colour palette & typography", "Brand guideline PDF", "Business card design", "Social media kit", "Full ownership & source files"],
     timeline: "1 – 2 weeks",
-    startingAt: "₹8,000",
+    startingAt: "₹4,999",
     faqs: [
       { question: "Can I trademark the logo?", answer: "Yes — the design is 100% original and ownership transfers to you, so you can register it." },
       { question: "What if I don't like any concept?", answer: "We go back to the drawing board with your feedback until we nail it." },
@@ -268,7 +268,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["User flows & journey maps", "Low-fidelity wireframes", "High-fidelity UI (light & dark)", "Clickable Figma prototype", "Component library / design system", "Responsive breakpoints", "Icon & illustration set", "Developer handoff"],
     timeline: "2 – 5 weeks",
-    startingAt: "₹30,000",
+    startingAt: "₹14,999",
     faqs: [
       { question: "Do you also develop the design?", answer: "Yes — our development team can build exactly what's designed, pixel for pixel." },
       { question: "Can you redesign just a few screens?", answer: "Sure — we take on focused UX audits and partial redesigns too." },
@@ -294,7 +294,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Business cards & letterheads", "Brochures & catalogues", "Hoardings, banners & standees", "Packaging & labels", "Social media post templates", "YouTube thumbnails", "Event & festival creatives", "Print vendor coordination"],
     timeline: "1 – 7 days",
-    startingAt: "₹2,000",
+    startingAt: "₹999",
     faqs: [
       { question: "Do you handle printing too?", answer: "We can coordinate with trusted print vendors in Delhi NCR and deliver to you." },
       { question: "Can I get a monthly creative package?", answer: "Yes — fixed monthly packages for social media and marketing creatives are available." },
@@ -320,7 +320,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Marketing audit & strategy", "Funnel & offer planning", "Content calendar", "Ad campaigns (Google & Meta)", "Landing page optimisation", "Email / WhatsApp sequences", "Tracking & dashboards", "Monthly growth report"],
     timeline: "Ongoing · results from week 2",
-    startingAt: "₹15,000 / month",
+    startingAt: "₹9,999 / month",
     faqs: [
       { question: "Is there a minimum contract?", answer: "We recommend 3 months to test, learn and scale — but there's no long lock-in." },
       { question: "Is ad spend included in the fee?", answer: "No — ad spend is paid directly to Google/Meta, so you keep full control and transparency." },
@@ -346,7 +346,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Social media audit", "Profile optimisation", "Monthly content calendar", "12–30 posts / reels per month", "Captions & hashtag research", "Community management", "Paid promotion setup", "Monthly analytics report"],
     timeline: "Ongoing · monthly retainer",
-    startingAt: "₹12,000 / month",
+    startingAt: "₹7,999 / month",
     faqs: [
       { question: "Do you shoot photos and videos?", answer: "We can arrange shoots in Delhi NCR, or edit footage you capture on your phone." },
       { question: "Which platforms should I be on?", answer: "Wherever your customers are — usually Instagram + one other. We'll recommend after the audit." },
@@ -372,7 +372,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Account audit / setup", "Keyword & competitor research", "Search & PMax campaigns", "Ad copy & extensions", "Landing page recommendations", "GA4 / GTM conversion tracking", "Weekly optimisation", "Monthly ROI report"],
     timeline: "Leads in 48–72 hours",
-    startingAt: "₹10,000 / month",
+    startingAt: "₹6,999 / month",
     faqs: [
       { question: "What budget should I start with?", answer: "Most local businesses start with ₹500–₹1,500/day in ad spend and scale once cost per lead is proven." },
       { question: "How fast will I get leads?", answer: "Usually within 2–3 days of launch, improving steadily as we optimise." },
@@ -398,7 +398,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Business Manager & Pixel setup", "Conversions API integration", "Audience research", "Ad creatives (static & video)", "Lead / sales campaigns", "Retargeting funnels", "Lead sync automation", "Monthly ROAS report"],
     timeline: "Results in 1–2 weeks",
-    startingAt: "₹10,000 / month",
+    startingAt: "₹6,999 / month",
     faqs: [
       { question: "Lead forms or website traffic?", answer: "Lead forms are cheaper per lead; website campaigns give higher-quality leads. We often run both and compare." },
       { question: "Do you make the ad videos?", answer: "Yes — we script, edit and design creatives, or use footage you provide." },
@@ -424,7 +424,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Full SEO audit", "Keyword research & mapping", "On-page optimisation", "Technical fixes", "Google Business Profile", "Monthly content / blogs", "Link building", "Monthly ranking report"],
     timeline: "Ongoing · results in 2–4 months",
-    startingAt: "₹12,000 / month",
+    startingAt: "₹7,999 / month",
     faqs: [
       { question: "How soon will I rank?", answer: "Low-competition keywords can move in weeks; competitive ones take 3–6 months of consistent work." },
       { question: "Do you guarantee rankings?", answer: "We guarantee ethical work and transparent progress — nobody can honestly guarantee Google rankings." },
@@ -450,7 +450,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["On-page audit report", "Keyword-to-page map", "Title & meta rewrites", "Heading & content optimisation", "Image alt & compression", "Internal linking plan", "Schema implementation", "Before / after report"],
     timeline: "2 – 4 weeks",
-    startingAt: "₹10,000",
+    startingAt: "₹5,999",
     faqs: [
       { question: "Will you change my website design?", answer: "No — on-page SEO improves content and code without changing your look." },
       { question: "Do you need access to my website?", answer: "Yes — CMS or developer access so we can implement changes directly." },
@@ -476,7 +476,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Backlink profile audit", "Competitor link gap analysis", "Outreach & guest posts", "Local citations", "Brand mention building", "Toxic link disavow", "Review strategy", "Monthly link report"],
     timeline: "Ongoing · monthly",
-    startingAt: "₹8,000 / month",
+    startingAt: "₹5,999 / month",
     faqs: [
       { question: "How many links per month?", answer: "Quality over quantity — typically 8–20 relevant links monthly depending on your package." },
       { question: "Are these links permanent?", answer: "We focus on editorial and owned placements that stay live long-term." },
@@ -502,7 +502,7 @@ export const SERVICE_DETAILS: Record<string, ServiceDetail> = {
     ],
     deliverables: ["Technical SEO audit (100+ checks)", "Core Web Vitals optimisation", "XML sitemap & robots.txt", "Crawl error & 404 fixes", "Redirect & canonical cleanup", "Schema markup", "Log file analysis", "Monitoring dashboard"],
     timeline: "2 – 6 weeks",
-    startingAt: "₹15,000",
+    startingAt: "₹7,999",
     faqs: [
       { question: "Will my site get faster?", answer: "Almost always — speed optimisation is a core part of technical SEO." },
       { question: "Do you fix the issues or just report them?", answer: "We fix them. You get a prioritised audit plus hands-on implementation." },

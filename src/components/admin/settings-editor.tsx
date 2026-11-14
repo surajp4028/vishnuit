@@ -16,6 +16,7 @@ const TABS: { key: string; label: string; desc: string }[] = [
   { key: "seo", label: "SEO", desc: "Default meta title, description and share image." },
   { key: "founder", label: "Founder", desc: "Founder card on home & about." },
   { key: "conversion", label: "Conversion", desc: "WhatsApp button, lead email alerts and announcement bar." },
+  { key: "integrations", label: "Integrations", desc: "Meta Pixel & Conversions API, and Google Sheet sync for the website and landing-page forms." },
   { key: "security", label: "Password", desc: "Change your admin password." },
 ];
 
@@ -98,6 +99,80 @@ function PasswordForm() {
   );
 }
 
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" onClick={() => onChange(!on)} className={cn("relative h-6 w-11 shrink-0 rounded-full transition", on ? "bg-accent" : "bg-foreground/15")}>
+      <span className={cn("absolute top-0.5 size-5 rounded-full bg-white shadow transition-all", on ? "left-[22px]" : "left-0.5")} />
+    </button>
+  );
+}
+
+function IntField({ k, label, secret, area, placeholder, help, value, set }: { k: string; label: string; secret?: boolean; area?: boolean; placeholder?: string; help?: string; value: Obj; set: (k: string, v: unknown) => void }) {
+  const v = String(value[k] ?? "");
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-muted">{label}</span>
+      {area ? (
+        <textarea value={v} onChange={(e) => set(k, e.target.value)} rows={4} placeholder={placeholder} className={cn(inputCls, "font-mono text-xs")} />
+      ) : (
+        <input type={secret ? "password" : "text"} autoComplete="off" value={v} onChange={(e) => set(k, e.target.value)} placeholder={placeholder} className={inputCls} />
+      )}
+      {help && <span className="mt-1 block text-[11px] text-muted">{help}</span>}
+    </label>
+  );
+}
+
+function IntegrationsEditor({ value, onChange }: { value: Obj; onChange: (v: Obj) => void }) {
+  const [test, setTest] = useState<Record<string, string>>({});
+  const set = (k: string, nv: unknown) => onChange({ ...value, [k]: nv });
+  async function runTest(target: "lp" | "site") {
+    setTest((t) => ({ ...t, [target]: "Sending…" }));
+    const r = await fetch("/api/admin/integrations/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target }) });
+    const j = await r.json().catch(() => ({}));
+    setTest((t) => ({ ...t, [target]: r.ok ? "✓ Test row added — check your sheet" : `✗ ${j.error || "Failed"}` }));
+  }
+  return (
+    <div className="space-y-8">
+      <section className="rounded-2xl border border-border p-5">
+        <h3 className="font-display font-bold">Meta (Facebook / Instagram Ads)</h3>
+        <p className="mt-1 mb-5 text-xs text-muted">Pixel fires PageView on every page and Lead on every form submit. Conversions API sends the same Lead from the server (deduplicated) for better ad attribution.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <IntField value={value} set={set} k="metaPixelId" label="Meta Pixel ID" placeholder="e.g. 123456789012345" help="Events Manager → Data sources → your Pixel → ID" />
+          <IntField value={value} set={set} k="metaTestEventCode" label="Test event code (optional)" placeholder="TEST12345" help="Only while testing in Events Manager; clear it after." />
+          <div className="sm:col-span-2"><IntField value={value} set={set} k="metaCapiToken" label="Conversions API access token" secret placeholder="EAAG…" help="Events Manager → Settings → Conversions API → Generate access token" /></div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border p-5">
+        <h3 className="font-display font-bold">Google Sheet — lead sync</h3>
+        <p className="mt-1 mb-5 text-xs text-muted">Use <b>either</b> an Apps Script web app URL (easiest — script is in docs/google-apps-script.gs) <b>or</b> a service account. Leads are always saved in the admin too, even if the sheet fails.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2"><IntField value={value} set={set} k="gsheetWebhookUrl" label="Option A — Apps Script web app URL" placeholder="https://script.google.com/macros/s/…/exec" /></div>
+          <IntField value={value} set={set} k="gsheetSecret" label="Apps Script secret" secret help="Must match SECRET inside the script" />
+          <div />
+          <IntField value={value} set={set} k="gsheetId" label="Option B — Spreadsheet ID" placeholder="1AbC…xyz (from the sheet URL)" />
+          <IntField value={value} set={set} k="googleServiceAccountEmail" label="Service account email" placeholder="leads@project.iam.gserviceaccount.com" help="Share the sheet with this email as Editor" />
+          <div className="sm:col-span-2"><IntField value={value} set={set} k="googlePrivateKey" label="Service account private key" area placeholder="-----BEGIN PRIVATE KEY-----…" /></div>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {([["lp", "lpTab", "lpSheetEnabled", "Landing page (Meta ads) form"], ["site", "siteTab", "siteSheetEnabled", "Website contact form"]] as const).map(([target, tabKey, enKey, title]) => (
+            <div key={target} className="rounded-xl bg-foreground/[0.03] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold">{title}</p>
+                <Toggle on={value[enKey] !== false} onChange={(b) => set(enKey, b)} />
+              </div>
+              <IntField value={value} set={set} k={tabKey} label="Sheet tab name" placeholder={target === "lp" ? "LP Leads" : "Website Leads"} />
+              <button type="button" onClick={() => runTest(target)} className="mt-3 rounded-full border border-border px-4 py-1.5 text-xs font-semibold hover:border-accent">Send test row</button>
+              {test[target] && <p className="mt-2 text-xs">{test[target]}</p>}
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-[11px] text-muted">Save changes first, then send a test row.</p>
+      </section>
+    </div>
+  );
+}
+
 export function SettingsEditor({ initial }: { initial: Obj }) {
   const router = useRouter();
   const [tab, setTab] = useState("branding");
@@ -138,6 +213,8 @@ export function SettingsEditor({ initial }: { initial: Obj }) {
           </div>
           {tab === "security" ? (
             <PasswordForm />
+          ) : tab === "integrations" ? (
+            <IntegrationsEditor value={(data.integrations ?? {}) as Obj} onChange={(v) => setData({ ...data, integrations: v })} />
           ) : tab === "stats" ? (
             <StatsEditor value={data.stats as { label: string; value: number; suffix: string }[]} onChange={(v) => setData({ ...data, stats: v })} />
           ) : (

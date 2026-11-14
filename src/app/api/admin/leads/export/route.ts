@@ -4,8 +4,8 @@ import { requireAdminApi } from "@/lib/server/auth";
 export async function GET() {
   const a = await requireAdminApi();
   if (a instanceof Response) return a;
-  const rows = await query("SELECT id,created_at,name,email,phone,service,budget,status,source,page,message,notes FROM leads ORDER BY id DESC");
-  const cols = ["id", "created_at", "name", "email", "phone", "service", "budget", "status", "source", "page", "message", "notes"];
+  const rows = await query("SELECT id,created_at,name,email,phone,service,budget,city,status,source,page,utm,message,notes FROM leads ORDER BY id DESC");
+  const cols = ["id", "created_at", "name", "email", "phone", "service", "budget", "city", "status", "source", "page", "utm", "message", "notes"];
   const esc = (v: unknown) => {
     let s = String(v ?? "");
     if (/^[=+\-@]/.test(s)) s = "'" + s; // CSV formula-injection guard
