@@ -1,108 +1,58 @@
 [
  {
-  "slug": "minimal-portfolio",
-  "title": "Minimal Developer Portfolio",
-  "tagline": "A clean, content-first personal site",
-  "category": "Website",
-  "client": "Personal project",
+  "slug": "astro-kundli-milan",
+  "title": "ASTRO — Kundli & Vedic Astrology",
+  "tagline": "Free kundli tools and paid PDF reports",
+  "category": "E-commerce",
+  "client": "ASTRO",
   "year": "2026",
-  "role": "Design & Development",
-  "summary": "A second, minimal take on my portfolio — quiet typography, a floating navbar, light & dark themes and a built-in contact form.",
+  "role": "Fullstack Developer",
+  "summary": "A Vedic astrology platform — free Kundli, Kundli Milan, Rashifal, Panchang and Numerology, plus paid PDF reports with Razorpay checkout, delivered automatically.",
   "overview": [
-   "Alongside this animated portfolio, I designed and built a minimal version that puts the content first: a short intro with resume download, quick stats, selected projects, work experience, skills and a contact section, all on a single narrow column.",
-   "The design relies on typography, soft borders and whitespace instead of heavy effects. A floating pill navbar stays in reach while scrolling, the whole site switches between light and dark themes, and visitors can send an enquiry or a full project brief straight from the page."
+   "ASTRO offers free astrology tools — Free Kundli (lagna and navamsa charts, planetary positions, current dasha, Manglik check), Kundli Milan with 36-guna Ashtakoot matching, daily, weekly and tomorrow's Rashifal in English and Hindi, city-wise Panchang and Numerology — all powered by AstrologyAPI with caching and daily usage caps to control cost.",
+   "Detailed reports such as Kundli Milan, Pro Kundli and Basic Kundli are sold as PDFs. A customer enters birth details with date/time pickers and place search (with correct historical time zones), applies a coupon and pays through Razorpay. Payment is verified by signature and webhook, the report PDF is generated, stored in private S3 with KMS encryption and emailed — with automatic retries, refunds on failure and a reconcile job as a safety net.",
+   "The admin console covers orders (with payment attempts and provider logs, regenerate, resend, refund), the report catalogue and pricing, coupons, API usage, customers, staff permissions, sessions, audit logs and full branding — logo, colours and PDF branding. The OTP login, encryption and security layer is shared with SKYO."
   ],
   "highlights": [
    {
-    "title": "Content-first layout",
-    "text": "Intro, stats, projects, experience and skills in one focused column."
+    "title": "Free astrology tools",
+    "text": "Kundli, Kundli Milan, Rashifal, Panchang and Numerology in English & Hindi."
    },
    {
-    "title": "Floating navbar",
-    "text": "A pill navbar that follows you with a theme toggle and section links."
+    "title": "Paid PDF reports",
+    "text": "Birth details → coupon → Razorpay → PDF generated, stored and emailed."
    },
    {
-    "title": "Light & dark themes",
-    "text": "Every section is designed for both modes."
+    "title": "Reliable payments",
+    "text": "Signature + webhook verification, auto-retry, auto-refund and reconcile cron."
    },
    {
-    "title": "Contact built in",
-    "text": "Quick email enquiry plus a full form with service and message."
+    "title": "Full admin & branding",
+    "text": "Orders, catalogue, coupons, API usage, staff, audit and PDF branding."
    }
   ],
   "tools": [
    "Next.js",
    "React",
-   "Tailwind CSS"
+   "TypeScript",
+   "Tailwind CSS",
+   "Aceternity UI",
+   "Razorpay",
+   "MySQL",
+   "AWS S3"
   ],
-  "url": "https://suraj-minimal-portfolio.vercel.app/",
-  "cover": "/projects/minimal-portfolio-hero.webp",
+  "url": "https://kundlimilan.vercel.app/",
+  "cover": "/projects/kundli-home.webp",
   "gallery": [
-   "/projects/minimal-portfolio-projects.webp",
-   "/projects/minimal-portfolio-experience.webp",
-   "/projects/minimal-portfolio-skills-dark.webp",
-   "/projects/minimal-portfolio-contact-dark.webp"
+   "/projects/kundli-reports.webp",
+   "/projects/kundli-free-kundli.webp",
+   "/projects/kundli-milan.webp",
+   "/projects/kundli-horoscope.webp",
+   "/projects/kundli-panchang.webp",
+   "/projects/kundli-rashifal.webp"
   ],
   "featured": true,
   "sort": 0
- },
- {
-  "slug": "suraj-dev-portfolio",
-  "title": "Suraj.dev — Personal Portfolio",
-  "tagline": "An animated, premium developer portfolio",
-  "category": "Website",
-  "client": "Personal project",
-  "year": "2025",
-  "role": "Design & Development",
-  "summary": "A premium personal portfolio with an aurora hero, 3D globe, skills marquee, case studies and a contact form with email + WhatsApp alerts.",
-  "overview": [
-   "Suraj.dev is the founder's flagship personal portfolio — built to impress recruiters and clients within the first scroll. It combines bold typography, an animated aurora hero, a 3D globe and smooth Aceternity-style interactions with a fast, SEO-friendly Next.js build.",
-   "Every project has its own case-study page with screenshots, highlights and tech stack, and the contact form delivers enquiries instantly by email (Resend) and WhatsApp. A printable resume page and downloadable PDF CV round it off."
-  ],
-  "highlights": [
-   {
-    "title": "Animated hero",
-    "text": "Aurora background, flip words and a premium dashboard visual."
-   },
-   {
-    "title": "3D globe & bento grid",
-    "text": "Interactive three.js globe and a bento layout of skills and stats."
-   },
-   {
-    "title": "Case studies",
-    "text": "21 projects with dedicated pages, screenshots and tech stacks."
-   },
-   {
-    "title": "Instant lead alerts",
-    "text": "Contact form sends email via Resend and a WhatsApp alert."
-   },
-   {
-    "title": "Light & dark themes",
-    "text": "Every section designed for both modes."
-   },
-   {
-    "title": "Resume & CV",
-    "text": "Printable resume page and downloadable PDF CV."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "Three.js",
-   "Resend"
-  ],
-  "url": "https://surajportfolio-coral.vercel.app/",
-  "cover": "/projects/suraj-portfolio-v1-hero.webp",
-  "gallery": [
-   "/projects/suraj-portfolio-v1-bento.webp",
-   "/projects/suraj-portfolio-v1-about.webp",
-   "/projects/suraj-portfolio-v1-skills.webp",
-   "/projects/suraj-portfolio-v1-contact.webp"
-  ],
-  "featured": true,
-  "sort": 1
  },
  {
   "slug": "imoneypay-merchant-onboarding",
@@ -198,7 +148,7 @@
    "/projects/onboarding-inbox.webp"
   ],
   "featured": true,
-  "sort": 2
+  "sort": 1
  },
  {
   "slug": "skyo-travel",
@@ -251,63 +201,8 @@
    "/projects/skyo-packages.webp",
    "/projects/skyo-pnr.webp"
   ],
-  "featured": false,
-  "sort": 3
- },
- {
-  "slug": "astro-kundli-milan",
-  "title": "ASTRO — Kundli & Vedic Astrology",
-  "tagline": "Free kundli tools and paid PDF reports",
-  "category": "E-commerce",
-  "client": "ASTRO",
-  "year": "2026",
-  "role": "Fullstack Developer",
-  "summary": "A Vedic astrology platform — free Kundli, Kundli Milan, Rashifal, Panchang and Numerology, plus paid PDF reports with Razorpay checkout, delivered automatically.",
-  "overview": [
-   "ASTRO offers free astrology tools — Free Kundli (lagna and navamsa charts, planetary positions, current dasha, Manglik check), Kundli Milan with 36-guna Ashtakoot matching, daily, weekly and tomorrow's Rashifal in English and Hindi, city-wise Panchang and Numerology — all powered by AstrologyAPI with caching and daily usage caps to control cost.",
-   "Detailed reports such as Kundli Milan, Pro Kundli and Basic Kundli are sold as PDFs. A customer enters birth details with date/time pickers and place search (with correct historical time zones), applies a coupon and pays through Razorpay. Payment is verified by signature and webhook, the report PDF is generated, stored in private S3 with KMS encryption and emailed — with automatic retries, refunds on failure and a reconcile job as a safety net.",
-   "The admin console covers orders (with payment attempts and provider logs, regenerate, resend, refund), the report catalogue and pricing, coupons, API usage, customers, staff permissions, sessions, audit logs and full branding — logo, colours and PDF branding. The OTP login, encryption and security layer is shared with SKYO."
-  ],
-  "highlights": [
-   {
-    "title": "Free astrology tools",
-    "text": "Kundli, Kundli Milan, Rashifal, Panchang and Numerology in English & Hindi."
-   },
-   {
-    "title": "Paid PDF reports",
-    "text": "Birth details → coupon → Razorpay → PDF generated, stored and emailed."
-   },
-   {
-    "title": "Reliable payments",
-    "text": "Signature + webhook verification, auto-retry, auto-refund and reconcile cron."
-   },
-   {
-    "title": "Full admin & branding",
-    "text": "Orders, catalogue, coupons, API usage, staff, audit and PDF branding."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "TypeScript",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "Razorpay",
-   "MySQL",
-   "AWS S3"
-  ],
-  "url": "https://kundlimilan.vercel.app/",
-  "cover": "/projects/kundli-home.webp",
-  "gallery": [
-   "/projects/kundli-reports.webp",
-   "/projects/kundli-free-kundli.webp",
-   "/projects/kundli-milan.webp",
-   "/projects/kundli-horoscope.webp",
-   "/projects/kundli-panchang.webp",
-   "/projects/kundli-rashifal.webp"
-  ],
-  "featured": false,
-  "sort": 4
+  "featured": true,
+  "sort": 2
  },
  {
   "slug": "shiv-shringar-sewa-samiti",
@@ -357,7 +252,112 @@
    "/projects/shiv-shringar-yatra.webp",
    "/projects/shiv-shringar-event.webp"
   ],
-  "featured": false,
+  "featured": true,
+  "sort": 3
+ },
+ {
+  "slug": "suraj-dev-portfolio",
+  "title": "Suraj.dev — Personal Portfolio",
+  "tagline": "An animated, premium developer portfolio",
+  "category": "Website",
+  "client": "Personal project",
+  "year": "2025",
+  "role": "Design & Development",
+  "summary": "A premium personal portfolio with an aurora hero, 3D globe, skills marquee, case studies and a contact form with email + WhatsApp alerts.",
+  "overview": [
+   "Suraj.dev is the founder's flagship personal portfolio — built to impress recruiters and clients within the first scroll. It combines bold typography, an animated aurora hero, a 3D globe and smooth Aceternity-style interactions with a fast, SEO-friendly Next.js build.",
+   "Every project has its own case-study page with screenshots, highlights and tech stack, and the contact form delivers enquiries instantly by email (Resend) and WhatsApp. A printable resume page and downloadable PDF CV round it off."
+  ],
+  "highlights": [
+   {
+    "title": "Animated hero",
+    "text": "Aurora background, flip words and a premium dashboard visual."
+   },
+   {
+    "title": "3D globe & bento grid",
+    "text": "Interactive three.js globe and a bento layout of skills and stats."
+   },
+   {
+    "title": "Case studies",
+    "text": "21 projects with dedicated pages, screenshots and tech stacks."
+   },
+   {
+    "title": "Instant lead alerts",
+    "text": "Contact form sends email via Resend and a WhatsApp alert."
+   },
+   {
+    "title": "Light & dark themes",
+    "text": "Every section designed for both modes."
+   },
+   {
+    "title": "Resume & CV",
+    "text": "Printable resume page and downloadable PDF CV."
+   }
+  ],
+  "tools": [
+   "Next.js",
+   "React",
+   "Tailwind CSS",
+   "Aceternity UI",
+   "Three.js",
+   "Resend"
+  ],
+  "url": "https://surajportfolio-coral.vercel.app/",
+  "cover": "/projects/suraj-portfolio-v1-hero.webp",
+  "gallery": [
+   "/projects/suraj-portfolio-v1-bento.webp",
+   "/projects/suraj-portfolio-v1-about.webp",
+   "/projects/suraj-portfolio-v1-skills.webp",
+   "/projects/suraj-portfolio-v1-contact.webp"
+  ],
+  "featured": true,
+  "sort": 4
+ },
+ {
+  "slug": "minimal-portfolio",
+  "title": "Minimal Developer Portfolio",
+  "tagline": "A clean, content-first personal site",
+  "category": "Website",
+  "client": "Personal project",
+  "year": "2026",
+  "role": "Design & Development",
+  "summary": "A second, minimal take on my portfolio — quiet typography, a floating navbar, light & dark themes and a built-in contact form.",
+  "overview": [
+   "Alongside this animated portfolio, I designed and built a minimal version that puts the content first: a short intro with resume download, quick stats, selected projects, work experience, skills and a contact section, all on a single narrow column.",
+   "The design relies on typography, soft borders and whitespace instead of heavy effects. A floating pill navbar stays in reach while scrolling, the whole site switches between light and dark themes, and visitors can send an enquiry or a full project brief straight from the page."
+  ],
+  "highlights": [
+   {
+    "title": "Content-first layout",
+    "text": "Intro, stats, projects, experience and skills in one focused column."
+   },
+   {
+    "title": "Floating navbar",
+    "text": "A pill navbar that follows you with a theme toggle and section links."
+   },
+   {
+    "title": "Light & dark themes",
+    "text": "Every section is designed for both modes."
+   },
+   {
+    "title": "Contact built in",
+    "text": "Quick email enquiry plus a full form with service and message."
+   }
+  ],
+  "tools": [
+   "Next.js",
+   "React",
+   "Tailwind CSS"
+  ],
+  "url": "https://suraj-minimal-portfolio.vercel.app/",
+  "cover": "/projects/minimal-portfolio-hero.webp",
+  "gallery": [
+   "/projects/minimal-portfolio-projects.webp",
+   "/projects/minimal-portfolio-experience.webp",
+   "/projects/minimal-portfolio-skills-dark.webp",
+   "/projects/minimal-portfolio-contact-dark.webp"
+  ],
+  "featured": true,
   "sort": 5
  },
  {
@@ -405,6 +405,49 @@
   "sort": 6
  },
  {
+  "slug": "perk-immigration",
+  "title": "Perk Immigration, Canada",
+  "tagline": "Immigration consultancy",
+  "category": "Website",
+  "client": "Sapna Sharma",
+  "year": "2024",
+  "role": "Design & Development",
+  "summary": "A credible, lead-focused immigration consultancy website for Canadian visa and migration services.",
+  "overview": [
+   "Perk Immigration is a professional immigration consultancy website that showcases global visa and migration services with clarity and credibility. It presents service details, eligibility guidance and consultation information in an easy-to-understand format.",
+   "The modern, responsive layout offers smooth navigation and fast performance on every device, with a clear content hierarchy, strong calls-to-action and a trustworthy visual tone that supports lead generation."
+  ],
+  "highlights": [
+   {
+    "title": "Programme pages",
+    "text": "Express Entry, PNP, work permits, visitor visas and more."
+   },
+   {
+    "title": "Eligibility focus",
+    "text": "67-point eligibility assessment and clear next steps."
+   },
+   {
+    "title": "Lead capture",
+    "text": "Consultation forms wired to the team's inbox."
+   },
+   {
+    "title": "Trust signals",
+    "text": "Clean hierarchy and a professional visual tone."
+   }
+  ],
+  "tools": [
+   "WordPress",
+   "Elementor",
+   "WPForms",
+   "Contact Form 7"
+  ],
+  "url": "https://perkimmigration.com/",
+  "cover": "/projects/perk-immigration.png",
+  "gallery": [],
+  "featured": true,
+  "sort": 7
+ },
+ {
   "slug": "london-school-e-learning",
   "title": "London School E-learning Platform",
   "tagline": "Online courses & micro-credentials",
@@ -445,49 +488,6 @@
   ],
   "url": "https://londonschoolobs.com/",
   "cover": "/projects/london-school.png",
-  "gallery": [],
-  "featured": true,
-  "sort": 7
- },
- {
-  "slug": "perk-immigration",
-  "title": "Perk Immigration, Canada",
-  "tagline": "Immigration consultancy",
-  "category": "Website",
-  "client": "Sapna Sharma",
-  "year": "2024",
-  "role": "Design & Development",
-  "summary": "A credible, lead-focused immigration consultancy website for Canadian visa and migration services.",
-  "overview": [
-   "Perk Immigration is a professional immigration consultancy website that showcases global visa and migration services with clarity and credibility. It presents service details, eligibility guidance and consultation information in an easy-to-understand format.",
-   "The modern, responsive layout offers smooth navigation and fast performance on every device, with a clear content hierarchy, strong calls-to-action and a trustworthy visual tone that supports lead generation."
-  ],
-  "highlights": [
-   {
-    "title": "Programme pages",
-    "text": "Express Entry, PNP, work permits, visitor visas and more."
-   },
-   {
-    "title": "Eligibility focus",
-    "text": "67-point eligibility assessment and clear next steps."
-   },
-   {
-    "title": "Lead capture",
-    "text": "Consultation forms wired to the team's inbox."
-   },
-   {
-    "title": "Trust signals",
-    "text": "Clean hierarchy and a professional visual tone."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "WPForms",
-   "Contact Form 7"
-  ],
-  "url": "https://perkimmigration.com/",
-  "cover": "/projects/perk-immigration.png",
   "gallery": [],
   "featured": true,
   "sort": 8
