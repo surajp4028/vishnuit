@@ -49,7 +49,7 @@ export default async function AboutPage() {
         <div>
           <SectionHeading align="left" className="mb-6 md:mb-8" eyebrow="Our story" title="Smart solutions for" highlight="your business" />
           <div className="space-y-4 text-base leading-relaxed text-muted md:text-lg">
-            <p>Vishnu IT Solutions is a digital marketing and IT services agency based in East Azad Nagar, Delhi. We specialise in SEO, PPC, social media marketing and web development that help brands get found, trusted and chosen.</p>
+            <p>Vishnu IT Solutions is a digital marketing and IT services agency based in Gandhi Nagar, Delhi. We specialise in SEO, PPC, social media marketing and web development that help brands get found, trusted and chosen.</p>
             <p>What started as a freelance practice building websites and ad funnels has grown into a full-service studio shipping fintech platforms, travel and astrology products, e-commerce stores and brand identities for clients across India and abroad.</p>
           </div>
           <ul className="mt-8 grid gap-3 sm:grid-cols-2">

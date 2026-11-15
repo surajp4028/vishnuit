@@ -526,9 +526,9 @@ export const settings: Record<string, unknown> = {
     email: "surajp4028@gmail.com",
     phone: "+91 79826 24533",
     whatsapp: "917982624533",
-    address: "East Azad Nagar, Delhi 110051, India",
+    address: "Gandhi Nagar, Delhi 110031, India",
     hours: "Mon – Sat, 10:00 AM – 7:00 PM IST",
-    mapEmbed: "https://www.google.com/maps?q=East+Azad+Nagar,+Delhi+110051&output=embed",
+    mapEmbed: "https://www.google.com/maps?q=Gandhi+Nagar,+Delhi+110031&output=embed",
   },
   social: {
     linkedin: "https://www.linkedin.com/in/suraj-pandey-225459197",

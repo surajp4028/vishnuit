@@ -205,6 +205,106 @@
   "sort": 2
  },
  {
+  "slug": "ewastebiz",
+  "title": "E-WasteBiz — B2B E-Waste Recycling",
+  "tagline": "Lead-generation website + admin CRM for a Delhi-NCR e-waste business",
+  "category": "Website",
+  "client": "E-WasteBiz Enterprises",
+  "year": "2026",
+  "role": "Fullstack Developer",
+  "summary": "A fast, ad-ready lead-generation website for a B2B e-waste buyer and recycler in Delhi-NCR — instant-quote forms, call & WhatsApp tracking, Google/Meta ads attribution and a custom admin panel to manage leads and every part of the site.",
+  "overview": [
+   "E-WasteBiz Enterprises buys and recycles corporate e-waste across Delhi-NCR — old laptops, servers, networking gear, UPS batteries and tonnes of cable and factory scrap. They needed a website that looks trustworthy to corporate admin and finance teams, works well with Google and Meta ads, and turns visitors into pickup requests the same day.",
+   "The public site leads with one clear offer — sell your business e-waste, free pickup, fair price, GST invoice and recycling certificates. An instant-quote form sits right in the hero, sticky Call and WhatsApp buttons follow the visitor on mobile, and every page builds trust: the four ITAD and recycling services, a four-step pickup process, industries served, data-destruction methods (software wiping, degaussing, physical shredding) and GST, MSME and authorised-recycler registrations. Light and dark themes, scroll animations, LocalBusiness schema and Open Graph tags are built in.",
+   "Every enquiry is captured with its full attribution — UTM parameters, gclid and fbclid — so the owner can see which Google Ads or Meta campaign produced it. Lead conversions fire on the thank-you page, while call and WhatsApp clicks are tracked as separate conversions and counted per day by traffic source. Forms are protected with a honeypot, a too-fast-submit check and rate limiting, and every lead triggers an instant email alert plus an optional auto-reply to the customer via Resend.",
+   "Behind it is a custom admin panel, built to be used on a phone. The dashboard shows leads today, the last 7 days, leads awaiting a call-back, call/WhatsApp clicks, a 30-day leads chart and breakdowns by source and scrap category. Leads move through a New → Contacted → Quoted → Won/Lost pipeline with deal values, notes, one-tap call/WhatsApp/email, bulk actions and CSV export. The owner also edits the site content, certificates, testimonials, FAQs, client logos, partners and gallery, sets GA4, Google Ads and Meta Pixel IDs, and changes the login — all without a developer. It runs on PHP with MySQL (or JSON files as a fallback) on Hostinger."
+  ],
+  "highlights": [
+   {
+    "title": "Instant-quote hero form",
+    "text": "Name, phone, what to sell and city right in the hero — a quote request in under 20 seconds."
+   },
+   {
+    "title": "Call & WhatsApp first",
+    "text": "Sticky mobile call bar, floating WhatsApp button and pre-filled WhatsApp messages."
+   },
+   {
+    "title": "Ads attribution",
+    "text": "UTM, gclid and fbclid saved on every lead and shown per campaign in the admin panel."
+   },
+   {
+    "title": "Conversion tracking",
+    "text": "GA4, Google Ads conversion labels and Meta Pixel — leads, calls and WhatsApp clicks tracked separately."
+   },
+   {
+    "title": "Lead pipeline CRM",
+    "text": "New → Contacted → Quoted → Won/Lost with deal value, notes, bulk actions and CSV export."
+   },
+   {
+    "title": "Live dashboard",
+    "text": "Leads today, 7-day trend, call-backs due, click counts, 30-day chart, source and category split."
+   },
+   {
+    "title": "Instant email alerts",
+    "text": "Every lead emailed to the team via Resend, with an optional auto-reply to the customer."
+   },
+   {
+    "title": "Spam protection",
+    "text": "Honeypot field, too-fast-submit check and per-IP rate limiting on forms and logins."
+   },
+   {
+    "title": "Full content control",
+    "text": "Contact details, announcement bar, stats, certificates, testimonials, FAQs, logos, partners and gallery."
+   },
+   {
+    "title": "Image uploads",
+    "text": "Certificate scans, client logos and gallery photos uploaded straight from the admin panel."
+   },
+   {
+    "title": "Trust & compliance",
+    "text": "GST, MSME and authorised-recycler registrations, data-destruction methods and recycling certificates."
+   },
+   {
+    "title": "Mobile-first & SEO-ready",
+    "text": "Light/dark themes, fast static pages, LocalBusiness schema and Open Graph previews."
+   }
+  ],
+  "tools": [
+   "HTML5",
+   "CSS3",
+   "JavaScript",
+   "PHP",
+   "MySQL",
+   "Resend",
+   "Google Analytics 4",
+   "Google Ads",
+   "Meta Pixel",
+   "Hostinger"
+  ],
+  "url": "https://ewastebiz.in/",
+  "cover": "/projects/ewastebiz-home.webp",
+  "gallery": [
+   "/projects/ewastebiz-admin-overview.webp",
+   "/projects/ewastebiz-admin-leads.webp",
+   "/projects/ewastebiz-admin-lead-detail.webp",
+   "/projects/ewastebiz-mobile.webp",
+   "/projects/ewastebiz-services-grid.webp",
+   "/projects/ewastebiz-process.webp",
+   "/projects/ewastebiz-industries.webp",
+   "/projects/ewastebiz-compliance.webp",
+   "/projects/ewastebiz-services.webp",
+   "/projects/ewastebiz-about.webp",
+   "/projects/ewastebiz-contact.webp",
+   "/projects/ewastebiz-admin-content.webp",
+   "/projects/ewastebiz-admin-certificates.webp",
+   "/projects/ewastebiz-admin-testimonials.webp",
+   "/projects/ewastebiz-admin-settings.webp",
+   "/projects/ewastebiz-admin-login.webp"
+  ],
+  "featured": true,
+  "sort": 3
+ },
+ {
   "slug": "shiv-shringar-sewa-samiti",
   "title": "Shiv Shringar Sewa Samiti",
   "tagline": "A devotional website for a Delhi mandir",
@@ -253,7 +353,7 @@
    "/projects/shiv-shringar-event.webp"
   ],
   "featured": true,
-  "sort": 3
+  "sort": 4
  },
  {
   "slug": "suraj-dev-portfolio",
@@ -311,7 +411,7 @@
    "/projects/suraj-portfolio-v1-contact.webp"
   ],
   "featured": true,
-  "sort": 4
+  "sort": 5
  },
  {
   "slug": "minimal-portfolio",
@@ -358,7 +458,7 @@
    "/projects/minimal-portfolio-contact-dark.webp"
   ],
   "featured": true,
-  "sort": 5
+  "sort": 6
  },
  {
   "slug": "house-of-geet",
@@ -402,7 +502,7 @@
   "cover": "/projects/house-of-geet.png",
   "gallery": [],
   "featured": true,
-  "sort": 6
+  "sort": 7
  },
  {
   "slug": "perk-immigration",
@@ -445,7 +545,7 @@
   "cover": "/projects/perk-immigration.png",
   "gallery": [],
   "featured": true,
-  "sort": 7
+  "sort": 8
  },
  {
   "slug": "london-school-e-learning",
@@ -490,7 +590,7 @@
   "cover": "/projects/london-school.png",
   "gallery": [],
   "featured": true,
-  "sort": 8
+  "sort": 9
  },
  {
   "slug": "stanley-growth-consulting",
@@ -533,7 +633,7 @@
   "cover": "/projects/stanley-consulting.png",
   "gallery": [],
   "featured": true,
-  "sort": 9
+  "sort": 10
  },
  {
   "slug": "zodaromatics",
@@ -578,7 +678,7 @@
    "/projects/zodaromatics-2.jpg"
   ],
   "featured": false,
-  "sort": 10
+  "sort": 11
  },
  {
   "slug": "orpheus-financial",
@@ -621,7 +721,7 @@
   "cover": "/projects/orpheus-financial.png",
   "gallery": [],
   "featured": false,
-  "sort": 11
+  "sort": 12
  },
  {
   "slug": "mannat-immigration",
@@ -664,7 +764,7 @@
   "cover": "/projects/mannat-immigration.webp",
   "gallery": [],
   "featured": false,
-  "sort": 12
+  "sort": 13
  },
  {
   "slug": "architecture-cad-institute",
@@ -709,7 +809,7 @@
    "/projects/architecture-cad-2.jpg"
   ],
   "featured": false,
-  "sort": 13
+  "sort": 14
  },
  {
   "slug": "softbytes-seo-agency",
@@ -753,7 +853,7 @@
   "cover": "/projects/softbytes.jpg",
   "gallery": [],
   "featured": false,
-  "sort": 14
+  "sort": 15
  },
  {
   "slug": "mj-nails-salons",
@@ -797,7 +897,7 @@
   "cover": "/projects/mj-nails-salons.jpg",
   "gallery": [],
   "featured": false,
-  "sort": 15
+  "sort": 16
  },
  {
   "slug": "the-detailing-hunter",
@@ -840,7 +940,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 16
+  "sort": 17
  },
  {
   "slug": "unexplore-travel",
@@ -881,7 +981,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 17
+  "sort": 18
  },
  {
   "slug": "brand-print-design",
@@ -925,7 +1025,7 @@
    "/projects/brand-hoardings.webp"
   ],
   "featured": false,
-  "sort": 18
+  "sort": 19
  },
  {
   "slug": "payment-gateway-plugins",
@@ -970,7 +1070,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 19
+  "sort": 20
  },
  {
   "slug": "kotak-trading-platform",
@@ -1014,7 +1114,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 20
+  "sort": 21
  },
  {
   "slug": "onboarding-dashboard-cms",
@@ -1059,7 +1159,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 21
+  "sort": 22
  },
  {
   "slug": "absolute-immigrations",
@@ -1103,7 +1203,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 22
+  "sort": 23
  },
  {
   "slug": "meridian-pr-immigrations",
@@ -1144,7 +1244,7 @@
   "cover": "",
   "gallery": [],
   "featured": false,
-  "sort": 23
+  "sort": 24
  },
  {
   "slug": "vishnu-it",
@@ -1196,6 +1296,6 @@
    "/projects/vishnu-it-story-hd.webp"
   ],
   "featured": true,
-  "sort": 24
+  "sort": 25
  }
 ]

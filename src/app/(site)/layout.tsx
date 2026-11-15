@@ -15,7 +15,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     logo: settings.branding.logoLight,
     telephone: settings.contact.phone,
     email: settings.contact.email,
-    address: { "@type": "PostalAddress", streetAddress: "East Azad Nagar", addressLocality: "Delhi", postalCode: "110051", addressCountry: "IN" },
+    address: { "@type": "PostalAddress", streetAddress: "Gandhi Nagar", addressLocality: "Delhi", postalCode: "110031", addressCountry: "IN" },
     sameAs: Object.values(settings.social).filter(Boolean),
   };
   return (
