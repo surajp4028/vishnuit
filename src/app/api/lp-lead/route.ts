@@ -9,6 +9,8 @@ import { getSettings } from "@/lib/server/content";
 import { resolveLpPixel } from "@/lib/server/lp-pixels";
 
 const clean = (v: unknown, max = 255) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+export const maxDuration = 60;
+
 const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "referrer"] as const;
 
 export async function POST(req: Request) {
@@ -55,10 +57,15 @@ export async function POST(req: Request) {
   // Sheets, email and Meta CAPI run after the response so the visitor sees "thank you" instantly.
   after(async () => {
     const s = await getSettings();
-    const sheet = await appendLead("lp", { id, ...lead, ...utm });
     const { html, text } = leadEmail({ ...lead, source: `Landing page ${lead.page}${utm.utm_campaign ? ` · ${utm.utm_campaign}` : ""}` });
-    const mail = await sendMail({ to: process.env.CONTACT_TO_EMAIL || s.contact.email, subject: `🔥 New ad lead: ${lead.name} (${lead.phone})`, html, text, replyTo: lead.email || undefined });
-    if (id) await exec("UPDATE leads SET emailed=?, notes=? WHERE id=?", [mail.ok ? 1 : 0, sheet.ok ? "Synced to Google Sheet" : `Sheet sync failed: ${sheet.error ?? ""}`.slice(0, 500), id]).catch(() => {});
+    // Email first and in parallel with the (slower) Google Sheet, so a slow sheet can never delay or block the alert.
+    const [mail, sheet] = await Promise.all([
+      sendMail({ to: process.env.CONTACT_TO_EMAIL || s.contact.email, subject: `🔥 New ad lead: ${lead.name} (${lead.phone})`, html, text, replyTo: lead.email || undefined }),
+      appendLead("lp", { id, ...lead, ...utm }),
+    ]);
+    if (!mail.ok) console.error("[lp-lead] email failed:", mail.error);
+    if (!sheet.ok) console.error("[lp-lead] sheet failed:", sheet.error);
+    if (id) await exec("UPDATE leads SET emailed=?, notes=? WHERE id=?", [mail.ok ? 1 : 0, [sheet.ok ? "Synced to Google Sheet" : `Sheet sync failed: ${sheet.error ?? ""}`, mail.ok ? "" : `Email failed: ${mail.error ?? ""}`].filter(Boolean).join(" · ").slice(0, 500), id]).catch(() => {});
     const lpSlug = lead.page.replace(/^\//, "").split(/[?#]/)[0] || "";
     const pixel = await resolveLpPixel(lpSlug || null);
     await sendMetaLead({ pixel, lp: lpSlug, eventId, url: `https://${host}${lead.page}`, email: lead.email, phone: lead.phone, name: lead.name, city: lead.city, ip, ua: h.get("user-agent") ?? undefined, fbp: cookies._fbp, fbc: cookies._fbc, service: lead.service });
