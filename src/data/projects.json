@@ -1,1301 +1,1338 @@
 [
- {
-  "slug": "astro-kundli-milan",
-  "title": "ASTRO — Kundli & Vedic Astrology",
-  "tagline": "Free kundli tools and paid PDF reports",
-  "category": "E-commerce",
-  "client": "ASTRO",
-  "year": "2026",
-  "role": "Fullstack Developer",
-  "summary": "A Vedic astrology platform — free Kundli, Kundli Milan, Rashifal, Panchang and Numerology, plus paid PDF reports with Razorpay checkout, delivered automatically.",
-  "overview": [
-   "ASTRO offers free astrology tools — Free Kundli (lagna and navamsa charts, planetary positions, current dasha, Manglik check), Kundli Milan with 36-guna Ashtakoot matching, daily, weekly and tomorrow's Rashifal in English and Hindi, city-wise Panchang and Numerology — all powered by AstrologyAPI with caching and daily usage caps to control cost.",
-   "Detailed reports such as Kundli Milan, Pro Kundli and Basic Kundli are sold as PDFs. A customer enters birth details with date/time pickers and place search (with correct historical time zones), applies a coupon and pays through Razorpay. Payment is verified by signature and webhook, the report PDF is generated, stored in private S3 with KMS encryption and emailed — with automatic retries, refunds on failure and a reconcile job as a safety net.",
-   "The admin console covers orders (with payment attempts and provider logs, regenerate, resend, refund), the report catalogue and pricing, coupons, API usage, customers, staff permissions, sessions, audit logs and full branding — logo, colours and PDF branding. The OTP login, encryption and security layer is shared with SKYO."
-  ],
-  "highlights": [
-   {
-    "title": "Free astrology tools",
-    "text": "Kundli, Kundli Milan, Rashifal, Panchang and Numerology in English & Hindi."
-   },
-   {
-    "title": "Paid PDF reports",
-    "text": "Birth details → coupon → Razorpay → PDF generated, stored and emailed."
-   },
-   {
-    "title": "Reliable payments",
-    "text": "Signature + webhook verification, auto-retry, auto-refund and reconcile cron."
-   },
-   {
-    "title": "Full admin & branding",
-    "text": "Orders, catalogue, coupons, API usage, staff, audit and PDF branding."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "TypeScript",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "Razorpay",
-   "MySQL",
-   "AWS S3"
-  ],
-  "url": "https://kundlimilan.vercel.app/",
-  "cover": "/projects/kundli-home.webp",
-  "gallery": [
-   "/projects/kundli-reports.webp",
-   "/projects/kundli-free-kundli.webp",
-   "/projects/kundli-milan.webp",
-   "/projects/kundli-horoscope.webp",
-   "/projects/kundli-panchang.webp",
-   "/projects/kundli-rashifal.webp"
-  ],
-  "featured": true,
-  "sort": 0
- },
- {
-  "slug": "imoneypay-merchant-onboarding",
-  "title": "Payment Gateway Merchant Onboarding",
-  "tagline": "From merchant sign-up to live payments",
-  "category": "Fintech",
-  "client": "I Money Pay Pvt. Ltd.",
-  "year": "2026",
-  "role": "Fullstack Developer",
-  "summary": "End-to-end merchant onboarding for a payment gateway — Aadhaar/PAN/GST KYC, ID OCR, pennyless bank checks, merged application PDFs, e-signed agreements and bank/VPA push.",
-  "overview": [
-   "At I Money Pay, a payment gateway company, I build the platform that takes a merchant from sign-up to live payments. A merchant picks their entity type (Pvt Ltd, Public Ltd, LLP, Proprietorship, Partnership and more) and completes a guided, multi-step journey — business details, authorised signatories, bank account, documents, declarations and submit — with autosave and live status tracking.",
-   "KYC is automated end to end. Each signatory's Aadhaar and PAN are verified through DigiLocker / Digio, the business PAN and GSTIN are checked against government records, and CKYC lookups are supported. Uploaded ID documents are read with OCR to pre-fill name, date of birth, father's name and address; Aadhaar numbers are masked before storage and every file is stored encrypted on AWS S3. Bank accounts are confirmed with pennyless verification — no test deposit needed.",
-   "Paperwork is generated, not collected. The platform builds a single application PDF that merges the form data, declarations, signatory photographs and signatures with every uploaded document, compressed to a shareable size. The Merchant Agreement and GST declaration are auto-filled from the application and sent for e-sign, with versions managed by the compliance team, and channel-partner document sets are handled alongside.",
-   "Internally, applications move through Maker → Checker → Approver → Risk → Operations queues with role-based access, discrepancy handling and block/unblock workflows. Approved merchants are pushed to the payment gateway and the bank, and SID/TID VPAs are imported from CSV, encrypted and pushed in batches. Admins manage MCC codes and entity rules, every change is audited, application logs follow a retention policy, a health page monitors S3, the database and each KYC API, and the team gets an automated daily status email."
-  ],
-  "highlights": [
-   {
-    "title": "Aadhaar & PAN KYC",
-    "text": "DigiLocker / Digio verification for every authorised signatory."
-   },
-   {
-    "title": "Business PAN & GST",
-    "text": "Business PAN and GSTIN checked via Digio, with a GST declaration flow when there's no GSTIN."
-   },
-   {
-    "title": "ID OCR & auto-fill",
-    "text": "Name, DOB, father's name and address read from uploaded IDs to pre-fill the form."
-   },
-   {
-    "title": "Aadhaar masking",
-    "text": "Aadhaar stored masked; all documents encrypted at rest on AWS S3."
-   },
-   {
-    "title": "Pennyless bank check",
-    "text": "Account and IFSC verified without a penny-drop transfer."
-   },
-   {
-    "title": "Merged application PDF",
-    "text": "Form data, declarations, photos, signatures and every upload merged and compressed into one PDF."
-   },
-   {
-    "title": "Agreement & e-sign",
-    "text": "Merchant Agreement auto-filled from the application and e-signed, with compliance-managed versions."
-   },
-   {
-    "title": "Entity & partner rules",
-    "text": "Requirement matrix per entity type plus channel-partner document sets."
-   },
-   {
-    "title": "Department queues",
-    "text": "Maker → Checker → Approver → Risk → Operations with role-based access."
-   },
-   {
-    "title": "Bank push & VPA creation",
-    "text": "Approved merchants pushed to PG and bank; SID/TID VPAs imported from CSV, encrypted and pushed."
-   },
-   {
-    "title": "MCC management",
-    "text": "Admin-managed merchant category codes mapped to every merchant and terminal."
-   },
-   {
-    "title": "Logs, retention & health",
-    "text": "Audited changes, log retention, live API health checks and a daily status email."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "Node.js",
-   "PHP",
-   "MySQL",
-   "AWS S3",
-   "REST APIs",
-   "Webhooks",
-   "Postman",
-   "JIRA",
-   "Tailwind CSS"
-  ],
-  "url": "https://onboarding.imoneypg.com/",
-  "cover": "/projects/onboarding-admin.webp",
-  "gallery": [
-   "/projects/onboarding-dashboard-dark.webp",
-   "/projects/onboarding-kyc-ocr.webp",
-   "/projects/onboarding-documents-review.webp",
-   "/projects/onboarding-pdf-documents.webp",
-   "/projects/onboarding-pdf-signatories.webp",
-   "/projects/onboarding-vpa-push.webp",
-   "/projects/onboarding-entity-settings.webp",
-   "/projects/onboarding-health-status.webp",
-   "/projects/onboarding-applications.webp",
-   "/projects/onboarding-merchant.webp",
-   "/projects/onboarding-inbox.webp"
-  ],
-  "featured": true,
-  "sort": 1
- },
- {
-  "slug": "skyo-travel",
-  "title": "SKYO Travel Booking",
-  "tagline": "Trains, flights, buses, hotels & holidays in one app",
-  "category": "E-commerce",
-  "client": "SKYO",
-  "year": "2026",
-  "role": "Fullstack Developer",
-  "summary": "A travel booking platform for trains, flights, buses, hotels and holiday packages — live IRCTC data, passwordless OTP login and bank-grade encryption of every personal detail.",
-  "overview": [
-   "SKYO brings trains, flights, buses, hotels and holiday packages into one booking experience. Travellers search every mode from a single widget, check live train running status, PNR status and seat availability across classes and quotas, browse airport boards and flight status, and plan day-by-day holiday packages with transparent inclusions.",
-   "Train search, availability, live status and PNR come from the RailCore (IRCTC) API, with Postman collections for the train and flight APIs. Travellers sign in without a password — email or mobile plus a one-time code over ZeptoMail and Fast2SMS — while agents get a separate admin console with granular staff permissions, bookings per service, sessions, audit logs and site settings.",
-   "Security was designed in from day one: every personal value (names, emails, phones, IPs, devices, passenger data) is stored only as AWS KMS envelope-encrypted ciphertext with HMAC blind indexes for search, OTPs are hashed and rate-limited, and the app ships a nonce-based CSP, HSTS, CSRF checks and DPDP 2023 consent capture. The APIs are mobile-ready with bearer tokens for future Android and iOS apps."
-  ],
-  "highlights": [
-   {
-    "title": "5 services, 1 search",
-    "text": "Trains, flights, buses, hotels and packages from one search widget."
-   },
-   {
-    "title": "Live IRCTC data",
-    "text": "Train search, seat availability, live running status and PNR via RailCore."
-   },
-   {
-    "title": "Passwordless OTP login",
-    "text": "Email or mobile OTP for travellers; secure password + lockout for agents."
-   },
-   {
-    "title": "KMS-encrypted PII",
-    "text": "AES-256-GCM envelope encryption with blind indexes, audit logs and DPDP consent."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "TypeScript",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "MySQL",
-   "AWS S3",
-   "Postman"
-  ],
-  "url": "https://skyo-five.vercel.app/",
-  "cover": "/projects/skyo-home.webp",
-  "gallery": [
-   "/projects/skyo-services.webp",
-   "/projects/skyo-features.webp",
-   "/projects/skyo-flights.webp",
-   "/projects/skyo-packages.webp",
-   "/projects/skyo-pnr.webp"
-  ],
-  "featured": true,
-  "sort": 2
- },
- {
-  "slug": "ewastebiz",
-  "title": "E-WasteBiz — B2B E-Waste Recycling",
-  "tagline": "Lead-generation website + admin CRM for a Delhi-NCR e-waste business",
-  "category": "Website",
-  "client": "E-WasteBiz Enterprises",
-  "year": "2026",
-  "role": "Fullstack Developer",
-  "summary": "A fast, ad-ready lead-generation website for a B2B e-waste buyer and recycler in Delhi-NCR — instant-quote forms, call & WhatsApp tracking, Google/Meta ads attribution and a custom admin panel to manage leads and every part of the site.",
-  "overview": [
-   "E-WasteBiz Enterprises buys and recycles corporate e-waste across Delhi-NCR — old laptops, servers, networking gear, UPS batteries and tonnes of cable and factory scrap. They needed a website that looks trustworthy to corporate admin and finance teams, works well with Google and Meta ads, and turns visitors into pickup requests the same day.",
-   "The public site leads with one clear offer — sell your business e-waste, free pickup, fair price, GST invoice and recycling certificates. An instant-quote form sits right in the hero, sticky Call and WhatsApp buttons follow the visitor on mobile, and every page builds trust: the four ITAD and recycling services, a four-step pickup process, industries served, data-destruction methods (software wiping, degaussing, physical shredding) and GST, MSME and authorised-recycler registrations. Light and dark themes, scroll animations, LocalBusiness schema and Open Graph tags are built in.",
-   "Every enquiry is captured with its full attribution — UTM parameters, gclid and fbclid — so the owner can see which Google Ads or Meta campaign produced it. Lead conversions fire on the thank-you page, while call and WhatsApp clicks are tracked as separate conversions and counted per day by traffic source. Forms are protected with a honeypot, a too-fast-submit check and rate limiting, and every lead triggers an instant email alert plus an optional auto-reply to the customer via Resend.",
-   "Behind it is a custom admin panel, built to be used on a phone. The dashboard shows leads today, the last 7 days, leads awaiting a call-back, call/WhatsApp clicks, a 30-day leads chart and breakdowns by source and scrap category. Leads move through a New → Contacted → Quoted → Won/Lost pipeline with deal values, notes, one-tap call/WhatsApp/email, bulk actions and CSV export. The owner also edits the site content, certificates, testimonials, FAQs, client logos, partners and gallery, sets GA4, Google Ads and Meta Pixel IDs, and changes the login — all without a developer. It runs on PHP with MySQL (or JSON files as a fallback) on Hostinger."
-  ],
-  "highlights": [
-   {
-    "title": "Instant-quote hero form",
-    "text": "Name, phone, what to sell and city right in the hero — a quote request in under 20 seconds."
-   },
-   {
-    "title": "Call & WhatsApp first",
-    "text": "Sticky mobile call bar, floating WhatsApp button and pre-filled WhatsApp messages."
-   },
-   {
-    "title": "Ads attribution",
-    "text": "UTM, gclid and fbclid saved on every lead and shown per campaign in the admin panel."
-   },
-   {
-    "title": "Conversion tracking",
-    "text": "GA4, Google Ads conversion labels and Meta Pixel — leads, calls and WhatsApp clicks tracked separately."
-   },
-   {
-    "title": "Lead pipeline CRM",
-    "text": "New → Contacted → Quoted → Won/Lost with deal value, notes, bulk actions and CSV export."
-   },
-   {
-    "title": "Live dashboard",
-    "text": "Leads today, 7-day trend, call-backs due, click counts, 30-day chart, source and category split."
-   },
-   {
-    "title": "Instant email alerts",
-    "text": "Every lead emailed to the team via Resend, with an optional auto-reply to the customer."
-   },
-   {
-    "title": "Spam protection",
-    "text": "Honeypot field, too-fast-submit check and per-IP rate limiting on forms and logins."
-   },
-   {
-    "title": "Full content control",
-    "text": "Contact details, announcement bar, stats, certificates, testimonials, FAQs, logos, partners and gallery."
-   },
-   {
-    "title": "Image uploads",
-    "text": "Certificate scans, client logos and gallery photos uploaded straight from the admin panel."
-   },
-   {
-    "title": "Trust & compliance",
-    "text": "GST, MSME and authorised-recycler registrations, data-destruction methods and recycling certificates."
-   },
-   {
-    "title": "Mobile-first & SEO-ready",
-    "text": "Light/dark themes, fast static pages, LocalBusiness schema and Open Graph previews."
-   }
-  ],
-  "tools": [
-   "HTML5",
-   "CSS3",
-   "JavaScript",
-   "PHP",
-   "MySQL",
-   "Resend",
-   "Google Analytics 4",
-   "Google Ads",
-   "Meta Pixel",
-   "Hostinger"
-  ],
-  "url": "https://ewastebiz.in/",
-  "cover": "/projects/ewastebiz-home.webp",
-  "gallery": [
-   "/projects/ewastebiz-admin-overview.webp",
-   "/projects/ewastebiz-admin-leads.webp",
-   "/projects/ewastebiz-admin-lead-detail.webp",
-   "/projects/ewastebiz-mobile.webp",
-   "/projects/ewastebiz-services-grid.webp",
-   "/projects/ewastebiz-process.webp",
-   "/projects/ewastebiz-industries.webp",
-   "/projects/ewastebiz-compliance.webp",
-   "/projects/ewastebiz-services.webp",
-   "/projects/ewastebiz-about.webp",
-   "/projects/ewastebiz-contact.webp",
-   "/projects/ewastebiz-admin-content.webp",
-   "/projects/ewastebiz-admin-certificates.webp",
-   "/projects/ewastebiz-admin-testimonials.webp",
-   "/projects/ewastebiz-admin-settings.webp",
-   "/projects/ewastebiz-admin-login.webp"
-  ],
-  "featured": true,
-  "sort": 3
- },
- {
-  "slug": "shiv-shringar-sewa-samiti",
-  "title": "Shiv Shringar Sewa Samiti",
-  "tagline": "A devotional website for a Delhi mandir",
-  "category": "Website",
-  "client": "Shiv Shringar Sewa Samiti",
-  "year": "2026",
-  "role": "Design & Development",
-  "summary": "Website for Prachin Hanuman Mandir, East Azad Nagar — daily shringar darshan, festival specials, yatras, videos and events, all managed from a custom admin panel.",
-  "overview": [
-   "Shiv Shringar Sewa Samiti adorns Mahadev every evening at Prachin Hanuman Mandir, East Azad Nagar, Delhi — as Mahakal, in the nine forms of the Devi and for every festival. The website brings that devotion online with a Darshan of the Day, story highlights, festival shringar specials, photo galleries, videos, yatra routes and special events, plus live darshan timings and a countdown to the next aarti.",
-   "Everything is editable from a custom admin panel: settings (WhatsApp, contact, social links, hero video, timings, announcements), events, videos, darshan posts, highlights, yatras, gallery and timings. Uploaded MP4s and YouTube links autoplay muted with a sound toggle, Instagram reels open from their thumbnails, and contact-form messages are saved and emailed through Resend."
-  ],
-  "highlights": [
-   {
-    "title": "Darshan of the Day",
-    "text": "Daily shringar with story highlights, specials and full photo galleries."
-   },
-   {
-    "title": "Yatras & events",
-    "text": "Event pages with routes, timings and moments from the day."
-   },
-   {
-    "title": "Custom admin panel",
-    "text": "Manage darshan, events, videos, gallery, timings and announcements."
-   },
-   {
-    "title": "Video & contact",
-    "text": "Autoplay videos, Instagram reels, WhatsApp and Resend-powered contact form."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "TypeScript",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "MySQL"
-  ],
-  "url": "https://shiv-shringar.vercel.app/",
-  "cover": "/projects/shiv-shringar-home.webp",
-  "gallery": [
-   "/projects/shiv-shringar-darshan.webp",
-   "/projects/shiv-shringar-gallery.webp",
-   "/projects/shiv-shringar-specials.webp",
-   "/projects/shiv-shringar-yatra.webp",
-   "/projects/shiv-shringar-event.webp"
-  ],
-  "featured": true,
-  "sort": 4
- },
- {
-  "slug": "suraj-dev-portfolio",
-  "title": "Suraj.dev — Personal Portfolio",
-  "tagline": "An animated, premium developer portfolio",
-  "category": "Website",
-  "client": "Personal project",
-  "year": "2025",
-  "role": "Design & Development",
-  "summary": "A premium personal portfolio with an aurora hero, 3D globe, skills marquee, case studies and a contact form with email + WhatsApp alerts.",
-  "overview": [
-   "Suraj.dev is the founder's flagship personal portfolio — built to impress recruiters and clients within the first scroll. It combines bold typography, an animated aurora hero, a 3D globe and smooth Aceternity-style interactions with a fast, SEO-friendly Next.js build.",
-   "Every project has its own case-study page with screenshots, highlights and tech stack, and the contact form delivers enquiries instantly by email (Resend) and WhatsApp. A printable resume page and downloadable PDF CV round it off."
-  ],
-  "highlights": [
-   {
-    "title": "Animated hero",
-    "text": "Aurora background, flip words and a premium dashboard visual."
-   },
-   {
-    "title": "3D globe & bento grid",
-    "text": "Interactive three.js globe and a bento layout of skills and stats."
-   },
-   {
-    "title": "Case studies",
-    "text": "21 projects with dedicated pages, screenshots and tech stacks."
-   },
-   {
-    "title": "Instant lead alerts",
-    "text": "Contact form sends email via Resend and a WhatsApp alert."
-   },
-   {
-    "title": "Light & dark themes",
-    "text": "Every section designed for both modes."
-   },
-   {
-    "title": "Resume & CV",
-    "text": "Printable resume page and downloadable PDF CV."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "Tailwind CSS",
-   "Aceternity UI",
-   "Three.js",
-   "Resend"
-  ],
-  "url": "https://surajportfolio-coral.vercel.app/",
-  "cover": "/projects/suraj-portfolio-v1-hero.webp",
-  "gallery": [
-   "/projects/suraj-portfolio-v1-bento.webp",
-   "/projects/suraj-portfolio-v1-about.webp",
-   "/projects/suraj-portfolio-v1-skills.webp",
-   "/projects/suraj-portfolio-v1-contact.webp"
-  ],
-  "featured": true,
-  "sort": 5
- },
- {
-  "slug": "minimal-portfolio",
-  "title": "Minimal Developer Portfolio",
-  "tagline": "A clean, content-first personal site",
-  "category": "Website",
-  "client": "Personal project",
-  "year": "2026",
-  "role": "Design & Development",
-  "summary": "A second, minimal take on my portfolio — quiet typography, a floating navbar, light & dark themes and a built-in contact form.",
-  "overview": [
-   "Alongside this animated portfolio, I designed and built a minimal version that puts the content first: a short intro with resume download, quick stats, selected projects, work experience, skills and a contact section, all on a single narrow column.",
-   "The design relies on typography, soft borders and whitespace instead of heavy effects. A floating pill navbar stays in reach while scrolling, the whole site switches between light and dark themes, and visitors can send an enquiry or a full project brief straight from the page."
-  ],
-  "highlights": [
-   {
-    "title": "Content-first layout",
-    "text": "Intro, stats, projects, experience and skills in one focused column."
-   },
-   {
-    "title": "Floating navbar",
-    "text": "A pill navbar that follows you with a theme toggle and section links."
-   },
-   {
-    "title": "Light & dark themes",
-    "text": "Every section is designed for both modes."
-   },
-   {
-    "title": "Contact built in",
-    "text": "Quick email enquiry plus a full form with service and message."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "Tailwind CSS"
-  ],
-  "url": "https://suraj-minimal-portfolio.vercel.app/",
-  "cover": "/projects/minimal-portfolio-hero.webp",
-  "gallery": [
-   "/projects/minimal-portfolio-projects.webp",
-   "/projects/minimal-portfolio-experience.webp",
-   "/projects/minimal-portfolio-skills-dark.webp",
-   "/projects/minimal-portfolio-contact-dark.webp"
-  ],
-  "featured": true,
-  "sort": 6
- },
- {
-  "slug": "house-of-geet",
-  "title": "House of Geet",
-  "tagline": "Ethnic wear e-commerce",
-  "category": "E-commerce",
-  "client": "Geet",
-  "year": "2025",
-  "role": "Design & Development",
-  "summary": "A fashion-focused online store that pairs traditional ethnic wear with a modern, mobile-first shopping experience.",
-  "overview": [
-   "House of Geet is a fashion-focused online store designed to highlight traditional ethnic wear with a modern shopping experience. The website showcases curated collections with elegant visuals, clean product layouts and smooth browsing that reflect the brand's cultural and aesthetic identity.",
-   "The platform was built mobile-first and optimised for performance and conversions, with intuitive navigation, fast loading and a seamless checkout flow."
-  ],
-  "highlights": [
-   {
-    "title": "Curated collections",
-    "text": "Category landing pages and rich product layouts for every collection."
-   },
-   {
-    "title": "Seamless checkout",
-    "text": "WooCommerce cart and checkout tuned for mobile shoppers."
-   },
-   {
-    "title": "Mobile-first",
-    "text": "Responsive layouts designed for phones first, then scaled up."
-   },
-   {
-    "title": "Ads-ready",
-    "text": "Meta Pixel tracking for campaigns and retargeting."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "WooCommerce",
-   "Elementor",
-   "Contact Form 7",
-   "Meta Pixel"
-  ],
-  "url": "https://houseofgeet.com/",
-  "cover": "/projects/house-of-geet.png",
-  "gallery": [],
-  "featured": true,
-  "sort": 7
- },
- {
-  "slug": "perk-immigration",
-  "title": "Perk Immigration, Canada",
-  "tagline": "Immigration consultancy",
-  "category": "Website",
-  "client": "Sapna Sharma",
-  "year": "2024",
-  "role": "Design & Development",
-  "summary": "A credible, lead-focused immigration consultancy website for Canadian visa and migration services.",
-  "overview": [
-   "Perk Immigration is a professional immigration consultancy website that showcases global visa and migration services with clarity and credibility. It presents service details, eligibility guidance and consultation information in an easy-to-understand format.",
-   "The modern, responsive layout offers smooth navigation and fast performance on every device, with a clear content hierarchy, strong calls-to-action and a trustworthy visual tone that supports lead generation."
-  ],
-  "highlights": [
-   {
-    "title": "Programme pages",
-    "text": "Express Entry, PNP, work permits, visitor visas and more."
-   },
-   {
-    "title": "Eligibility focus",
-    "text": "67-point eligibility assessment and clear next steps."
-   },
-   {
-    "title": "Lead capture",
-    "text": "Consultation forms wired to the team's inbox."
-   },
-   {
-    "title": "Trust signals",
-    "text": "Clean hierarchy and a professional visual tone."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "WPForms",
-   "Contact Form 7"
-  ],
-  "url": "https://perkimmigration.com/",
-  "cover": "/projects/perk-immigration.png",
-  "gallery": [],
-  "featured": true,
-  "sort": 8
- },
- {
-  "slug": "london-school-e-learning",
-  "title": "London School E-learning Platform",
-  "tagline": "Online courses & micro-credentials",
-  "category": "Website",
-  "client": "Payal Das",
-  "year": "2024",
-  "role": "Design & Development",
-  "summary": "A modern e-learning platform with courses, micro-courses and online payments, designed for learners worldwide.",
-  "overview": [
-   "London School E-Learning Platform is a user-focused educational website designed for seamless online learning. It presents courses, academic information and updates in a clear structure, making it easy for students to find and access learning resources.",
-   "The site was built with a responsive layout, optimised performance and a clean visual identity, with special focus on clarity, accessibility and a smooth learner experience."
-  ],
-  "highlights": [
-   {
-    "title": "Course catalogue",
-    "text": "Flagship programmes and industry-linked micro-courses."
-   },
-   {
-    "title": "LMS",
-    "text": "Tutor LMS for lessons, enrolments and learner dashboards."
-   },
-   {
-    "title": "Online payments",
-    "text": "WooCommerce checkout with Razorpay for course fees."
-   },
-   {
-    "title": "Global audience",
-    "text": "Fast, accessible pages for learners across regions."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Tutor LMS",
-   "WooCommerce",
-   "Razorpay",
-   "Elementor",
-   "Astra"
-  ],
-  "url": "https://londonschoolobs.com/",
-  "cover": "/projects/london-school.png",
-  "gallery": [],
-  "featured": true,
-  "sort": 9
- },
- {
-  "slug": "stanley-growth-consulting",
-  "title": "Stanley Growth Consulting",
-  "tagline": "Business strategy & consulting",
-  "category": "Website",
-  "client": "Mr. Guy Wabo",
-  "year": "2024",
-  "role": "Design & Development",
-  "summary": "A personal-brand-driven consulting website positioning its founder as a trusted advisor for growing businesses.",
-  "overview": [
-   "Stanley Growth Consulting is a business strategy and consulting website designed to position Mr. Guy Wabo as a trusted advisor for entrepreneurs and growing businesses. It communicates strategic expertise, credibility and authority with a strong personal-brand identity.",
-   "The site highlights services including Entity Structuring & Legal Setup, NAICS & Compliance Optimization, Personal Credit Development and Strategic Consulting & Coaching, with a clean, responsive design focused on clarity and conversion."
-  ],
-  "highlights": [
-   {
-    "title": "Service architecture",
-    "text": "Clear pages for structuring, compliance, credit and coaching."
-   },
-   {
-    "title": "Personal brand",
-    "text": "Founder-led storytelling that builds authority."
-   },
-   {
-    "title": "Conversion flow",
-    "text": "Focused content that leads to booking a consultation."
-   },
-   {
-    "title": "Responsive",
-    "text": "Polished on desktop, tablet and mobile."
-   }
-  ],
-  "tools": [
-   "UI/UX design",
-   "Responsive layout",
-   "On-page SEO",
-   "Lead forms"
-  ],
-  "url": "https://stanleygrowthconsulting.com/",
-  "cover": "/projects/stanley-consulting.png",
-  "gallery": [],
-  "featured": true,
-  "sort": 10
- },
- {
-  "slug": "zodaromatics",
-  "title": "Zodaromatics",
-  "tagline": "Premium perfume e-commerce",
-  "category": "E-commerce",
-  "client": "",
-  "year": "2023",
-  "role": "Design & Development",
-  "summary": "A luxury perfume store with a visually rich layout, detailed product pages and a smooth shopping experience.",
-  "overview": [
-   "Zodaromatics is a premium perfume e-commerce website designed to reflect luxury, elegance and sensory appeal. It showcases a curated range of fragrances with a visually rich layout, detailed product pages and a smooth shopping experience.",
-   "The build focused on responsive design, intuitive navigation and conversion-driven UI so customers can browse and buy easily on any device."
-  ],
-  "highlights": [
-   {
-    "title": "Luxury visual identity",
-    "text": "Editorial imagery and typography that feel premium."
-   },
-   {
-    "title": "Product storytelling",
-    "text": "Detailed product pages for every fragrance."
-   },
-   {
-    "title": "Conversion UI",
-    "text": "Clear calls-to-action from collection to checkout."
-   },
-   {
-    "title": "Every device",
-    "text": "Fully responsive storefront."
-   }
-  ],
-  "tools": [
-   "E-commerce",
-   "Product catalogue",
-   "Responsive layout",
-   "UI/UX design"
-  ],
-  "url": "",
-  "cover": "/projects/zodaromatics.webp",
-  "gallery": [
-   "/projects/zodaromatics-2.jpg"
-  ],
-  "featured": false,
-  "sort": 11
- },
- {
-  "slug": "orpheus-financial",
-  "title": "Orpheus Financial",
-  "tagline": "Offshore setup & financial advisory",
-  "category": "Website",
-  "client": "",
-  "year": "2024",
-  "role": "Design & Development",
-  "summary": "A modern financial-services website that communicates trust and expertise for UAE company setup and advisory.",
-  "overview": [
-   "Orpheus Financial is a modern financial-services website designed to present core offerings with clarity and professionalism. The structure highlights services, insights and client-focused solutions to communicate trust, transparency and expertise.",
-   "It features a responsive design, intuitive navigation and a refined visual style suited to the financial sector, with attention to usability, performance and clear service presentation."
-  ],
-  "highlights": [
-   {
-    "title": "Offshore & UAE setup",
-    "text": "Service pages for corporate accounts and company formation."
-   },
-   {
-    "title": "Wealth advisory",
-    "text": "Clear presentation of advisory and management services."
-   },
-   {
-    "title": "Trust-first design",
-    "text": "Refined visuals and stats that build credibility."
-   },
-   {
-    "title": "Insights",
-    "text": "Blog and updates section for thought leadership."
-   }
-  ],
-  "tools": [
-   "UI/UX design",
-   "Responsive layout",
-   "On-page SEO",
-   "Lead forms"
-  ],
-  "url": "",
-  "cover": "/projects/orpheus-financial.png",
-  "gallery": [],
-  "featured": false,
-  "sort": 12
- },
- {
-  "slug": "mannat-immigration",
-  "title": "Mannat Immigration",
-  "tagline": "Visa & immigration consultants, Delhi",
-  "category": "Website",
-  "client": "Rashi Manchanda (CEO)",
-  "year": "2023",
-  "role": "Design & Development",
-  "summary": "A trust-building immigration consultancy website with clear service offerings, eligibility guidance and consultation CTAs.",
-  "overview": [
-   "Mannat Immigration is a professional immigration consultancy website designed to establish trust and credibility for global visa and migration services. It clearly presents service offerings, eligibility guidance and consultation details for potential clients.",
-   "The design focuses on a clean layout, responsive structure and easy navigation, with clear calls-to-action, fast loading and a professional visual tone that supports lead generation under CEO Rashi Manchanda."
-  ],
-  "highlights": [
-   {
-    "title": "Country pages",
-    "text": "Study, work and visit visa pathways by destination."
-   },
-   {
-    "title": "Clear CTAs",
-    "text": "Book-a-consultation prompts across the journey."
-   },
-   {
-    "title": "Fast loading",
-    "text": "Optimised images and lightweight pages."
-   },
-   {
-    "title": "Credibility",
-    "text": "Awards, partner logos and leadership up front."
-   }
-  ],
-  "tools": [
-   "UI/UX design",
-   "Responsive layout",
-   "On-page SEO",
-   "Lead forms"
-  ],
-  "url": "",
-  "cover": "/projects/mannat-immigration.webp",
-  "gallery": [],
-  "featured": false,
-  "sort": 13
- },
- {
-  "slug": "architecture-cad-institute",
-  "title": "Architecture CAD Institute",
-  "tagline": "Architecture & design services",
-  "category": "Website",
-  "client": "Nitesh",
-  "year": "2023",
-  "role": "Design & Development",
-  "summary": "A clean, modern website that presents architecture services, software training and workflows for an architecture brand.",
-  "overview": [
-   "Architecture CAD is a professional architecture and design services website created to showcase technical expertise, project offerings and industry-focused solutions. Services, workflows and contact information are presented in a clean, structured way.",
-   "The design emphasises clarity, responsiveness and a modern visual approach suited to the architecture domain, strengthening the brand's online presence and supporting lead generation."
-  ],
-  "highlights": [
-   {
-    "title": "Software courses",
-    "text": "AutoCAD, SketchUp, 3ds Max and SolidWorks offerings."
-   },
-   {
-    "title": "Services",
-    "text": "Planning, interior, exterior, building and restoration."
-   },
-   {
-    "title": "Portfolio",
-    "text": "'Our Works' gallery of completed projects."
-   },
-   {
-    "title": "WhatsApp leads",
-    "text": "Quick enquiry path for prospective clients."
-   }
-  ],
-  "tools": [
-   "UI/UX design",
-   "Responsive layout",
-   "On-page SEO",
-   "WhatsApp integration"
-  ],
-  "url": "",
-  "cover": "/projects/architecture-cad.webp",
-  "gallery": [
-   "/projects/architecture-cad-2.jpg"
-  ],
-  "featured": false,
-  "sort": 14
- },
- {
-  "slug": "softbytes-seo-agency",
-  "title": "Softbytes Ltd",
-  "tagline": "SEO agency website",
-  "category": "Website",
-  "client": "Enume Sakah",
-  "year": "2022",
-  "role": "Design & Development",
-  "summary": "A conversion-focused SEO agency website that explains services and value clearly and turns visitors into calls.",
-  "overview": [
-   "Softbytes Ltd is a professional SEO agency website designed to showcase digital-marketing expertise and result-driven optimisation services. It presents SEO solutions and the agency's value proposition in a clear, structured way.",
-   "The site focuses on a modern, responsive design with smooth navigation and fast performance, with conversion-focused layouts that support lead generation."
-  ],
-  "highlights": [
-   {
-    "title": "Service clarity",
-    "text": "SEO offerings explained in plain language."
-   },
-   {
-    "title": "Book-a-call funnel",
-    "text": "Prominent CTAs that drive consultations."
-   },
-   {
-    "title": "SEO built in",
-    "text": "Rank Math and Search Console from day one."
-   },
-   {
-    "title": "Tracking",
-    "text": "Google Tag Manager for analytics and ads."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "Rank Math",
-   "Google Tag Manager",
-   "Slider Revolution"
-  ],
-  "url": "https://softbytesltd.com/",
-  "cover": "/projects/softbytes.jpg",
-  "gallery": [],
-  "featured": false,
-  "sort": 15
- },
- {
-  "slug": "mj-nails-salons",
-  "title": "MJ Nails Salons",
-  "tagline": "Beauty & nail salon website",
-  "category": "Website",
-  "client": "Enume",
-  "year": "2023",
-  "role": "Design & Development",
-  "summary": "An elegant salon website that showcases services and styles and encourages online bookings.",
-  "overview": [
-   "MJ Nails Salons is a beauty-focused website that showcases professional nail services through a modern, elegant and visually engaging interface, highlighting services, styles and brand identity.",
-   "The responsive layout, smooth navigation and strong visual presentation give clients an effortless experience and encourage enquiries and bookings."
-  ],
-  "highlights": [
-   {
-    "title": "Online booking",
-    "text": "Booking page and clear service menu."
-   },
-   {
-    "title": "Local SEO",
-    "text": "Rank Math setup for 'near me' searches."
-   },
-   {
-    "title": "Brand visuals",
-    "text": "Elegant typography and soft colour palette."
-   },
-   {
-    "title": "Responsive",
-    "text": "Smooth on every screen size."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "Rank Math",
-   "Bootstrap",
-   "Google Tag Manager"
-  ],
-  "url": "https://mjnailssalons.com/",
-  "cover": "/projects/mj-nails-salons.jpg",
-  "gallery": [],
-  "featured": false,
-  "sort": 16
- },
- {
-  "slug": "the-detailing-hunter",
-  "title": "The Detailing Hunter",
-  "tagline": "Car detailing, PPF & wrapping",
-  "category": "Website",
-  "client": "Wazir",
-  "year": "2025",
-  "role": "Design & Development",
-  "summary": "A bold automotive-services website for car detailing, paint protection film (PPF) and vehicle wrapping.",
-  "overview": [
-   "The Detailing Hunter is a high-impact automotive services website for car detailing, paint protection film (PPF) and vehicle wrapping. It highlights premium auto-care solutions with bold visuals and clear service segmentation, so customers quickly understand the offerings and quality standards.",
-   "The site focuses on a modern, responsive design with smooth navigation and strong visual storytelling. It is optimised for performance and lead generation, strengthening the brand's presence in the automotive detailing industry."
-  ],
-  "highlights": [
-   {
-    "title": "Service segmentation",
-    "text": "Maintenance, PPF, detailing, graphene and ceramic coating."
-   },
-   {
-    "title": "Bold visuals",
-    "text": "High-impact imagery that sells premium auto-care."
-   },
-   {
-    "title": "Book a demo",
-    "text": "Enquiry forms and clear calls-to-action."
-   },
-   {
-    "title": "Local presence",
-    "text": "Location and contact details up front for Faridabad customers."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "Contact Form 7",
-   "Swiper"
-  ],
-  "url": "https://thedetailinghunter.com/",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 17
- },
- {
-  "slug": "unexplore-travel",
-  "title": "Unexplore Travel",
-  "tagline": "Travel & tour website",
-  "category": "Website",
-  "client": "",
-  "year": "",
-  "role": "Design & Development",
-  "summary": "A travel website that showcases destinations and tour packages and turns visitors into enquiries.",
-  "overview": [
-   "Unexplore Travel is a travel and tour website built to showcase destinations and packages with rich visuals and a clear path to enquiry."
-  ],
-  "highlights": [
-   {
-    "title": "Destinations",
-    "text": "Visual destination and package pages."
-   },
-   {
-    "title": "Enquiry flow",
-    "text": "Simple forms to request a trip."
-   },
-   {
-    "title": "Responsive",
-    "text": "Smooth browsing on phones and desktops."
-   },
-   {
-    "title": "Fast",
-    "text": "Optimised pages for quick loading."
-   }
-  ],
-  "tools": [
-   "UI/UX design",
-   "Responsive layout",
-   "Lead forms"
-  ],
-  "url": "https://unexploretravel.com/",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 18
- },
- {
-  "slug": "brand-print-design",
-  "title": "Brand & Print Design",
-  "tagline": "Business cards, hoardings & standees",
-  "category": "Brand Design",
-  "client": "",
-  "year": "2024",
-  "role": "Graphic Designer",
-  "summary": "Business cards, hoardings and standees that blend aesthetics with strategic messaging for strong brand visibility.",
-  "overview": [
-   "Alongside development, I design brand and print collateral. This collection includes business cards that combine creativity with professional branding, and hoardings and standees that pair visual appeal with strategic messaging for maximum visibility.",
-   "Each piece is designed to match the client's identity and campaign goals, from a graphic designer's personal card to a jewellery brand's festive sale billboard."
-  ],
-  "highlights": [
-   {
-    "title": "Business cards",
-    "text": "Premium, on-brand cards with QR and contact details."
-   },
-   {
-    "title": "Hoardings",
-    "text": "Large-format campaign creatives for retail brands."
-   },
-   {
-    "title": "Standees",
-    "text": "In-store displays designed for footfall."
-   },
-   {
-    "title": "Brand consistency",
-    "text": "Typography and colour aligned to each identity."
-   }
-  ],
-  "tools": [
-   "Photoshop",
-   "Illustrator",
-   "Figma"
-  ],
-  "url": "",
-  "cover": "/projects/brand-business-cards.webp",
-  "gallery": [
-   "/projects/brand-hoardings.webp"
-  ],
-  "featured": false,
-  "sort": 19
- },
- {
-  "slug": "payment-gateway-plugins",
-  "title": "Payment Gateway Plugins",
-  "tagline": "Secure PG plugins for e-commerce",
-  "category": "Fintech",
-  "client": "ITSTARPAY Pvt. Ltd.",
-  "year": "2025",
-  "role": "Frontend / Integration Developer",
-  "summary": "Custom gateway plugins with secure transaction handling, webhook integration, refund flows and gateway-specific compliance.",
-  "overview": [
-   "At ITSTARPAY I developed and customised payment gateway plugins for e-commerce platforms, including secure transaction handling, webhook integration, refund flows and gateway-specific compliance requirements (Razorpay-style).",
-   "I also integrated and troubleshot gateways for client sites, fixing bugs and optimising performance across payment journeys."
-  ],
-  "highlights": [
-   {
-    "title": "Secure transactions",
-    "text": "Signed requests and server-side verification."
-   },
-   {
-    "title": "Webhooks",
-    "text": "Payment, refund and status events handled reliably."
-   },
-   {
-    "title": "Refund flows",
-    "text": "Full and partial refunds from the admin."
-   },
-   {
-    "title": "Compliance",
-    "text": "Gateway-specific rules built into each plugin."
-   }
-  ],
-  "tools": [
-   "PHP",
-   "WordPress",
-   "WooCommerce",
-   "Node.js",
-   "Webhooks",
-   "Razorpay"
-  ],
-  "url": "",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 20
- },
- {
-  "slug": "kotak-trading-platform",
-  "title": "Kotak Trading Platform",
-  "tagline": "Trading on the Kotak Trading API",
-  "category": "Fintech",
-  "client": "ITSTARPAY Pvt. Ltd.",
-  "year": "2025",
-  "role": "Frontend Developer",
-  "summary": "Real-time market data, order placement, portfolio tracking and secure API authentication on the Kotak Trading API.",
-  "overview": [
-   "I built and integrated a platform on the Kotak Trading API that enables real-time market data access, order placement and portfolio tracking.",
-   "Secure API authentication protects every trading operation, and the UI keeps prices and positions updating live."
-  ],
-  "highlights": [
-   {
-    "title": "Live market data",
-    "text": "Streaming quotes and watchlists."
-   },
-   {
-    "title": "Order placement",
-    "text": "Buy and sell flows with validation."
-   },
-   {
-    "title": "Portfolio tracking",
-    "text": "Holdings, positions and P&L at a glance."
-   },
-   {
-    "title": "Secure auth",
-    "text": "Token-based API authentication."
-   }
-  ],
-  "tools": [
-   "Next.js",
-   "React",
-   "REST APIs",
-   "JWT",
-   "Tailwind CSS"
-  ],
-  "url": "",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 21
- },
- {
-  "slug": "onboarding-dashboard-cms",
-  "title": "Onboarding Dashboard & CMS",
-  "tagline": "Secure onboarding with e-sign PDFs",
-  "category": "Fintech",
-  "client": "ITSTARPAY Pvt. Ltd.",
-  "year": "2025",
-  "role": "Frontend Developer",
-  "summary": "Users submit details and generate e-sign PDFs; admins manage updates with automated emails and S3 document storage.",
-  "overview": [
-   "I built a secure onboarding dashboard and CMS where users submit their details, generate PDF documents with e-sign preview and download, and admins manage updates with automated email triggers.",
-   "Documents are stored on AWS S3 with GitHub integration, and webhook-based real-time request authorisation blocks spam."
-  ],
-  "highlights": [
-   {
-    "title": "PDF + e-sign",
-    "text": "Generate, preview and download signed documents."
-   },
-   {
-    "title": "Admin CMS",
-    "text": "Review and update submissions in one place."
-   },
-   {
-    "title": "Automated emails",
-    "text": "Triggers on every status change."
-   },
-   {
-    "title": "Secure storage",
-    "text": "AWS S3 with webhook-based spam blocking."
-   }
-  ],
-  "tools": [
-   "React",
-   "Node.js",
-   "AWS S3",
-   "GitHub",
-   "MySQL",
-   "Webhooks"
-  ],
-  "url": "",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 22
- },
- {
-  "slug": "absolute-immigrations",
-  "title": "Absolute Immigrations",
-  "tagline": "Immigration website & ad landing pages",
-  "category": "Website",
-  "client": "Absolute Immigrations",
-  "year": "2024",
-  "role": "WordPress Developer",
-  "summary": "WordPress website and campaign landing pages with CRM-integrated lead capture from Google & Meta Ads.",
-  "overview": [
-   "As WordPress Developer at Absolute Immigrations I built and customised the company website and designed landing pages for Google and Meta ad campaigns, driving higher conversions.",
-   "Leads from both ad platforms flow automatically into the CRM through API integrations, and I handled QA, client onboarding and delivery."
-  ],
-  "highlights": [
-   {
-    "title": "Campaign landing pages",
-    "text": "Fast, focused pages for every ad set."
-   },
-   {
-    "title": "CRM automation",
-    "text": "Google & Meta leads synced via APIs."
-   },
-   {
-    "title": "QA & delivery",
-    "text": "Testing and smooth handover for each launch."
-   },
-   {
-    "title": "Conversion focus",
-    "text": "Forms and CTAs optimised for enquiries."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "PHP",
-   "Google Ads",
-   "Meta Ads",
-   "CRM APIs"
-  ],
-  "url": "https://absoluteimmigrations.in",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 23
- },
- {
-  "slug": "meridian-pr-immigrations",
-  "title": "Meridian PR Immigrations",
-  "tagline": "Immigration consultancy website",
-  "category": "Website",
-  "client": "",
-  "year": "2024",
-  "role": "WordPress Developer",
-  "summary": "Conversion-focused immigration consultancy website with a custom WordPress theme and lead funnels.",
-  "overview": [
-   "A conversion-focused immigration consultancy website built on WordPress with a custom theme and lead funnels, delivered during my time at Absolute Immigrations."
-  ],
-  "highlights": [
-   {
-    "title": "Custom theme",
-    "text": "Brand-specific WordPress theme."
-   },
-   {
-    "title": "Lead funnels",
-    "text": "Enquiry paths for each visa service."
-   },
-   {
-    "title": "Responsive",
-    "text": "Optimised for mobile visitors from ads."
-   },
-   {
-    "title": "Fast",
-    "text": "Lightweight pages for quick loading."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "PHP",
-   "Landing pages"
-  ],
-  "url": "https://meridianprimmigrations.com",
-  "cover": "",
-  "gallery": [],
-  "featured": false,
-  "sort": 24
- },
- {
-  "slug": "vishnu-it",
-  "title": "Vishnu IT Solutions",
-  "tagline": "My digital marketing & IT agency",
-  "category": "Website",
-  "client": "Vishnu IT Solutions (own brand)",
-  "year": "2025",
-  "role": "Founder · Design & Development",
-  "summary": "My own agency site — web development, SEO, branding, app development and digital marketing, with a Web Folio of client work.",
-  "overview": [
-   "Vishnu IT Solutions is the digital marketing and IT solutions agency I run, helping businesses thrive online with SEO, PPC, social media and web development. Our mission is to turn ideas into powerful digital experiences.",
-   "The website presents the agency's services — Web Development, SEO Optimization, Branding & UI/UX Design, App Development and Marketing & SMO — along with a Work Showcase, the Web Folio of delivered client projects, FAQs, a blog and a project-brief contact form.",
-   "The agency has 4+ years of experience, a 15+ member team, clients in 2+ countries and 3+ offices, with a 4.9-star Google rating from 250+ verified customers. I'm also Google Ads Creative certified."
-  ],
-  "highlights": [
-   {
-    "title": "Full-service agency",
-    "text": "Web, SEO, branding & UI/UX, apps and marketing under one roof."
-   },
-   {
-    "title": "Web Folio",
-    "text": "A portfolio of delivered client websites and stores."
-   },
-   {
-    "title": "4.9★ on Google",
-    "text": "Rated by 250+ verified customers."
-   },
-   {
-    "title": "Lead capture",
-    "text": "Services-based contact form, map and WhatsApp chat."
-   }
-  ],
-  "tools": [
-   "WordPress",
-   "Elementor",
-   "Rank Math",
-   "On-page SEO",
-   "Google Ads"
-  ],
-  "url": "https://www.vishnuit.co.in",
-  "cover": "/projects/vishnu-it-hero.webp",
-  "gallery": [
-   "/projects/vishnu-it-services.webp",
-   "/projects/vishnu-it-end-to-end.webp",
-   "/projects/vishnu-it-web-dev.webp",
-   "/projects/vishnu-it-work-showcase.webp",
-   "/projects/vishnu-it-web-folio.webp",
-   "/projects/vishnu-it-story-hd.webp"
-  ],
-  "featured": true,
-  "sort": 25
- }
+  {
+    "slug": "astro-kundli-milan",
+    "title": "ASTRO — Kundli & Vedic Astrology",
+    "tagline": "Free kundli tools and paid PDF reports",
+    "category": "E-commerce",
+    "client": "ASTRO",
+    "year": "2026",
+    "role": "Fullstack Developer",
+    "summary": "A Vedic astrology platform — free Kundli, Kundli Milan, Rashifal, Panchang and Numerology, plus paid PDF reports with Razorpay checkout, delivered automatically.",
+    "overview": [
+      "ASTRO offers free astrology tools — Free Kundli (lagna and navamsa charts, planetary positions, current dasha, Manglik check), Kundli Milan with 36-guna Ashtakoot matching, daily, weekly and tomorrow's Rashifal in English and Hindi, city-wise Panchang and Numerology — all powered by AstrologyAPI with caching and daily usage caps to control cost.",
+      "Detailed reports such as Kundli Milan, Pro Kundli and Basic Kundli are sold as PDFs. A customer enters birth details with date/time pickers and place search (with correct historical time zones), applies a coupon and pays through Razorpay. Payment is verified by signature and webhook, the report PDF is generated, stored in private S3 with KMS encryption and emailed — with automatic retries, refunds on failure and a reconcile job as a safety net.",
+      "The admin console covers orders (with payment attempts and provider logs, regenerate, resend, refund), the report catalogue and pricing, coupons, API usage, customers, staff permissions, sessions, audit logs and full branding — logo, colours and PDF branding. The OTP login, encryption and security layer is shared with SKYO."
+    ],
+    "highlights": [
+      {
+        "title": "Free astrology tools",
+        "text": "Kundli, Kundli Milan, Rashifal, Panchang and Numerology in English & Hindi."
+      },
+      {
+        "title": "Paid PDF reports",
+        "text": "Birth details → coupon → Razorpay → PDF generated, stored and emailed."
+      },
+      {
+        "title": "Reliable payments",
+        "text": "Signature + webhook verification, auto-retry, auto-refund and reconcile cron."
+      },
+      {
+        "title": "Full admin & branding",
+        "text": "Orders, catalogue, coupons, API usage, staff, audit and PDF branding."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Aceternity UI",
+      "Razorpay",
+      "MySQL",
+      "AWS S3"
+    ],
+    "url": "https://kundlimilan.vercel.app/",
+    "cover": "/projects/kundli-home.webp",
+    "gallery": [
+      "/projects/kundli-reports.webp",
+      "/projects/kundli-free-kundli.webp",
+      "/projects/kundli-milan.webp",
+      "/projects/kundli-horoscope.webp",
+      "/projects/kundli-panchang.webp",
+      "/projects/kundli-rashifal.webp"
+    ],
+    "featured": true,
+    "sort": 0
+  },
+  {
+    "slug": "imoneypay-merchant-onboarding",
+    "title": "Payment Gateway Merchant Onboarding",
+    "tagline": "From merchant sign-up to live payments",
+    "category": "Fintech",
+    "client": "I Money Pay Pvt. Ltd.",
+    "year": "2026",
+    "role": "Fullstack Developer",
+    "summary": "End-to-end merchant onboarding for a payment gateway — Aadhaar/PAN/GST KYC, ID OCR, pennyless bank checks, merged application PDFs, e-signed agreements and bank/VPA push.",
+    "overview": [
+      "At I Money Pay, a payment gateway company, I build the platform that takes a merchant from sign-up to live payments. A merchant picks their entity type (Pvt Ltd, Public Ltd, LLP, Proprietorship, Partnership and more) and completes a guided, multi-step journey — business details, authorised signatories, bank account, documents, declarations and submit — with autosave and live status tracking.",
+      "KYC is automated end to end. Each signatory's Aadhaar and PAN are verified through DigiLocker / Digio, the business PAN and GSTIN are checked against government records, and CKYC lookups are supported. Uploaded ID documents are read with OCR to pre-fill name, date of birth, father's name and address; Aadhaar numbers are masked before storage and every file is stored encrypted on AWS S3. Bank accounts are confirmed with pennyless verification — no test deposit needed.",
+      "Paperwork is generated, not collected. The platform builds a single application PDF that merges the form data, declarations, signatory photographs and signatures with every uploaded document, compressed to a shareable size. The Merchant Agreement and GST declaration are auto-filled from the application and sent for e-sign, with versions managed by the compliance team, and channel-partner document sets are handled alongside.",
+      "Internally, applications move through Maker → Checker → Approver → Risk → Operations queues with role-based access, discrepancy handling and block/unblock workflows. Approved merchants are pushed to the payment gateway and the bank, and SID/TID VPAs are imported from CSV, encrypted and pushed in batches. Admins manage MCC codes and entity rules, every change is audited, application logs follow a retention policy, a health page monitors S3, the database and each KYC API, and the team gets an automated daily status email."
+    ],
+    "highlights": [
+      {
+        "title": "Aadhaar & PAN KYC",
+        "text": "DigiLocker / Digio verification for every authorised signatory."
+      },
+      {
+        "title": "Business PAN & GST",
+        "text": "Business PAN and GSTIN checked via Digio, with a GST declaration flow when there's no GSTIN."
+      },
+      {
+        "title": "ID OCR & auto-fill",
+        "text": "Name, DOB, father's name and address read from uploaded IDs to pre-fill the form."
+      },
+      {
+        "title": "Aadhaar masking",
+        "text": "Aadhaar stored masked; all documents encrypted at rest on AWS S3."
+      },
+      {
+        "title": "Pennyless bank check",
+        "text": "Account and IFSC verified without a penny-drop transfer."
+      },
+      {
+        "title": "Merged application PDF",
+        "text": "Form data, declarations, photos, signatures and every upload merged and compressed into one PDF."
+      },
+      {
+        "title": "Agreement & e-sign",
+        "text": "Merchant Agreement auto-filled from the application and e-signed, with compliance-managed versions."
+      },
+      {
+        "title": "Entity & partner rules",
+        "text": "Requirement matrix per entity type plus channel-partner document sets."
+      },
+      {
+        "title": "Department queues",
+        "text": "Maker → Checker → Approver → Risk → Operations with role-based access."
+      },
+      {
+        "title": "Bank push & VPA creation",
+        "text": "Approved merchants pushed to PG and bank; SID/TID VPAs imported from CSV, encrypted and pushed."
+      },
+      {
+        "title": "MCC management",
+        "text": "Admin-managed merchant category codes mapped to every merchant and terminal."
+      },
+      {
+        "title": "Logs, retention & health",
+        "text": "Audited changes, log retention, live API health checks and a daily status email."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "Node.js",
+      "PHP",
+      "MySQL",
+      "AWS S3",
+      "REST APIs",
+      "Webhooks",
+      "Postman",
+      "JIRA",
+      "Tailwind CSS"
+    ],
+    "url": "https://onboarding.imoneypg.com/",
+    "cover": "/projects/onboarding-admin.webp",
+    "gallery": [
+      "/projects/onboarding-dashboard-dark.webp",
+      "/projects/onboarding-kyc-ocr.webp",
+      "/projects/onboarding-documents-review.webp",
+      "/projects/onboarding-pdf-documents.webp",
+      "/projects/onboarding-pdf-signatories.webp",
+      "/projects/onboarding-vpa-push.webp",
+      "/projects/onboarding-entity-settings.webp",
+      "/projects/onboarding-health-status.webp",
+      "/projects/onboarding-applications.webp",
+      "/projects/onboarding-merchant.webp",
+      "/projects/onboarding-inbox.webp"
+    ],
+    "featured": true,
+    "sort": 1
+  },
+  {
+    "slug": "skyo-travel",
+    "title": "SKYO Travel Booking",
+    "tagline": "Trains, flights, buses, hotels & holidays in one app",
+    "category": "E-commerce",
+    "client": "SKYO",
+    "year": "2026",
+    "role": "Fullstack Developer",
+    "summary": "A travel booking platform for trains, flights, buses, hotels and holiday packages — live IRCTC data, passwordless OTP login and bank-grade encryption of every personal detail.",
+    "overview": [
+      "SKYO brings trains, flights, buses, hotels and holiday packages into one booking experience. Travellers search every mode from a single widget, check live train running status, PNR status and seat availability across classes and quotas, browse airport boards and flight status, and plan day-by-day holiday packages with transparent inclusions.",
+      "Train search, availability, live status and PNR come from the RailCore (IRCTC) API, with Postman collections for the train and flight APIs. Travellers sign in without a password — email or mobile plus a one-time code over ZeptoMail and Fast2SMS — while agents get a separate admin console with granular staff permissions, bookings per service, sessions, audit logs and site settings.",
+      "Security was designed in from day one: every personal value (names, emails, phones, IPs, devices, passenger data) is stored only as AWS KMS envelope-encrypted ciphertext with HMAC blind indexes for search, OTPs are hashed and rate-limited, and the app ships a nonce-based CSP, HSTS, CSRF checks and DPDP 2023 consent capture. The APIs are mobile-ready with bearer tokens for future Android and iOS apps."
+    ],
+    "highlights": [
+      {
+        "title": "5 services, 1 search",
+        "text": "Trains, flights, buses, hotels and packages from one search widget."
+      },
+      {
+        "title": "Live IRCTC data",
+        "text": "Train search, seat availability, live running status and PNR via RailCore."
+      },
+      {
+        "title": "Passwordless OTP login",
+        "text": "Email or mobile OTP for travellers; secure password + lockout for agents."
+      },
+      {
+        "title": "KMS-encrypted PII",
+        "text": "AES-256-GCM envelope encryption with blind indexes, audit logs and DPDP consent."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Aceternity UI",
+      "MySQL",
+      "AWS S3",
+      "Postman"
+    ],
+    "url": "https://skyo-five.vercel.app/",
+    "cover": "/projects/skyo-home.webp",
+    "gallery": [
+      "/projects/skyo-services.webp",
+      "/projects/skyo-features.webp",
+      "/projects/skyo-flights.webp",
+      "/projects/skyo-packages.webp",
+      "/projects/skyo-pnr.webp"
+    ],
+    "featured": true,
+    "sort": 2
+  },
+  {
+    "slug": "ewastebiz",
+    "title": "E-WasteBiz — B2B E-Waste Recycling",
+    "tagline": "Lead-generation website + admin CRM for a Delhi-NCR e-waste business",
+    "category": "Website",
+    "client": "E-WasteBiz Enterprises",
+    "year": "2026",
+    "role": "Fullstack Developer",
+    "summary": "A fast, ad-ready lead-generation website for a B2B e-waste buyer and recycler in Delhi-NCR — instant-quote forms, call & WhatsApp tracking, Google/Meta ads attribution and a custom admin panel to manage leads and every part of the site.",
+    "overview": [
+      "E-WasteBiz Enterprises buys and recycles corporate e-waste across Delhi-NCR — old laptops, servers, networking gear, UPS batteries and tonnes of cable and factory scrap. They needed a website that looks trustworthy to corporate admin and finance teams, works well with Google and Meta ads, and turns visitors into pickup requests the same day.",
+      "The public site leads with one clear offer — sell your business e-waste, free pickup, fair price, GST invoice and recycling certificates. An instant-quote form sits right in the hero, sticky Call and WhatsApp buttons follow the visitor on mobile, and every page builds trust: the four ITAD and recycling services, a four-step pickup process, industries served, data-destruction methods (software wiping, degaussing, physical shredding) and GST, MSME and authorised-recycler registrations. Light and dark themes, scroll animations, LocalBusiness schema and Open Graph tags are built in.",
+      "Every enquiry is captured with its full attribution — UTM parameters, gclid and fbclid — so the owner can see which Google Ads or Meta campaign produced it. Lead conversions fire on the thank-you page, while call and WhatsApp clicks are tracked as separate conversions and counted per day by traffic source. Forms are protected with a honeypot, a too-fast-submit check and rate limiting, and every lead triggers an instant email alert plus an optional auto-reply to the customer via Resend.",
+      "Behind it is a custom admin panel, built to be used on a phone. The dashboard shows leads today, the last 7 days, leads awaiting a call-back, call/WhatsApp clicks, a 30-day leads chart and breakdowns by source and scrap category. Leads move through a New → Contacted → Quoted → Won/Lost pipeline with deal values, notes, one-tap call/WhatsApp/email, bulk actions and CSV export. The owner also edits the site content, certificates, testimonials, FAQs, client logos, partners and gallery, sets GA4, Google Ads and Meta Pixel IDs, and changes the login — all without a developer. It runs on PHP with MySQL (or JSON files as a fallback) on Hostinger."
+    ],
+    "highlights": [
+      {
+        "title": "Instant-quote hero form",
+        "text": "Name, phone, what to sell and city right in the hero — a quote request in under 20 seconds."
+      },
+      {
+        "title": "Call & WhatsApp first",
+        "text": "Sticky mobile call bar, floating WhatsApp button and pre-filled WhatsApp messages."
+      },
+      {
+        "title": "Ads attribution",
+        "text": "UTM, gclid and fbclid saved on every lead and shown per campaign in the admin panel."
+      },
+      {
+        "title": "Conversion tracking",
+        "text": "GA4, Google Ads conversion labels and Meta Pixel — leads, calls and WhatsApp clicks tracked separately."
+      },
+      {
+        "title": "Lead pipeline CRM",
+        "text": "New → Contacted → Quoted → Won/Lost with deal value, notes, bulk actions and CSV export."
+      },
+      {
+        "title": "Live dashboard",
+        "text": "Leads today, 7-day trend, call-backs due, click counts, 30-day chart, source and category split."
+      },
+      {
+        "title": "Instant email alerts",
+        "text": "Every lead emailed to the team via Resend, with an optional auto-reply to the customer."
+      },
+      {
+        "title": "Spam protection",
+        "text": "Honeypot field, too-fast-submit check and per-IP rate limiting on forms and logins."
+      },
+      {
+        "title": "Full content control",
+        "text": "Contact details, announcement bar, stats, certificates, testimonials, FAQs, logos, partners and gallery."
+      },
+      {
+        "title": "Image uploads",
+        "text": "Certificate scans, client logos and gallery photos uploaded straight from the admin panel."
+      },
+      {
+        "title": "Trust & compliance",
+        "text": "GST, MSME and authorised-recycler registrations, data-destruction methods and recycling certificates."
+      },
+      {
+        "title": "Mobile-first & SEO-ready",
+        "text": "Light/dark themes, fast static pages, LocalBusiness schema and Open Graph previews."
+      }
+    ],
+    "tools": [
+      "HTML5",
+      "CSS3",
+      "JavaScript",
+      "PHP",
+      "MySQL",
+      "Resend",
+      "Google Analytics 4",
+      "Google Ads",
+      "Meta Pixel",
+      "Hostinger"
+    ],
+    "url": "https://ewastebiz.in/",
+    "cover": "/projects/ewastebiz-home.webp",
+    "gallery": [
+      "/projects/ewastebiz-admin-overview.webp",
+      "/projects/ewastebiz-admin-leads.webp",
+      "/projects/ewastebiz-admin-lead-detail.webp",
+      "/projects/ewastebiz-mobile.webp",
+      "/projects/ewastebiz-services-grid.webp",
+      "/projects/ewastebiz-process.webp",
+      "/projects/ewastebiz-industries.webp",
+      "/projects/ewastebiz-compliance.webp",
+      "/projects/ewastebiz-services.webp",
+      "/projects/ewastebiz-about.webp",
+      "/projects/ewastebiz-contact.webp",
+      "/projects/ewastebiz-admin-content.webp",
+      "/projects/ewastebiz-admin-certificates.webp",
+      "/projects/ewastebiz-admin-testimonials.webp",
+      "/projects/ewastebiz-admin-settings.webp",
+      "/projects/ewastebiz-admin-login.webp"
+    ],
+    "featured": true,
+    "sort": 3
+  },
+  {
+    "slug": "the-detailing-hunter",
+    "title": "The Detailing Hunter — Car Detailing, PPF & Coatings",
+    "tagline": "Premium automotive-care website for a Faridabad detailing studio",
+    "category": "Website",
+    "client": "Wazir",
+    "year": "2025",
+    "role": "Design & Development",
+    "summary": "A bold, high-impact website for The Detailing Hunter, a car-detailing studio in Faridabad offering paint protection film (PPF), ceramic and graphene coatings, detailing and maintenance — built to showcase premium work and turn visitors into WhatsApp and call enquiries.",
+    "overview": [
+      "The Detailing Hunter is a premium car-care studio on YMCA Road, Faridabad, specialising in paint protection film (PPF), ceramic coating, graphene coating, interior and exterior detailing and regular maintenance washes. They needed a website that feels as polished as the cars leaving their workshop and makes it effortless for car owners to book a service.",
+      "The design uses a striking red, black and white brand palette with large automotive photography, so every page sells the result before the visitor reads a word. A clear menu splits the offering into dedicated service pages — PPF, Detailing, Ceramic Coating, Graphene and Maintenance — each explaining the treatment, what it protects against and why it is worth it.",
+      "Trust is built throughout: customer and experience counters, a ‘Who we are’ story, a ‘What we do’ grid, a ‘Best advantages’ section (expert team, certified technicians, premium products, long-lasting shine), plus the studio’s address, phone numbers, opening hours and email on the contact page.",
+      "Lead generation is front and centre. A floating WhatsApp button, click-to-call numbers, ‘Book a demo’ calls-to-action and an enquiry form appear across the site, while Instagram and YouTube links connect visitors to the studio’s before-and-after content. The site is fully responsive, so the bold visuals and booking buttons work just as well on a phone."
+    ],
+    "highlights": [
+      {
+        "title": "Dedicated service pages",
+        "text": "PPF, Detailing, Ceramic Coating, Graphene Coating and Maintenance — each with its own page."
+      },
+      {
+        "title": "Bold automotive branding",
+        "text": "Red, black and white palette with large car photography that sells premium auto-care."
+      },
+      {
+        "title": "WhatsApp & call first",
+        "text": "Floating WhatsApp button and click-to-call numbers on every page."
+      },
+      {
+        "title": "Book a demo CTAs",
+        "text": "Clear booking calls-to-action and an enquiry form to capture leads."
+      },
+      {
+        "title": "Trust builders",
+        "text": "Customer and experience counters, ‘Who we are’ story and best-advantages section."
+      },
+      {
+        "title": "Services grid",
+        "text": "Visual cards for PPF, graphene and ceramic coating with ‘Read more’ links."
+      },
+      {
+        "title": "Local presence",
+        "text": "Faridabad address, opening hours, phone and email up front for nearby customers."
+      },
+      {
+        "title": "Social proof links",
+        "text": "Instagram and YouTube connected for before-and-after detailing content."
+      },
+      {
+        "title": "Mobile responsive",
+        "text": "Bold layouts and booking buttons that work smoothly on every phone."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Elementor",
+      "Contact Form 7",
+      "Swiper",
+      "WhatsApp",
+      "Hostinger"
+    ],
+    "url": "https://thedetailinghunter.com",
+    "cover": "/projects/detailing-hunter-home.webp",
+    "gallery": [
+      "/projects/detailing-hunter-home.webp",
+      "/projects/detailing-hunter-what-we-do.webp",
+      "/projects/detailing-hunter-services.webp",
+      "/projects/detailing-hunter-advantages.webp",
+      "/projects/detailing-hunter-about.webp",
+      "/projects/detailing-hunter-ppf.webp",
+      "/projects/detailing-hunter-detailing.webp",
+      "/projects/detailing-hunter-ceramic-coating.webp",
+      "/projects/detailing-hunter-graphene.webp",
+      "/projects/detailing-hunter-maintenance.webp",
+      "/projects/detailing-hunter-contact.webp",
+      "/projects/detailing-hunter-mobile.webp"
+    ],
+    "featured": true,
+    "sort": 4
+  },
+  {
+    "slug": "shiv-shringar-sewa-samiti",
+    "title": "Shiv Shringar Sewa Samiti",
+    "tagline": "A devotional website for a Delhi mandir",
+    "category": "Website",
+    "client": "Shiv Shringar Sewa Samiti",
+    "year": "2026",
+    "role": "Design & Development",
+    "summary": "Website for Prachin Hanuman Mandir, East Azad Nagar — daily shringar darshan, festival specials, yatras, videos and events, all managed from a custom admin panel.",
+    "overview": [
+      "Shiv Shringar Sewa Samiti adorns Mahadev every evening at Prachin Hanuman Mandir, East Azad Nagar, Delhi — as Mahakal, in the nine forms of the Devi and for every festival. The website brings that devotion online with a Darshan of the Day, story highlights, festival shringar specials, photo galleries, videos, yatra routes and special events, plus live darshan timings and a countdown to the next aarti.",
+      "Everything is editable from a custom admin panel: settings (WhatsApp, contact, social links, hero video, timings, announcements), events, videos, darshan posts, highlights, yatras, gallery and timings. Uploaded MP4s and YouTube links autoplay muted with a sound toggle, Instagram reels open from their thumbnails, and contact-form messages are saved and emailed through Resend."
+    ],
+    "highlights": [
+      {
+        "title": "Darshan of the Day",
+        "text": "Daily shringar with story highlights, specials and full photo galleries."
+      },
+      {
+        "title": "Yatras & events",
+        "text": "Event pages with routes, timings and moments from the day."
+      },
+      {
+        "title": "Custom admin panel",
+        "text": "Manage darshan, events, videos, gallery, timings and announcements."
+      },
+      {
+        "title": "Video & contact",
+        "text": "Autoplay videos, Instagram reels, WhatsApp and Resend-powered contact form."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Aceternity UI",
+      "MySQL"
+    ],
+    "url": "https://shiv-shringar.vercel.app/",
+    "cover": "/projects/shiv-shringar-home.webp",
+    "gallery": [
+      "/projects/shiv-shringar-darshan.webp",
+      "/projects/shiv-shringar-gallery.webp",
+      "/projects/shiv-shringar-specials.webp",
+      "/projects/shiv-shringar-yatra.webp",
+      "/projects/shiv-shringar-event.webp"
+    ],
+    "featured": true,
+    "sort": 5
+  },
+  {
+    "slug": "suraj-dev-portfolio",
+    "title": "Suraj.dev — Personal Portfolio",
+    "tagline": "An animated, premium developer portfolio",
+    "category": "Website",
+    "client": "Personal project",
+    "year": "2025",
+    "role": "Design & Development",
+    "summary": "A premium personal portfolio with an aurora hero, 3D globe, skills marquee, case studies and a contact form with email + WhatsApp alerts.",
+    "overview": [
+      "Suraj.dev is the founder's flagship personal portfolio — built to impress recruiters and clients within the first scroll. It combines bold typography, an animated aurora hero, a 3D globe and smooth Aceternity-style interactions with a fast, SEO-friendly Next.js build.",
+      "Every project has its own case-study page with screenshots, highlights and tech stack, and the contact form delivers enquiries instantly by email (Resend) and WhatsApp. A printable resume page and downloadable PDF CV round it off."
+    ],
+    "highlights": [
+      {
+        "title": "Animated hero",
+        "text": "Aurora background, flip words and a premium dashboard visual."
+      },
+      {
+        "title": "3D globe & bento grid",
+        "text": "Interactive three.js globe and a bento layout of skills and stats."
+      },
+      {
+        "title": "Case studies",
+        "text": "21 projects with dedicated pages, screenshots and tech stacks."
+      },
+      {
+        "title": "Instant lead alerts",
+        "text": "Contact form sends email via Resend and a WhatsApp alert."
+      },
+      {
+        "title": "Light & dark themes",
+        "text": "Every section designed for both modes."
+      },
+      {
+        "title": "Resume & CV",
+        "text": "Printable resume page and downloadable PDF CV."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "Tailwind CSS",
+      "Aceternity UI",
+      "Three.js",
+      "Resend"
+    ],
+    "url": "https://surajportfolio-coral.vercel.app/",
+    "cover": "/projects/suraj-portfolio-v1-hero.webp",
+    "gallery": [
+      "/projects/suraj-portfolio-v1-bento.webp",
+      "/projects/suraj-portfolio-v1-about.webp",
+      "/projects/suraj-portfolio-v1-skills.webp",
+      "/projects/suraj-portfolio-v1-contact.webp"
+    ],
+    "featured": true,
+    "sort": 6
+  },
+  {
+    "slug": "minimal-portfolio",
+    "title": "Minimal Developer Portfolio",
+    "tagline": "A clean, content-first personal site",
+    "category": "Website",
+    "client": "Personal project",
+    "year": "2026",
+    "role": "Design & Development",
+    "summary": "A second, minimal take on my portfolio — quiet typography, a floating navbar, light & dark themes and a built-in contact form.",
+    "overview": [
+      "Alongside this animated portfolio, I designed and built a minimal version that puts the content first: a short intro with resume download, quick stats, selected projects, work experience, skills and a contact section, all on a single narrow column.",
+      "The design relies on typography, soft borders and whitespace instead of heavy effects. A floating pill navbar stays in reach while scrolling, the whole site switches between light and dark themes, and visitors can send an enquiry or a full project brief straight from the page."
+    ],
+    "highlights": [
+      {
+        "title": "Content-first layout",
+        "text": "Intro, stats, projects, experience and skills in one focused column."
+      },
+      {
+        "title": "Floating navbar",
+        "text": "A pill navbar that follows you with a theme toggle and section links."
+      },
+      {
+        "title": "Light & dark themes",
+        "text": "Every section is designed for both modes."
+      },
+      {
+        "title": "Contact built in",
+        "text": "Quick email enquiry plus a full form with service and message."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "Tailwind CSS"
+    ],
+    "url": "https://suraj-minimal-portfolio.vercel.app/",
+    "cover": "/projects/minimal-portfolio-hero.webp",
+    "gallery": [
+      "/projects/minimal-portfolio-projects.webp",
+      "/projects/minimal-portfolio-experience.webp",
+      "/projects/minimal-portfolio-skills-dark.webp",
+      "/projects/minimal-portfolio-contact-dark.webp"
+    ],
+    "featured": true,
+    "sort": 7
+  },
+  {
+    "slug": "house-of-geet",
+    "title": "House of Geet",
+    "tagline": "Ethnic wear e-commerce",
+    "category": "E-commerce",
+    "client": "Geet",
+    "year": "2025",
+    "role": "Design & Development",
+    "summary": "A fashion-focused online store that pairs traditional ethnic wear with a modern, mobile-first shopping experience.",
+    "overview": [
+      "House of Geet is a fashion-focused online store designed to highlight traditional ethnic wear with a modern shopping experience. The website showcases curated collections with elegant visuals, clean product layouts and smooth browsing that reflect the brand's cultural and aesthetic identity.",
+      "The platform was built mobile-first and optimised for performance and conversions, with intuitive navigation, fast loading and a seamless checkout flow."
+    ],
+    "highlights": [
+      {
+        "title": "Curated collections",
+        "text": "Category landing pages and rich product layouts for every collection."
+      },
+      {
+        "title": "Seamless checkout",
+        "text": "WooCommerce cart and checkout tuned for mobile shoppers."
+      },
+      {
+        "title": "Mobile-first",
+        "text": "Responsive layouts designed for phones first, then scaled up."
+      },
+      {
+        "title": "Ads-ready",
+        "text": "Meta Pixel tracking for campaigns and retargeting."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "WooCommerce",
+      "Elementor",
+      "Contact Form 7",
+      "Meta Pixel"
+    ],
+    "url": "https://houseofgeet.com/",
+    "cover": "/projects/house-of-geet.png",
+    "gallery": [],
+    "featured": true,
+    "sort": 8
+  },
+  {
+    "slug": "perk-immigration",
+    "title": "Perk Immigration, Canada",
+    "tagline": "Immigration consultancy",
+    "category": "Website",
+    "client": "Sapna Sharma",
+    "year": "2024",
+    "role": "Design & Development",
+    "summary": "A credible, lead-focused immigration consultancy website for Canadian visa and migration services.",
+    "overview": [
+      "Perk Immigration is a professional immigration consultancy website that showcases global visa and migration services with clarity and credibility. It presents service details, eligibility guidance and consultation information in an easy-to-understand format.",
+      "The modern, responsive layout offers smooth navigation and fast performance on every device, with a clear content hierarchy, strong calls-to-action and a trustworthy visual tone that supports lead generation."
+    ],
+    "highlights": [
+      {
+        "title": "Programme pages",
+        "text": "Express Entry, PNP, work permits, visitor visas and more."
+      },
+      {
+        "title": "Eligibility focus",
+        "text": "67-point eligibility assessment and clear next steps."
+      },
+      {
+        "title": "Lead capture",
+        "text": "Consultation forms wired to the team's inbox."
+      },
+      {
+        "title": "Trust signals",
+        "text": "Clean hierarchy and a professional visual tone."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Elementor",
+      "WPForms",
+      "Contact Form 7"
+    ],
+    "url": "https://perkimmigration.com/",
+    "cover": "/projects/perk-immigration.png",
+    "gallery": [],
+    "featured": true,
+    "sort": 9
+  },
+  {
+    "slug": "london-school-e-learning",
+    "title": "London School E-learning Platform",
+    "tagline": "Online courses & micro-credentials",
+    "category": "Website",
+    "client": "Payal Das",
+    "year": "2024",
+    "role": "Design & Development",
+    "summary": "A modern e-learning platform with courses, micro-courses and online payments, designed for learners worldwide.",
+    "overview": [
+      "London School E-Learning Platform is a user-focused educational website designed for seamless online learning. It presents courses, academic information and updates in a clear structure, making it easy for students to find and access learning resources.",
+      "The site was built with a responsive layout, optimised performance and a clean visual identity, with special focus on clarity, accessibility and a smooth learner experience."
+    ],
+    "highlights": [
+      {
+        "title": "Course catalogue",
+        "text": "Flagship programmes and industry-linked micro-courses."
+      },
+      {
+        "title": "LMS",
+        "text": "Tutor LMS for lessons, enrolments and learner dashboards."
+      },
+      {
+        "title": "Online payments",
+        "text": "WooCommerce checkout with Razorpay for course fees."
+      },
+      {
+        "title": "Global audience",
+        "text": "Fast, accessible pages for learners across regions."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Tutor LMS",
+      "WooCommerce",
+      "Razorpay",
+      "Elementor",
+      "Astra"
+    ],
+    "url": "https://londonschoolobs.com/",
+    "cover": "/projects/london-school.png",
+    "gallery": [],
+    "featured": true,
+    "sort": 10
+  },
+  {
+    "slug": "stanley-growth-consulting",
+    "title": "Stanley Growth Consulting",
+    "tagline": "Business strategy & consulting",
+    "category": "Website",
+    "client": "Mr. Guy Wabo",
+    "year": "2024",
+    "role": "Design & Development",
+    "summary": "A personal-brand-driven consulting website positioning its founder as a trusted advisor for growing businesses.",
+    "overview": [
+      "Stanley Growth Consulting is a business strategy and consulting website designed to position Mr. Guy Wabo as a trusted advisor for entrepreneurs and growing businesses. It communicates strategic expertise, credibility and authority with a strong personal-brand identity.",
+      "The site highlights services including Entity Structuring & Legal Setup, NAICS & Compliance Optimization, Personal Credit Development and Strategic Consulting & Coaching, with a clean, responsive design focused on clarity and conversion."
+    ],
+    "highlights": [
+      {
+        "title": "Service architecture",
+        "text": "Clear pages for structuring, compliance, credit and coaching."
+      },
+      {
+        "title": "Personal brand",
+        "text": "Founder-led storytelling that builds authority."
+      },
+      {
+        "title": "Conversion flow",
+        "text": "Focused content that leads to booking a consultation."
+      },
+      {
+        "title": "Responsive",
+        "text": "Polished on desktop, tablet and mobile."
+      }
+    ],
+    "tools": [
+      "UI/UX design",
+      "Responsive layout",
+      "On-page SEO",
+      "Lead forms"
+    ],
+    "url": "https://stanleygrowthconsulting.com/",
+    "cover": "/projects/stanley-consulting.png",
+    "gallery": [],
+    "featured": true,
+    "sort": 11
+  },
+  {
+    "slug": "zodaromatics",
+    "title": "Zodaromatics",
+    "tagline": "Premium perfume e-commerce",
+    "category": "E-commerce",
+    "client": "",
+    "year": "2023",
+    "role": "Design & Development",
+    "summary": "A luxury perfume store with a visually rich layout, detailed product pages and a smooth shopping experience.",
+    "overview": [
+      "Zodaromatics is a premium perfume e-commerce website designed to reflect luxury, elegance and sensory appeal. It showcases a curated range of fragrances with a visually rich layout, detailed product pages and a smooth shopping experience.",
+      "The build focused on responsive design, intuitive navigation and conversion-driven UI so customers can browse and buy easily on any device."
+    ],
+    "highlights": [
+      {
+        "title": "Luxury visual identity",
+        "text": "Editorial imagery and typography that feel premium."
+      },
+      {
+        "title": "Product storytelling",
+        "text": "Detailed product pages for every fragrance."
+      },
+      {
+        "title": "Conversion UI",
+        "text": "Clear calls-to-action from collection to checkout."
+      },
+      {
+        "title": "Every device",
+        "text": "Fully responsive storefront."
+      }
+    ],
+    "tools": [
+      "E-commerce",
+      "Product catalogue",
+      "Responsive layout",
+      "UI/UX design"
+    ],
+    "url": "",
+    "cover": "/projects/zodaromatics.webp",
+    "gallery": [
+      "/projects/zodaromatics-2.jpg"
+    ],
+    "featured": false,
+    "sort": 12
+  },
+  {
+    "slug": "orpheus-financial",
+    "title": "Orpheus Financial",
+    "tagline": "Offshore setup & financial advisory",
+    "category": "Website",
+    "client": "",
+    "year": "2024",
+    "role": "Design & Development",
+    "summary": "A modern financial-services website that communicates trust and expertise for UAE company setup and advisory.",
+    "overview": [
+      "Orpheus Financial is a modern financial-services website designed to present core offerings with clarity and professionalism. The structure highlights services, insights and client-focused solutions to communicate trust, transparency and expertise.",
+      "It features a responsive design, intuitive navigation and a refined visual style suited to the financial sector, with attention to usability, performance and clear service presentation."
+    ],
+    "highlights": [
+      {
+        "title": "Offshore & UAE setup",
+        "text": "Service pages for corporate accounts and company formation."
+      },
+      {
+        "title": "Wealth advisory",
+        "text": "Clear presentation of advisory and management services."
+      },
+      {
+        "title": "Trust-first design",
+        "text": "Refined visuals and stats that build credibility."
+      },
+      {
+        "title": "Insights",
+        "text": "Blog and updates section for thought leadership."
+      }
+    ],
+    "tools": [
+      "UI/UX design",
+      "Responsive layout",
+      "On-page SEO",
+      "Lead forms"
+    ],
+    "url": "",
+    "cover": "/projects/orpheus-financial.png",
+    "gallery": [],
+    "featured": false,
+    "sort": 13
+  },
+  {
+    "slug": "mannat-immigration",
+    "title": "Mannat Immigration",
+    "tagline": "Visa & immigration consultants, Delhi",
+    "category": "Website",
+    "client": "Rashi Manchanda (CEO)",
+    "year": "2023",
+    "role": "Design & Development",
+    "summary": "A trust-building immigration consultancy website with clear service offerings, eligibility guidance and consultation CTAs.",
+    "overview": [
+      "Mannat Immigration is a professional immigration consultancy website designed to establish trust and credibility for global visa and migration services. It clearly presents service offerings, eligibility guidance and consultation details for potential clients.",
+      "The design focuses on a clean layout, responsive structure and easy navigation, with clear calls-to-action, fast loading and a professional visual tone that supports lead generation under CEO Rashi Manchanda."
+    ],
+    "highlights": [
+      {
+        "title": "Country pages",
+        "text": "Study, work and visit visa pathways by destination."
+      },
+      {
+        "title": "Clear CTAs",
+        "text": "Book-a-consultation prompts across the journey."
+      },
+      {
+        "title": "Fast loading",
+        "text": "Optimised images and lightweight pages."
+      },
+      {
+        "title": "Credibility",
+        "text": "Awards, partner logos and leadership up front."
+      }
+    ],
+    "tools": [
+      "UI/UX design",
+      "Responsive layout",
+      "On-page SEO",
+      "Lead forms"
+    ],
+    "url": "",
+    "cover": "/projects/mannat-immigration.webp",
+    "gallery": [],
+    "featured": false,
+    "sort": 14
+  },
+  {
+    "slug": "architecture-cad-institute",
+    "title": "Architecture CAD Institute",
+    "tagline": "Architecture & design services",
+    "category": "Website",
+    "client": "Nitesh",
+    "year": "2023",
+    "role": "Design & Development",
+    "summary": "A clean, modern website that presents architecture services, software training and workflows for an architecture brand.",
+    "overview": [
+      "Architecture CAD is a professional architecture and design services website created to showcase technical expertise, project offerings and industry-focused solutions. Services, workflows and contact information are presented in a clean, structured way.",
+      "The design emphasises clarity, responsiveness and a modern visual approach suited to the architecture domain, strengthening the brand's online presence and supporting lead generation."
+    ],
+    "highlights": [
+      {
+        "title": "Software courses",
+        "text": "AutoCAD, SketchUp, 3ds Max and SolidWorks offerings."
+      },
+      {
+        "title": "Services",
+        "text": "Planning, interior, exterior, building and restoration."
+      },
+      {
+        "title": "Portfolio",
+        "text": "'Our Works' gallery of completed projects."
+      },
+      {
+        "title": "WhatsApp leads",
+        "text": "Quick enquiry path for prospective clients."
+      }
+    ],
+    "tools": [
+      "UI/UX design",
+      "Responsive layout",
+      "On-page SEO",
+      "WhatsApp integration"
+    ],
+    "url": "",
+    "cover": "/projects/architecture-cad.webp",
+    "gallery": [
+      "/projects/architecture-cad-2.jpg"
+    ],
+    "featured": false,
+    "sort": 15
+  },
+  {
+    "slug": "softbytes-seo-agency",
+    "title": "Softbytes Ltd",
+    "tagline": "SEO agency website",
+    "category": "Website",
+    "client": "Enume Sakah",
+    "year": "2022",
+    "role": "Design & Development",
+    "summary": "A conversion-focused SEO agency website that explains services and value clearly and turns visitors into calls.",
+    "overview": [
+      "Softbytes Ltd is a professional SEO agency website designed to showcase digital-marketing expertise and result-driven optimisation services. It presents SEO solutions and the agency's value proposition in a clear, structured way.",
+      "The site focuses on a modern, responsive design with smooth navigation and fast performance, with conversion-focused layouts that support lead generation."
+    ],
+    "highlights": [
+      {
+        "title": "Service clarity",
+        "text": "SEO offerings explained in plain language."
+      },
+      {
+        "title": "Book-a-call funnel",
+        "text": "Prominent CTAs that drive consultations."
+      },
+      {
+        "title": "SEO built in",
+        "text": "Rank Math and Search Console from day one."
+      },
+      {
+        "title": "Tracking",
+        "text": "Google Tag Manager for analytics and ads."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Elementor",
+      "Rank Math",
+      "Google Tag Manager",
+      "Slider Revolution"
+    ],
+    "url": "https://softbytesltd.com/",
+    "cover": "/projects/softbytes.jpg",
+    "gallery": [],
+    "featured": false,
+    "sort": 16
+  },
+  {
+    "slug": "mj-nails-salons",
+    "title": "MJ Nails Salons",
+    "tagline": "Beauty & nail salon website",
+    "category": "Website",
+    "client": "Enume",
+    "year": "2023",
+    "role": "Design & Development",
+    "summary": "An elegant salon website that showcases services and styles and encourages online bookings.",
+    "overview": [
+      "MJ Nails Salons is a beauty-focused website that showcases professional nail services through a modern, elegant and visually engaging interface, highlighting services, styles and brand identity.",
+      "The responsive layout, smooth navigation and strong visual presentation give clients an effortless experience and encourage enquiries and bookings."
+    ],
+    "highlights": [
+      {
+        "title": "Online booking",
+        "text": "Booking page and clear service menu."
+      },
+      {
+        "title": "Local SEO",
+        "text": "Rank Math setup for 'near me' searches."
+      },
+      {
+        "title": "Brand visuals",
+        "text": "Elegant typography and soft colour palette."
+      },
+      {
+        "title": "Responsive",
+        "text": "Smooth on every screen size."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Elementor",
+      "Rank Math",
+      "Bootstrap",
+      "Google Tag Manager"
+    ],
+    "url": "https://mjnailssalons.com/",
+    "cover": "/projects/mj-nails-salons.jpg",
+    "gallery": [],
+    "featured": false,
+    "sort": 17
+  },
+  {
+    "slug": "unexplore-travel",
+    "title": "Unexplore Travel",
+    "tagline": "Travel & tour website",
+    "category": "Website",
+    "client": "",
+    "year": "",
+    "role": "Design & Development",
+    "summary": "A travel website that showcases destinations and tour packages and turns visitors into enquiries.",
+    "overview": [
+      "Unexplore Travel is a travel and tour website built to showcase destinations and packages with rich visuals and a clear path to enquiry."
+    ],
+    "highlights": [
+      {
+        "title": "Destinations",
+        "text": "Visual destination and package pages."
+      },
+      {
+        "title": "Enquiry flow",
+        "text": "Simple forms to request a trip."
+      },
+      {
+        "title": "Responsive",
+        "text": "Smooth browsing on phones and desktops."
+      },
+      {
+        "title": "Fast",
+        "text": "Optimised pages for quick loading."
+      }
+    ],
+    "tools": [
+      "UI/UX design",
+      "Responsive layout",
+      "Lead forms"
+    ],
+    "url": "https://unexploretravel.com/",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 18
+  },
+  {
+    "slug": "brand-print-design",
+    "title": "Brand & Print Design",
+    "tagline": "Business cards, hoardings & standees",
+    "category": "Brand Design",
+    "client": "",
+    "year": "2024",
+    "role": "Graphic Designer",
+    "summary": "Business cards, hoardings and standees that blend aesthetics with strategic messaging for strong brand visibility.",
+    "overview": [
+      "Alongside development, I design brand and print collateral. This collection includes business cards that combine creativity with professional branding, and hoardings and standees that pair visual appeal with strategic messaging for maximum visibility.",
+      "Each piece is designed to match the client's identity and campaign goals, from a graphic designer's personal card to a jewellery brand's festive sale billboard."
+    ],
+    "highlights": [
+      {
+        "title": "Business cards",
+        "text": "Premium, on-brand cards with QR and contact details."
+      },
+      {
+        "title": "Hoardings",
+        "text": "Large-format campaign creatives for retail brands."
+      },
+      {
+        "title": "Standees",
+        "text": "In-store displays designed for footfall."
+      },
+      {
+        "title": "Brand consistency",
+        "text": "Typography and colour aligned to each identity."
+      }
+    ],
+    "tools": [
+      "Photoshop",
+      "Illustrator",
+      "Figma"
+    ],
+    "url": "",
+    "cover": "/projects/brand-business-cards.webp",
+    "gallery": [
+      "/projects/brand-hoardings.webp"
+    ],
+    "featured": false,
+    "sort": 19
+  },
+  {
+    "slug": "payment-gateway-plugins",
+    "title": "Payment Gateway Plugins",
+    "tagline": "Secure PG plugins for e-commerce",
+    "category": "Fintech",
+    "client": "ITSTARPAY Pvt. Ltd.",
+    "year": "2025",
+    "role": "Frontend / Integration Developer",
+    "summary": "Custom gateway plugins with secure transaction handling, webhook integration, refund flows and gateway-specific compliance.",
+    "overview": [
+      "At ITSTARPAY I developed and customised payment gateway plugins for e-commerce platforms, including secure transaction handling, webhook integration, refund flows and gateway-specific compliance requirements (Razorpay-style).",
+      "I also integrated and troubleshot gateways for client sites, fixing bugs and optimising performance across payment journeys."
+    ],
+    "highlights": [
+      {
+        "title": "Secure transactions",
+        "text": "Signed requests and server-side verification."
+      },
+      {
+        "title": "Webhooks",
+        "text": "Payment, refund and status events handled reliably."
+      },
+      {
+        "title": "Refund flows",
+        "text": "Full and partial refunds from the admin."
+      },
+      {
+        "title": "Compliance",
+        "text": "Gateway-specific rules built into each plugin."
+      }
+    ],
+    "tools": [
+      "PHP",
+      "WordPress",
+      "WooCommerce",
+      "Node.js",
+      "Webhooks",
+      "Razorpay"
+    ],
+    "url": "",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 20
+  },
+  {
+    "slug": "kotak-trading-platform",
+    "title": "Kotak Trading Platform",
+    "tagline": "Trading on the Kotak Trading API",
+    "category": "Fintech",
+    "client": "ITSTARPAY Pvt. Ltd.",
+    "year": "2025",
+    "role": "Frontend Developer",
+    "summary": "Real-time market data, order placement, portfolio tracking and secure API authentication on the Kotak Trading API.",
+    "overview": [
+      "I built and integrated a platform on the Kotak Trading API that enables real-time market data access, order placement and portfolio tracking.",
+      "Secure API authentication protects every trading operation, and the UI keeps prices and positions updating live."
+    ],
+    "highlights": [
+      {
+        "title": "Live market data",
+        "text": "Streaming quotes and watchlists."
+      },
+      {
+        "title": "Order placement",
+        "text": "Buy and sell flows with validation."
+      },
+      {
+        "title": "Portfolio tracking",
+        "text": "Holdings, positions and P&L at a glance."
+      },
+      {
+        "title": "Secure auth",
+        "text": "Token-based API authentication."
+      }
+    ],
+    "tools": [
+      "Next.js",
+      "React",
+      "REST APIs",
+      "JWT",
+      "Tailwind CSS"
+    ],
+    "url": "",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 21
+  },
+  {
+    "slug": "onboarding-dashboard-cms",
+    "title": "Onboarding Dashboard & CMS",
+    "tagline": "Secure onboarding with e-sign PDFs",
+    "category": "Fintech",
+    "client": "ITSTARPAY Pvt. Ltd.",
+    "year": "2025",
+    "role": "Frontend Developer",
+    "summary": "Users submit details and generate e-sign PDFs; admins manage updates with automated emails and S3 document storage.",
+    "overview": [
+      "I built a secure onboarding dashboard and CMS where users submit their details, generate PDF documents with e-sign preview and download, and admins manage updates with automated email triggers.",
+      "Documents are stored on AWS S3 with GitHub integration, and webhook-based real-time request authorisation blocks spam."
+    ],
+    "highlights": [
+      {
+        "title": "PDF + e-sign",
+        "text": "Generate, preview and download signed documents."
+      },
+      {
+        "title": "Admin CMS",
+        "text": "Review and update submissions in one place."
+      },
+      {
+        "title": "Automated emails",
+        "text": "Triggers on every status change."
+      },
+      {
+        "title": "Secure storage",
+        "text": "AWS S3 with webhook-based spam blocking."
+      }
+    ],
+    "tools": [
+      "React",
+      "Node.js",
+      "AWS S3",
+      "GitHub",
+      "MySQL",
+      "Webhooks"
+    ],
+    "url": "",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 22
+  },
+  {
+    "slug": "absolute-immigrations",
+    "title": "Absolute Immigrations",
+    "tagline": "Immigration website & ad landing pages",
+    "category": "Website",
+    "client": "Absolute Immigrations",
+    "year": "2024",
+    "role": "WordPress Developer",
+    "summary": "WordPress website and campaign landing pages with CRM-integrated lead capture from Google & Meta Ads.",
+    "overview": [
+      "As WordPress Developer at Absolute Immigrations I built and customised the company website and designed landing pages for Google and Meta ad campaigns, driving higher conversions.",
+      "Leads from both ad platforms flow automatically into the CRM through API integrations, and I handled QA, client onboarding and delivery."
+    ],
+    "highlights": [
+      {
+        "title": "Campaign landing pages",
+        "text": "Fast, focused pages for every ad set."
+      },
+      {
+        "title": "CRM automation",
+        "text": "Google & Meta leads synced via APIs."
+      },
+      {
+        "title": "QA & delivery",
+        "text": "Testing and smooth handover for each launch."
+      },
+      {
+        "title": "Conversion focus",
+        "text": "Forms and CTAs optimised for enquiries."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "PHP",
+      "Google Ads",
+      "Meta Ads",
+      "CRM APIs"
+    ],
+    "url": "https://absoluteimmigrations.in",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 23
+  },
+  {
+    "slug": "meridian-pr-immigrations",
+    "title": "Meridian PR Immigrations",
+    "tagline": "Immigration consultancy website",
+    "category": "Website",
+    "client": "",
+    "year": "2024",
+    "role": "WordPress Developer",
+    "summary": "Conversion-focused immigration consultancy website with a custom WordPress theme and lead funnels.",
+    "overview": [
+      "A conversion-focused immigration consultancy website built on WordPress with a custom theme and lead funnels, delivered during my time at Absolute Immigrations."
+    ],
+    "highlights": [
+      {
+        "title": "Custom theme",
+        "text": "Brand-specific WordPress theme."
+      },
+      {
+        "title": "Lead funnels",
+        "text": "Enquiry paths for each visa service."
+      },
+      {
+        "title": "Responsive",
+        "text": "Optimised for mobile visitors from ads."
+      },
+      {
+        "title": "Fast",
+        "text": "Lightweight pages for quick loading."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "PHP",
+      "Landing pages"
+    ],
+    "url": "https://meridianprimmigrations.com",
+    "cover": "",
+    "gallery": [],
+    "featured": false,
+    "sort": 24
+  },
+  {
+    "slug": "vishnu-it",
+    "title": "Vishnu IT Solutions",
+    "tagline": "My digital marketing & IT agency",
+    "category": "Website",
+    "client": "Vishnu IT Solutions (own brand)",
+    "year": "2025",
+    "role": "Founder · Design & Development",
+    "summary": "My own agency site — web development, SEO, branding, app development and digital marketing, with a Web Folio of client work.",
+    "overview": [
+      "Vishnu IT Solutions is the digital marketing and IT solutions agency I run, helping businesses thrive online with SEO, PPC, social media and web development. Our mission is to turn ideas into powerful digital experiences.",
+      "The website presents the agency's services — Web Development, SEO Optimization, Branding & UI/UX Design, App Development and Marketing & SMO — along with a Work Showcase, the Web Folio of delivered client projects, FAQs, a blog and a project-brief contact form.",
+      "The agency has 4+ years of experience, a 15+ member team, clients in 2+ countries and 3+ offices, with a 4.9-star Google rating from 250+ verified customers. I'm also Google Ads Creative certified."
+    ],
+    "highlights": [
+      {
+        "title": "Full-service agency",
+        "text": "Web, SEO, branding & UI/UX, apps and marketing under one roof."
+      },
+      {
+        "title": "Web Folio",
+        "text": "A portfolio of delivered client websites and stores."
+      },
+      {
+        "title": "4.9★ on Google",
+        "text": "Rated by 250+ verified customers."
+      },
+      {
+        "title": "Lead capture",
+        "text": "Services-based contact form, map and WhatsApp chat."
+      }
+    ],
+    "tools": [
+      "WordPress",
+      "Elementor",
+      "Rank Math",
+      "On-page SEO",
+      "Google Ads"
+    ],
+    "url": "https://www.vishnuit.co.in",
+    "cover": "/projects/vishnu-it-hero.webp",
+    "gallery": [
+      "/projects/vishnu-it-services.webp",
+      "/projects/vishnu-it-end-to-end.webp",
+      "/projects/vishnu-it-web-dev.webp",
+      "/projects/vishnu-it-work-showcase.webp",
+      "/projects/vishnu-it-web-folio.webp",
+      "/projects/vishnu-it-story-hd.webp"
+    ],
+    "featured": true,
+    "sort": 25
+  }
 ]

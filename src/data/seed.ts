@@ -532,8 +532,8 @@ export const settings: Record<string, unknown> = {
   },
   social: {
     linkedin: "https://www.linkedin.com/in/suraj-pandey-225459197",
-    instagram: "",
-    facebook: "",
+    instagram: "https://www.instagram.com/vishnuit.co.in/",
+    facebook: "https://www.facebook.com/vishnuit.co.in/",
     twitter: "",
     youtube: "",
     github: "",
