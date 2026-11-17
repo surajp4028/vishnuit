@@ -9,7 +9,8 @@ const MIN = 1, MAX = 500000;
 
 /** "Pay Now" from the header: the customer enters the amount themselves (e.g. an advance or balance payment). */
 export async function POST(req: Request) {
-  if (!(await getSettings()).conversion.payNowButton) return Response.json({ error: "Online payments are turned off." }, { status: 403 });
+  const conv = (await getSettings()).conversion;
+  if (!conv.payNowOnDesktop && !conv.payNowOnMobile) return Response.json({ error: "Online payments are turned off." }, { status: 403 });
   if (!rzpConfigured()) return Response.json({ error: "Online payments are not configured yet." }, { status: 503 });
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (!rateLimit(`paynow:${ip}`, 10)) return Response.json({ error: "Too many attempts. Please wait a few minutes." }, { status: 429 });

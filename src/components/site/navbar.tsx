@@ -22,7 +22,7 @@ const LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contact", ctaLabel = "Get a quote", payNow }: { logoLight: string; logoDark: string; name: string; services: NavService[]; ctaHref?: string; ctaLabel?: string; payNow?: { enabled: boolean; mobile: boolean } }) {
+export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contact", ctaLabel = "Get a quote", payNow }: { logoLight: string; logoDark: string; name: string; services: NavService[]; ctaHref?: string; ctaLabel?: string; payNow?: { desktop: boolean; mobile: boolean } }) {
   const pathname = usePathname();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
@@ -80,7 +80,7 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {payNow?.enabled && <PayNowButton showOnMobile={payNow.mobile} />}
+          {payNow && (payNow.desktop || payNow.mobile) && <PayNowButton desktop={payNow.desktop} mobile={payNow.mobile} />}
           <Link
             href={ctaHref}
             className="group hidden items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90 sm:inline-flex"

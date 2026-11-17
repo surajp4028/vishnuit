@@ -10,7 +10,7 @@ const field = "w-full rounded-xl border border-border bg-background px-4 py-3 te
 const PURPOSES = ["Advance payment", "Balance payment", "Website development", "E-commerce store", "Maintenance / support", "Domain & hosting", "Digital marketing", "Other"];
 
 /** Header "Pay Now": customer enters any amount, pays via Razorpay and downloads an invoice. */
-export function PayNowButton({ showOnMobile }: { showOnMobile: boolean }) {
+export function PayNowButton({ desktop, mobile }: { desktop: boolean; mobile: boolean }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [state, setState] = useState<"form" | "paying" | "done">("form");
@@ -110,7 +110,7 @@ export function PayNowButton({ showOnMobile }: { showOnMobile: boolean }) {
     <>
       <button onClick={() => setOpen(true)}
         className={cn("items-center rounded-full border border-black bg-white px-4 py-[7px] text-sm font-semibold text-black transition hover:bg-black hover:text-white dark:border-white dark:bg-transparent dark:text-white dark:hover:bg-white dark:hover:text-black",
-          showOnMobile ? "inline-flex" : "hidden sm:inline-flex")}>
+          desktop && mobile ? "inline-flex" : desktop ? "hidden sm:inline-flex" : "inline-flex sm:hidden")}>
         Pay Now
       </button>
       {mounted && createPortal(modal, document.body)}
