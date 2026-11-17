@@ -55,7 +55,8 @@ export function LeadForm({ services, defaultService, cta = "Get my free quote", 
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Something went wrong");
-      window.fbq?.("track", "Lead", { content_name: data.service || "Website", currency: "INR" }, { eventID: j.eventId });
+      window.fbq?.("track", "Lead", { content_name: data.service || "Website", content_category: pathname.replace(/^\//, "") || "landing", currency: "INR" }, { eventID: j.eventId });
+      try { sessionStorage.setItem("vit_lead", JSON.stringify({ id: j.eventId, lp: pathname.replace(/^\//, "") || "landing", service: data.service || "" })); } catch {}
       router.push(`/thank-you?n=${encodeURIComponent(data.name.split(" ")[0])}&from=${encodeURIComponent(pathname)}`);
     } catch (err) {
       setError((err as Error).message);

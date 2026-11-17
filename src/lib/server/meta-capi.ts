@@ -8,6 +8,8 @@ const sha = (v?: string) => (v ? createHash("sha256").update(v.trim().toLowerCas
 export async function sendMetaLead(opts: {
   eventId: string; url: string; email?: string; phone?: string; name?: string; city?: string;
   ip?: string; ua?: string; fbp?: string; fbc?: string; service?: string;
+  /** Landing page slug, sent as content_category so custom conversions can filter per LP. */
+  lp?: string;
   /** Per-landing-page pixel; when set, its own token is used (the common token belongs to the common pixel). */
   pixel?: { pixelId: string; capiToken: string; own: boolean };
 }) {
@@ -36,7 +38,7 @@ export async function sendMetaLead(opts: {
         fbp: opts.fbp,
         fbc: opts.fbc,
       },
-      custom_data: { content_name: opts.service || "Website enquiry", currency: "INR" },
+      custom_data: { content_name: opts.service || "Website enquiry", content_category: opts.lp || undefined, currency: "INR" },
     }],
     ...(c.metaTestEventCode ? { test_event_code: c.metaTestEventCode } : {}),
   };

@@ -6,6 +6,7 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { getSettings } from "@/lib/server/content";
 import { MetaPixel } from "@/components/lp/meta-pixel";
 import { resolveLpPixel } from "@/lib/server/lp-pixels";
+import { ThankYouEvent } from "@/components/lp/thank-you-event";
 
 export const metadata: Metadata = { title: "Thank you", robots: { index: false, follow: false } };
 
@@ -22,6 +23,7 @@ export default async function ThankYou({ searchParams }: { searchParams: Promise
   return (
     <>
     <MetaPixel pixelId={pixel.pixelId} />
+    <ThankYouEvent />
     <section className="relative isolate overflow-hidden pt-32 pb-20 md:pt-40">
       <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.16),transparent)] blur-2xl" />
       <div className="container-x max-w-3xl text-center">
