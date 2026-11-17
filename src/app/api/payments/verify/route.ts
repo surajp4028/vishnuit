@@ -1,6 +1,7 @@
 import { fetchPayment, verifyCheckoutSignature } from "@/lib/server/razorpay";
 import { markPaid } from "@/lib/server/payments";
 import { exec } from "@/lib/server/db";
+import { invoicePath } from "@/lib/server/invoice";
 
 export async function POST(req: Request) {
   const { razorpay_order_id: o, razorpay_payment_id: p, razorpay_signature: s } = await req.json().catch(() => ({}));
@@ -11,5 +12,5 @@ export async function POST(req: Request) {
   }
   const pay = await fetchPayment(p);
   await markPaid(o, p, pay?.method ?? null, s);
-  return Response.json({ ok: true });
+  return Response.json({ ok: true, invoiceUrl: invoicePath(o) });
 }

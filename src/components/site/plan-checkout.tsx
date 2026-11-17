@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-function loadScript() {
+export function loadRazorpay() {
   return new Promise<boolean>((resolve) => {
     if (window.Razorpay) return resolve(true);
     const s = document.createElement("script");
@@ -41,7 +41,7 @@ export function PlanCheckout({ plan, highlighted }: { plan: { id: number; name: 
     setState("paying");
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const [ok, res] = await Promise.all([
-      loadScript(),
+      loadRazorpay(),
       fetch("/api/payments/order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, planId: plan.id }) }),
     ]);
     const order = await res.json().catch(() => ({}));

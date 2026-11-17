@@ -1,11 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
-import { BadgeIndianRupee, Download, Mail, MessageCircle, Phone, Search, Users, Wallet, X } from "lucide-react";
+import { BadgeIndianRupee, Download, Mail, MessageCircle, Phone, Search, Users, Wallet, X, FileText } from "lucide-react";
 import { cn, formatDate, formatINR } from "@/lib/utils";
 
 export type PaymentRow = {
   id: number; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; notes: string | null;
-  rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; project_status: string; created_at: string; paid_at: string | null;
+  rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; project_status: string; created_at: string; paid_at: string | null; invoiceUrl?: string | null;
 };
 const PROJECT = ["onboarding", "in-progress", "review", "delivered", "on-hold"];
 const PAY_COLORS: Record<string, string> = { paid: "bg-emerald-500/10 text-emerald-600", created: "bg-amber-500/10 text-amber-600", failed: "bg-red-500/10 text-red-500" };
@@ -107,7 +107,7 @@ export function PaymentsTable({ initial, testMode }: { initial: PaymentRow[]; te
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={() => setOpen(null)}>
           <div className="h-full w-full max-w-md overflow-y-auto border-l border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
-              <div><h2 className="font-display text-xl font-bold">{open.name}</h2><p className="text-sm text-muted">{open.plan_name} plan · {formatINR(open.amount)}</p></div>
+              <div><h2 className="font-display text-xl font-bold">{open.name}</h2><p className="text-sm text-muted">{open.plan_name} · {formatINR(open.amount)}</p></div>
               <button onClick={() => setOpen(null)} aria-label="Close"><X className="size-5" /></button>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
@@ -115,6 +115,7 @@ export function PaymentsTable({ initial, testMode }: { initial: PaymentRow[]; te
               <a href={`tel:${open.phone}`} className="flex flex-col items-center gap-1 rounded-xl border border-border p-3 text-xs hover:border-accent"><Phone className="size-4 text-accent" />Call</a>
               <a href={`https://wa.me/${(open.phone || "").replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-xl border border-border p-3 text-xs hover:border-emerald-500"><MessageCircle className="size-4 text-emerald-500" />WhatsApp</a>
             </div>
+            {open.invoiceUrl && <a href={open.invoiceUrl} target="_blank" rel="noopener" className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background"><FileText className="size-4" /> View / download invoice</a>}
             <dl className="mt-6 space-y-3 text-sm">
               {[["Email", open.email], ["Phone", open.phone], ["Company", open.company], ["Status", open.status], ["Method", open.method], ["Payment ID", open.rzp_payment_id], ["Order ID", open.rzp_order_id], ["Created", open.created_at], ["Paid at", open.paid_at]].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4 border-b border-border pb-2"><dt className="text-muted">{k}</dt><dd className="text-right font-mono text-xs break-all">{v || "—"}</dd></div>

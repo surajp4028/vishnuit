@@ -23,7 +23,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     <>
       {/^#[0-9a-fA-F]{6}$/.test(settings.branding.accent) && <style>{`:root:not(.dark){--accent:${settings.branding.accent}}`}</style>}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(org) }} />
-      <Navbar logoLight={settings.branding.logoLight} logoDark={settings.branding.logoDark} name={settings.branding.siteName} services={navServices} />
+      <Navbar logoLight={settings.branding.logoLight} logoDark={settings.branding.logoDark} name={settings.branding.siteName} services={navServices} payNow={{ enabled: settings.conversion.payNowButton, mobile: settings.conversion.payNowMobile }} />
       <main className="overflow-x-clip">{children}</main>
       <Footer settings={settings} services={services} />
       <FloatingActions whatsapp={settings.contact.whatsapp} show={settings.conversion.whatsappButton} />

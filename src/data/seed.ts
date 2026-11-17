@@ -557,6 +557,8 @@ export const settings: Record<string, unknown> = {
     whatsappButton: true,
     stickyCta: true,
     leadNotify: true,
+    payNowButton: true,
+    payNowMobile: false,
     announcement: "Free website audit for new clients this month — limited slots!",
   },
 };

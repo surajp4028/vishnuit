@@ -9,7 +9,7 @@ export default async function LpLayout({ children }: { children: React.ReactNode
   const navServices = services.map(({ slug, title, category, icon, short }) => ({ slug, title, category, icon, short }));
   return (
     <>
-      <Navbar logoLight={settings.branding.logoLight} logoDark={settings.branding.logoDark} name={settings.branding.siteName} services={navServices} ctaHref="/website-development#get-quote" ctaLabel="Free quote" />
+      <Navbar logoLight={settings.branding.logoLight} logoDark={settings.branding.logoDark} name={settings.branding.siteName} services={navServices} payNow={{ enabled: settings.conversion.payNowButton, mobile: settings.conversion.payNowMobile }} ctaHref="/website-development#get-quote" ctaLabel="Free quote" />
       <main className="overflow-x-clip pb-20 lg:pb-0">{children}</main>
       <Footer settings={settings} services={services} />
       <LpStickyBar phone={c.phone} whatsapp={c.whatsapp} />
