@@ -3,6 +3,7 @@ import { Footer } from "@/components/site/footer";
 import { FloatingActions } from "@/components/site/floating-actions";
 import { getServices, getSettings } from "@/lib/server/content";
 import { siteUrl } from "@/lib/site";
+import { MetaPixel } from "@/components/lp/meta-pixel";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [settings, services] = await Promise.all([getSettings(), getServices()]);
@@ -26,6 +27,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main className="overflow-x-clip">{children}</main>
       <Footer settings={settings} services={services} />
       <FloatingActions whatsapp={settings.contact.whatsapp} show={settings.conversion.whatsappButton} />
+      <MetaPixel />
     </>
   );
 }

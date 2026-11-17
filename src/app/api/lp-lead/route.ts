@@ -6,6 +6,7 @@ import { sendMail, leadEmail } from "@/lib/server/mail";
 import { appendLead } from "@/lib/server/gsheet";
 import { sendMetaLead } from "@/lib/server/meta-capi";
 import { getSettings } from "@/lib/server/content";
+import { resolveLpPixel } from "@/lib/server/lp-pixels";
 
 const clean = (v: unknown, max = 255) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "referrer"] as const;
@@ -58,7 +59,8 @@ export async function POST(req: Request) {
     const { html, text } = leadEmail({ ...lead, source: `Landing page ${lead.page}${utm.utm_campaign ? ` · ${utm.utm_campaign}` : ""}` });
     const mail = await sendMail({ to: process.env.CONTACT_TO_EMAIL || s.contact.email, subject: `🔥 New ad lead: ${lead.name} (${lead.phone})`, html, text, replyTo: lead.email || undefined });
     if (id) await exec("UPDATE leads SET emailed=?, notes=? WHERE id=?", [mail.ok ? 1 : 0, sheet.ok ? "Synced to Google Sheet" : `Sheet sync failed: ${sheet.error ?? ""}`.slice(0, 500), id]).catch(() => {});
-    await sendMetaLead({ eventId, url: `https://${host}${lead.page}`, email: lead.email, phone: lead.phone, name: lead.name, city: lead.city, ip, ua: h.get("user-agent") ?? undefined, fbp: cookies._fbp, fbc: cookies._fbc, service: lead.service });
+    const pixel = await resolveLpPixel(lead.page.replace(/^\//, "").split(/[?#]/)[0] || null);
+    await sendMetaLead({ pixel, eventId, url: `https://${host}${lead.page}`, email: lead.email, phone: lead.phone, name: lead.name, city: lead.city, ip, ua: h.get("user-agent") ?? undefined, fbp: cookies._fbp, fbc: cookies._fbc, service: lead.service });
   });
 
   return Response.json({ ok: true, id, eventId });

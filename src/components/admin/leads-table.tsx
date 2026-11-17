@@ -16,15 +16,15 @@ const COLORS: Record<string, string> = {
   lost: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
-export function LeadsTable({ initial }: { initial: Lead[] }) {
+export function LeadsTable({ initial, initialQuery = "" }: { initial: Lead[]; initialQuery?: string }) {
   const [leads, setLeads] = useState(initial);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState<Lead | null>(null);
 
   const list = useMemo(() => {
     const s = q.toLowerCase();
-    return leads.filter((l) => (filter === "all" || l.status === filter) && (!s || [l.name, l.email, l.phone, l.service, l.message].join(" ").toLowerCase().includes(s)));
+    return leads.filter((l) => (filter === "all" || l.status === filter) && (!s || [l.name, l.email, l.phone, l.service, l.message, l.source].join(" ").toLowerCase().includes(s)));
   }, [leads, q, filter]);
   const count = (s: string) => leads.filter((l) => l.status === s).length;
   const conv = leads.length ? ((count("won") / leads.length) * 100).toFixed(1) : "0.0";

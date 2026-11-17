@@ -14,6 +14,8 @@ import { LeadForm } from "@/components/lp/lead-form";
 import { ScrollToFormButton } from "@/components/lp/chrome";
 import { LANDING_PAGES, getLandingPage } from "@/data/landing-pages";
 import { getBrands, getPlans, getSettings, getTestimonials } from "@/lib/server/content";
+import { MetaPixel } from "@/components/lp/meta-pixel";
+import { resolveLpPixel } from "@/lib/server/lp-pixels";
 
 export const revalidate = 300;
 export const dynamicParams = false;
@@ -45,13 +47,14 @@ const cell = (v: boolean | string, hl?: boolean) =>
 export default async function LandingPage({ params }: { params: Promise<{ lp: string }> }) {
   const p = getLandingPage((await params).lp);
   if (!p) notFound();
-  const [settings, plans, testimonials, brands] = await Promise.all([getSettings(), getPlans(), getTestimonials(), getBrands()]);
+  const [settings, plans, testimonials, brands, pixel] = await Promise.all([getSettings(), getPlans(), getTestimonials(), getBrands(), resolveLpPixel(p.slug)]);
   const { contact, founder } = settings;
   const tel = contact.phone.replace(/\s/g, "");
   const wa = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Hi Vishnu IT, I want a website. Please share details.")}`;
 
   return (
     <>
+      <MetaPixel pixelId={pixel.pixelId} />
       {/* ===== HERO + FORM ===== */}
       <section id="top" className="relative isolate overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
         <div className="pointer-events-none absolute -top-40 left-1/4 -z-10 h-[560px] w-[1000px] rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,0.16),transparent)] blur-2xl" />

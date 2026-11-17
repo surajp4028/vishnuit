@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  BadgeIndianRupee, Briefcase, ExternalLink, FileText, HelpCircle, Inbox, LayoutDashboard, LogOut, Menu, MessageSquareQuote, Settings, Sparkles, Star, Wallet, X,
+  BadgeIndianRupee, Briefcase, ExternalLink, FileText, HelpCircle, Inbox, LayoutDashboard, LogOut, Megaphone, Menu, MessageSquareQuote, Settings, Sparkles, Star, Wallet, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/leads", label: "Leads & Conversions", icon: Inbox, badge: true },
+  { href: "/admin/landing-pages", label: "Landing Pages", icon: Megaphone },
   { href: "/admin/payments", label: "Payments & Clients", icon: Wallet },
   { href: "/admin/c/services", label: "Services", icon: Sparkles },
   { href: "/admin/c/projects", label: "Portfolio", icon: Briefcase },

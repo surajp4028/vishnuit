@@ -8,10 +8,12 @@ const sha = (v?: string) => (v ? createHash("sha256").update(v.trim().toLowerCas
 export async function sendMetaLead(opts: {
   eventId: string; url: string; email?: string; phone?: string; name?: string; city?: string;
   ip?: string; ua?: string; fbp?: string; fbc?: string; service?: string;
+  /** Per-landing-page pixel; when set, its own token is used (the common token belongs to the common pixel). */
+  pixel?: { pixelId: string; capiToken: string; own: boolean };
 }) {
   const c = await getIntegrations();
-  const pixel = c.metaPixelId;
-  const token = c.metaCapiToken;
+  const pixel = opts.pixel?.pixelId || c.metaPixelId;
+  const token = opts.pixel ? opts.pixel.capiToken : c.metaCapiToken;
   if (!pixel || !token) return;
   const phone = opts.phone?.replace(/\D/g, "");
   const [fn, ...ln] = (opts.name ?? "").trim().split(/\s+/);
