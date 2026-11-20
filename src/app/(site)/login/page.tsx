@@ -1,3 +1,4 @@
+import { googleLoginOn } from "@/lib/server/content";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -11,7 +12,7 @@ export default async function LoginPage() {
   if (await getUser()) redirect("/account");
   return (
     <AuthCard title="Welcome back" subtitle="Log in to see your payments, invoices and online store.">
-      <Suspense><LoginForm /></Suspense>
+      <Suspense><LoginForm google={await googleLoginOn()} /></Suspense>
     </AuthCard>
   );
 }

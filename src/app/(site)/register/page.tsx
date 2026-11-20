@@ -1,3 +1,4 @@
+import { googleLoginOn } from "@/lib/server/content";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -11,7 +12,7 @@ export default async function RegisterPage() {
   if (await getUser()) redirect("/account");
   return (
     <AuthCard title="Create your account" subtitle="One account for your payments, invoices and your own online store.">
-      <Suspense><RegisterForm /></Suspense>
+      <Suspense><RegisterForm google={await googleLoginOn()} /></Suspense>
     </AuthCard>
   );
 }

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { googleLoginOn } from "@/lib/server/content";
 
 /** Start "Continue with Google": remember where to return, then send the user to Google. */
 export async function GET(req: Request) {
@@ -7,7 +8,7 @@ export async function GET(req: Request) {
   const id = process.env.GOOGLE_CLIENT_ID;
   const nextRaw = url.searchParams.get("next") || "/account";
   const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("\\") ? nextRaw : "/account";
-  if (!id || !process.env.GOOGLE_CLIENT_SECRET) return Response.redirect(new URL(`/login?error=google_off`, url.origin), 302);
+  if (!id || !(await googleLoginOn())) return Response.redirect(new URL(`/login?error=google_off`, url.origin), 302);
   const state = randomBytes(18).toString("base64url");
   (await cookies()).set("g_oauth", JSON.stringify({ state, next }), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/api/account/google", maxAge: 600 });
   const q = new URLSearchParams({

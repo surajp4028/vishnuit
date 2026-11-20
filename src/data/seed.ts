@@ -561,4 +561,7 @@ export const settings: Record<string, unknown> = {
     payNowOnMobile: true,
     announcement: "Free website audit for new clients this month — limited slots!",
   },
+  login: {
+    googleLogin: true,
+  },
 };

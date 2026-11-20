@@ -29,8 +29,8 @@ const GOOGLE_ERR: Record<string, string> = {
 };
 
 /** "Continue with Google" — only shown when Google sign-in is configured. */
-export function GoogleButton({ next }: { next: string }) {
-  if (process.env.NEXT_PUBLIC_GOOGLE_LOGIN !== "1") return null;
+export function GoogleButton({ next, on }: { next: string; on?: boolean }) {
+  if (!on) return null;
   return (
     <>
       <a href={`/api/account/google?next=${encodeURIComponent(next)}`} className="flex w-full items-center justify-center gap-3 rounded-pill border border-border bg-background py-3.5 text-sm font-semibold transition hover:border-foreground/30 hover:bg-foreground/[.03]">
@@ -67,7 +67,7 @@ async function post(url: string, body: unknown) {
 const safeNext = (n: string | null, fallback = "/account") => (n && n.startsWith("/") && !n.startsWith("//") && !n.includes("\\") && !/[\u0000-\u001f]/.test(n) ? n : fallback);
 
 /** `base` = a store's path (/catalog/@handle): keeps login/register inside that store and returns there. */
-export function LoginForm({ base }: { base?: string } = {}) {
+export function LoginForm({ base, google }: { base?: string; google?: boolean } = {}) {
   const sp = useSearchParams();
   const router = useRouter();
   const next = safeNext(sp.get("next"), base ?? "/account");
@@ -103,7 +103,7 @@ export function LoginForm({ base }: { base?: string } = {}) {
   return (
     <div className="space-y-5">
       <Err msg={urlErr} />
-      <GoogleButton next={next} />
+      <GoogleButton next={next} on={google} />
       <div className="grid grid-cols-2 rounded-pill border border-border bg-background p-1 text-sm font-semibold">
         {(["password", "otp"] as const).map((m) => (
           <button key={m} onClick={() => { setMode(m); setErr(""); }} className={cn("rounded-pill py-2.5 transition", mode === m ? "bg-foreground text-background" : "text-muted")}>
@@ -140,7 +140,7 @@ export function LoginForm({ base }: { base?: string } = {}) {
   );
 }
 
-export function RegisterForm({ base }: { base?: string } = {}) {
+export function RegisterForm({ base, google }: { base?: string; google?: boolean } = {}) {
   const sp = useSearchParams();
   const router = useRouter();
   const next = safeNext(sp.get("next"), base ?? "/account");
@@ -156,7 +156,7 @@ export function RegisterForm({ base }: { base?: string } = {}) {
   }
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <GoogleButton next={next} />
+      <GoogleButton next={next} on={google} />
       <input name="name" required placeholder="Full name" autoComplete="name" className={field} />
       <input name="email" type="email" required placeholder="Email" autoComplete="email" className={field} />
       <div className="flex gap-2">

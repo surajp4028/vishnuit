@@ -1,3 +1,4 @@
+import { googleLoginOn } from "@/lib/server/content";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export default async function StoreLogin({ params, searchParams }: { params: Pro
   if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : `${base}/account`);
   return (
     <StoreAuthShell store={s.name} base={base} logo={imgUrl(s.logo_key)} title="Welcome back" subtitle={`Log in to track your ${s.name} orders.`}>
-      <Suspense><LoginForm base={base} /></Suspense>
+      <Suspense><LoginForm base={base} google={await googleLoginOn()} /></Suspense>
     </StoreAuthShell>
   );
 }

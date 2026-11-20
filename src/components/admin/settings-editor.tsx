@@ -16,6 +16,7 @@ const TABS: { key: string; label: string; desc: string }[] = [
   { key: "seo", label: "SEO", desc: "Default meta title, description and share image." },
   { key: "founder", label: "Founder", desc: "Founder card on home & about." },
   { key: "conversion", label: "Conversion", desc: "WhatsApp button, header Pay Now button (show on desktop / mobile), lead email alerts and announcement bar." },
+  { key: "login", label: "Login options", desc: "Turn “Continue with Google” on or off for the website and every store. Needs GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET on the server." },
   { key: "integrations", label: "Integrations", desc: "Meta Pixel & Conversions API, and Google Sheet sync for the website and landing-page forms." },
   { key: "security", label: "Password", desc: "Change your admin password." },
 ];

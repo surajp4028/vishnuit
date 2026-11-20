@@ -2,7 +2,7 @@ import { exec } from "@/lib/server/db";
 import { requireAdminApi } from "@/lib/server/auth";
 import { refreshSite } from "@/lib/server/admin-crud";
 
-const KEYS = ["branding", "hero", "stats", "contact", "social", "seo", "founder", "conversion", "integrations"];
+const KEYS = ["branding", "hero", "stats", "contact", "social", "seo", "founder", "conversion", "login", "integrations"];
 
 export async function PUT(req: Request) {
   const a = await requireAdminApi();

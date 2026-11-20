@@ -52,7 +52,14 @@ export type Settings = {
   seo: { title: string; description: string; keywords: string; ogImage: string };
   founder: { name: string; role: string; photo: string; bio: string; cv: string; portfolio: string };
   conversion: { whatsappButton: boolean; stickyCta: boolean; leadNotify: boolean; payNowOnDesktop: boolean; payNowOnMobile: boolean; announcement: string };
+  login: { googleLogin: boolean };
 };
+
+/** Google sign-in is offered only when the admin switch is on AND the OAuth keys are set. */
+export async function googleLoginOn() {
+  const s = await getSettings();
+  return s.login?.googleLogin !== false && Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
 
 // ---------- Helpers ----------
 const arr = <T,>(v: unknown, d: T[] = []): T[] => {
