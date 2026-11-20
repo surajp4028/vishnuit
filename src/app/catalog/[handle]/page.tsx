@@ -16,10 +16,11 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   if (!s) notFound();
   const base = storeBase(raw, s.handle);
   const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 40 })]);
-  const featured = products.filter((p) => p.featured).slice(0, 10);
-  const latest = (products.filter((p) => !p.featured).length >= 4 ? products.filter((p) => !p.featured) : products).slice(0, 8);
+  // Small stores: one "Our collection" grid instead of Bestsellers + New arrivals repeating the same items.
+  const small = products.length <= 8;
+  const featured = small ? [] : products.filter((p) => p.featured).slice(0, 10);
+  const latest = (small ? products : products.filter((p) => !p.featured).length >= 4 ? products.filter((p) => !p.featured) : products).slice(0, 8);
   const aboutImgs = s.storefront.about.images.map((k) => imgUrl(k)).filter(Boolean) as string[];
-  const priceSteps = [499, 999, 1999, 4999].filter((x) => products.some((p) => p.price <= x)).slice(0, 4);
   const banner = imgUrl(s.banner_key);
   const catTiles = cats.filter((c) => !c.parent_id).map((c) => { const ids = withChildren(cats, c.id); return { ...c, img: imgUrl(products.find((p) => p.category_id != null && ids.includes(p.category_id) && p.images[0])?.images[0]) }; }).slice(0, 10);
   const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
@@ -63,13 +64,13 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
       {catTiles.length > 0 && (
         <section className="mx-auto mt-12 max-w-7xl sm:mt-16 sm:px-6">
           <div className="flex items-end justify-between px-3 sm:px-0"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">EXPLORE</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Shop by category</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">See all</Link></div>
-          <div className={`mt-5 flex snap-x scroll-px-3 gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:grid sm:gap-4 sm:overflow-visible sm:px-0 ${catTiles.length >= 5 ? "sm:grid-cols-5" : catTiles.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+          <div className={`mt-5 flex snap-x scroll-px-3 gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:grid sm:gap-4 sm:overflow-visible sm:px-0 ${catTiles.length >= 5 ? "sm:grid-cols-5" : catTiles.length === 4 ? "sm:grid-cols-4" : catTiles.length === 3 ? "sm:grid-cols-3" : catTiles.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-1"}`}>
             {catTiles.slice(0, 10).map((c) => (
-              <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="group relative block aspect-[3/4] w-[38vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-foreground/[.05] sm:w-auto">
+              <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className={`group relative block aspect-[3/4] w-[38vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-foreground/[.05] sm:w-auto ${catTiles.length <= 2 ? "sm:aspect-[16/9]" : catTiles.length === 3 ? "sm:aspect-[4/5]" : ""}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {c.img ? <img src={c.img} alt="" className="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-105" /> : <span className="absolute inset-0 grid place-items-center font-display text-5xl font-extrabold text-foreground/10">{c.name[0]}</span>}
                 <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent" />
-                <span className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-4"><span className="block font-display text-[15px] leading-tight font-bold sm:text-lg">{c.name}</span><span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-white/75 transition group-hover:gap-2">Shop now <ArrowRight className="size-3" /></span></span>
+                <span className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-5"><span className={`block font-display text-[15px] leading-tight font-bold ${catTiles.length <= 3 ? "sm:text-3xl" : "sm:text-lg"}`}>{c.name}</span><span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-white/75 transition group-hover:gap-2">Shop now <ArrowRight className="size-3" /></span></span>
               </Link>
             ))}
           </div>
@@ -85,25 +86,8 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
         </section>
       )}
 
-      {priceSteps.length > 1 && (
-        <section className="mx-auto mt-12 max-w-7xl px-3 sm:mt-16 sm:px-6">
-          <div className="rounded-3xl bg-[#0b0d12] px-5 py-7 text-white sm:px-10 sm:py-10">
-            <p className="text-[11px] font-bold tracking-[4px] text-white/50">SHOP BY BUDGET</p>
-            <div className={`mt-4 grid gap-2.5 sm:gap-4 ${priceSteps.length === 4 ? "grid-cols-2 sm:grid-cols-4" : priceSteps.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-              {priceSteps.map((x) => (
-                <Link key={x} href={`${base}/shop?max=${x}`} className="group rounded-2xl border border-white/10 bg-white/[.04] px-4 py-4 transition hover:border-white/40 hover:bg-white/[.08] sm:py-6">
-                  <span className="block text-[11px] font-semibold tracking-[2px] text-white/55">UNDER</span>
-                  <span className="mt-1 block font-display text-[1.3rem] font-extrabold sm:text-4xl">₹{x.toLocaleString("en-IN")}</span>
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 transition group-hover:gap-2">Explore <ArrowRight className="size-3" /></span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="mx-auto mt-12 max-w-7xl px-3 sm:mt-16 sm:px-6">
-        <div className="flex items-end justify-between"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">JUST IN</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">New arrivals</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">Shop all</Link></div>
+        <div className="flex items-end justify-between"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">{small ? "THE EDIT" : "JUST IN"}</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{small ? "Our collection" : "New arrivals"}</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">Shop all</Link></div>
         {latest.length ? (
           <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">{latest.map((p) => <ProductCard key={p.id} p={p} base={base} />)}</div>
         ) : (

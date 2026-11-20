@@ -9,7 +9,7 @@ import { flattenTree, withChildren } from "@/lib/category-tree";
 export const metadata: Metadata = { title: "Shop" };
 export const dynamic = "force-dynamic";
 
-type SP = { c?: string; sort?: string; q?: string; f?: string | string[]; min?: string; max?: string; stock?: string };
+type SP = { c?: string | string[]; sort?: string; q?: string; f?: string | string[]; min?: string; max?: string; stock?: string };
 
 const inStock = (p: Product) => (p.variants.length ? p.variants.some((v) => v.stock !== 0) : p.stock !== 0);
 /** True when the product offers that option value (and, with one option, that variant isn't sold out). */
@@ -26,8 +26,10 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   if (!s) notFound();
   const base = storeBase(handle, s.handle);
   const [cats, all] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, q: sp.q })]);
-  const cat = cats.find((c) => c.slug === sp.c);
-  const catIds = cat ? withChildren(cats, cat.id) : [];
+  // One or several categories (?c=mens&c=women) — a product matches if it's in any of them (or their sub-categories).
+  const chosen = (Array.isArray(sp.c) ? sp.c : sp.c ? [sp.c] : []).map((slug) => cats.find((c) => c.slug === slug)).filter((c): c is NonNullable<typeof c> => !!c);
+  const cat = chosen.length === 1 ? chosen[0] : undefined;
+  const catIds = chosen.flatMap((c) => withChildren(cats, c.id));
   const parent = cat?.parent_id ? cats.find((c) => c.id === cat.parent_id) : undefined;
   const subs = cats.filter((c) => c.parent_id === (cat?.parent_id ?? cat?.id ?? -1)).sort((a, b) => a.sort - b.sort);
   const f = (Array.isArray(sp.f) ? sp.f : sp.f ? [sp.f] : []).filter((x) => x.includes(":"));
@@ -55,7 +57,7 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   const byOpt = new Map<string, string[]>();
   for (const x of f) { const [n, ...v] = x.split(":"); byOpt.set(n, [...(byOpt.get(n) ?? []), v.join(":")]); }
   let products = all.filter((p) =>
-    (!cat || (p.category_id != null && catIds.includes(p.category_id))) &&
+    (!chosen.length || (p.category_id != null && catIds.includes(p.category_id))) &&
     (!min || p.price >= min) && (!max || p.price <= max) &&
     (sp.stock !== "1" || inStock(p)) &&
     [...byOpt].every(([n, vs]) => vs.some((v) => hasValue(p, n, v))),
@@ -64,8 +66,8 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   if (sp.sort === "high") products = products.sort((a, b) => b.price - a.price);
   if (sp.sort === "off") products = products.sort((a, b) => (b.compare_price ? 1 - b.price / b.compare_price : 0) - (a.compare_price ? 1 - a.price / a.compare_price : 0));
 
-  const applied: Applied = { c: cat?.slug ?? "", f, min: sp.min ?? "", max: sp.max ?? "", stock: sp.stock === "1", sort: sp.sort ?? "", q: sp.q ?? "" };
-  const title = sp.q ? `“${sp.q}”` : cat ? cat.name : "All products";
+  const applied: Applied = { c: chosen.map((c) => c.slug), f, min: sp.min ?? "", max: sp.max ?? "", stock: sp.stock === "1", sort: sp.sort ?? "", q: sp.q ?? "" };
+  const title = sp.q ? `“${sp.q}”` : chosen.length ? chosen.map((c) => c.name).join(", ") : "All products";
   return (
     <section className="mx-auto max-w-7xl px-3 pt-5 sm:px-6 sm:pt-8">
       <nav className="text-xs text-muted"><Link href={base || "/"} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parent && <> / <Link href={`${base}/shop?c=${parent.slug}`} className="hover:text-foreground">{parent.name}</Link></>}{cat && <> / <span className="text-foreground">{cat.name}</span></>}</nav>

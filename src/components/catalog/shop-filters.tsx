@@ -9,7 +9,8 @@ export type Facets = {
   options: { name: string; values: { v: string; count: number; hex?: string }[] }[];
   price: { min: number; max: number };
 };
-export type Applied = { c: string; f: string[]; min: string; max: string; stock: boolean; sort: string; q: string };
+/** c = chosen category slugs (several allowed: shows products from any of them). */
+export type Applied = { c: string[]; f: string[]; min: string; max: string; stock: boolean; sort: string; q: string };
 
 const SORTS: [string, string][] = [["", "Newest"], ["low", "Price: low to high"], ["high", "Price: high to low"], ["off", "Biggest discount"]];
 const COLOR_HEX: Record<string, string> = { black: "#111", white: "#fff", red: "#d33", blue: "#2563eb", navy: "#1e2a5a", green: "#16a34a", yellow: "#facc15", pink: "#ec4899", maroon: "#7f1d1d", beige: "#e8dcc4", grey: "#9ca3af", gray: "#9ca3af", brown: "#7c4a21", orange: "#f97316", purple: "#7c3aed", gold: "#d4a017", silver: "#c0c0c0", cream: "#f5ecd7", mustard: "#d4a017", teal: "#0d9488", indigo: "#4338ca", blush: "#f4c2c2" };
@@ -17,7 +18,7 @@ const COLOR_HEX: Record<string, string> = { black: "#111", white: "#fff", red: "
 function toQuery(a: Applied) {
   const u = new URLSearchParams();
   if (a.q) u.set("q", a.q);
-  if (a.c) u.set("c", a.c);
+  a.c.forEach((x) => u.append("c", x));
   a.f.forEach((x) => u.append("f", x));
   if (a.min) u.set("min", a.min);
   if (a.max) u.set("max", a.max);
@@ -36,11 +37,11 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
   useEffect(() => setA(applied), [applied]);
   useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
 
-  const count = (applied.c ? 1 : 0) + applied.f.length + (applied.min || applied.max ? 1 : 0) + (applied.stock ? 1 : 0);
+  const count = applied.c.length + applied.f.length + (applied.min || applied.max ? 1 : 0) + (applied.stock ? 1 : 0);
   const go = (x: Applied) => { router.push(path + toQuery(x), { scroll: false }); setOpen(false); };
   const toggleF = (name: string, v: string) => { const k = `${name}:${v}`; setA((p) => ({ ...p, f: p.f.includes(k) ? p.f.filter((y) => y !== k) : [...p.f, k] })); };
   const chips = [
-    ...(applied.c ? [{ k: "c", label: facets.categories.find((x) => x.slug === applied.c)?.name ?? applied.c, rm: { ...applied, c: "" } }] : []),
+    ...applied.c.map((slug) => ({ k: `c:${slug}`, label: facets.categories.find((x) => x.slug === slug)?.name ?? slug, rm: { ...applied, c: applied.c.filter((y) => y !== slug) } })),
     ...applied.f.map((x) => ({ k: x, label: x.split(":").slice(1).join(":"), rm: { ...applied, f: applied.f.filter((y) => y !== x) } })),
     ...(applied.min || applied.max ? [{ k: "price", label: `₹${applied.min || facets.price.min} – ₹${applied.max || facets.price.max}`, rm: { ...applied, min: "", max: "" } }] : []),
     ...(applied.stock ? [{ k: "stock", label: "In stock", rm: { ...applied, stock: false } }] : []),
@@ -79,12 +80,17 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
               <section>
                 <p className="mb-3 text-[11px] font-bold tracking-[3px] text-muted">CATEGORY</p>
                 <div className="space-y-1">
-                  {[{ slug: "", name: "All products", count: 0, depth: 0 }, ...facets.categories].map((c) => (
-                    <button key={c.slug || "all"} onClick={() => setA({ ...a, c: c.slug })} className={cn("flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[14.5px] hover:bg-foreground/[.04]", c.depth === 1 && "pl-8 text-[13.5px]")}>
-                      <span className={cn("grid size-5 shrink-0 place-items-center rounded-full border-2", a.c === c.slug ? "border-foreground" : "border-border")}>{a.c === c.slug && <span className="size-2.5 rounded-full bg-foreground" />}</span>
+                  {[{ slug: "", name: "All products", count: 0, depth: 0 }, ...facets.categories].map((c) => {
+                    // Tick as many as you like; "All products" clears the choice.
+                    const on = c.slug ? a.c.includes(c.slug) : a.c.length === 0;
+                    const flip = () => setA({ ...a, c: !c.slug ? [] : on ? a.c.filter((y) => y !== c.slug) : [...a.c, c.slug] });
+                    return (
+                    <button key={c.slug || "all"} role="checkbox" aria-checked={on} onClick={flip} className={cn("flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[14.5px] hover:bg-foreground/[.04]", c.depth === 1 && "pl-8 text-[13.5px]")}>
+                      <span className={cn("grid size-5 shrink-0 place-items-center rounded-md border-2 transition", on ? "border-foreground bg-foreground text-background" : "border-border")}>{on && <Check className="size-3.5" strokeWidth={3} />}</span>
                       <span className={cn("flex-1", c.depth === 1 ? "text-muted" : "font-medium")}>{c.name}</span>{c.count > 0 && <span className="text-xs text-muted">{c.count}</span>}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -134,7 +140,7 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
             </section>
           </div>
           <footer className="grid grid-cols-2 gap-3 border-t border-border p-4">
-            <button onClick={() => go({ c: "", f: [], min: "", max: "", stock: false, sort: "", q: a.q })} className="rounded-full border border-border py-3.5 text-sm font-bold">Clear all</button>
+            <button onClick={() => go({ c: [], f: [], min: "", max: "", stock: false, sort: "", q: a.q })} className="rounded-full border border-border py-3.5 text-sm font-bold">Clear all</button>
             <button onClick={() => go(a)} className="rounded-full bg-foreground py-3.5 text-sm font-bold text-background">Show results</button>
           </footer>
         </aside>
