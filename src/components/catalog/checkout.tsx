@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Banknote, CheckCircle2, CreditCard, Loader2, Lock, Minus, Plus, ShieldCheck, ShoppingBag, Smartphone, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<{ orderNo: string; subtotal: number } | null>(null);
+  const [me, setMe] = useState<{ name: string; phone: string | null; email: string | null } | null | undefined>(undefined);
+  useEffect(() => { fetch("/api/account/me").then((r) => r.json()).then((j) => setMe(j?.user ?? null)).catch(() => setMe(null)); }, []);
 
   async function place(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setErr(""); setBusy(true);
@@ -109,12 +111,12 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
           </div>
 
           <div className={box}>
-            {step(2, "Delivery address")}
+            <div className="flex items-center justify-between">{step(2, "Delivery address")}{me === null && <Link href={`${base}/login?next=${encodeURIComponent(`${base}/cart`)}`} className="text-xs font-bold text-muted underline underline-offset-4">Have an account? Log in</Link>}</div>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-              <input name="name" required placeholder="Full name" autoComplete="name" className={field} />
-              <input name="phone" required inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
+              <input key={`n${me?.name ?? ""}`} name="name" required defaultValue={me?.name ?? ""} placeholder="Full name" autoComplete="name" className={field} />
+              <input key={`p${me?.phone ?? ""}`} name="phone" required defaultValue={me?.phone?.replace(/^\+?91/, "") ?? ""} inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
               <textarea name="address" required rows={2} placeholder="House no, street, area, city, PIN code" autoComplete="street-address" className={cn(field, "resize-none sm:col-span-2")} />
-              <input name="email" type="email" placeholder="Email for order updates (optional)" autoComplete="email" className={cn(field, "sm:col-span-2")} />
+              <input key={`e${me?.email ?? ""}`} name="email" type="email" defaultValue={me?.email ?? ""} placeholder="Email for order updates (optional)" autoComplete="email" className={cn(field, "sm:col-span-2")} />
             </div>
           </div>
         </div>

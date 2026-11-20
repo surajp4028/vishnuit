@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BadgeCheck, Quote, Star } from "lucide-react";
+import { ArrowRight, BadgeCheck } from "lucide-react";
+import { Testimonials } from "@/components/catalog/testimonials";
 import { HeroCarousel } from "@/components/catalog/hero-carousel";
 import { withChildren } from "@/lib/category-tree";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
@@ -16,14 +17,13 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 40 })]);
   const featured = products.filter((p) => p.featured).slice(0, 10);
   const latest = (products.filter((p) => !p.featured).length >= 4 ? products.filter((p) => !p.featured) : products).slice(0, 8);
-  const storyImg = imgUrl(s.storefront.about.images[0]);
+  const aboutImgs = s.storefront.about.images.map((k) => imgUrl(k)).filter(Boolean) as string[];
   const priceSteps = [499, 999, 1999, 4999].filter((x) => products.some((p) => p.price <= x)).slice(0, 4);
   const banner = imgUrl(s.banner_key);
   const catTiles = cats.filter((c) => !c.parent_id).map((c) => { const ids = withChildren(cats, c.id); return { ...c, img: imgUrl(products.find((p) => p.category_id != null && ids.includes(p.category_id) && p.images[0])?.images[0]) }; }).slice(0, 10);
   const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
   const slides = s.storefront.banners.map((x) => ({ ...x, url: imgUrl(x.key)! })).filter((x) => x.url);
   const reviews = s.testimonials.on ? s.testimonials.items.filter((t) => t.on) : [];
-  const avg = reviews.length ? reviews.reduce((a, t) => a + t.rating, 0) / reviews.length : 0;
 
   return (
     <>
@@ -111,55 +111,45 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
         {products.length > latest.length && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
       </section>
 
-      {reviews.length > 0 && (
-        <section className="mt-16 overflow-hidden sm:mt-24">
-          <div className="mx-auto max-w-7xl px-3 sm:px-6">
-            <div className="flex flex-col items-center text-center">
-              <p className="text-[11px] font-bold tracking-[4px] text-muted">LOVED BY CUSTOMERS</p>
-              <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-4xl">What people are saying</h2>
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted">
-                <span className="flex">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={n <= Math.round(avg) ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
-                <span><b className="text-foreground">{avg.toFixed(1)}</b> · {reviews.length} review{reviews.length > 1 ? "s" : ""}</span>
-              </div>
-            </div>
-          </div>
-          <div className="group relative mt-8 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]">
-            <div className={`flex w-max gap-4 py-2 ${reviews.length > 1 ? "animate-[marquee_var(--d)_linear_infinite] group-hover:[animation-play-state:paused]" : "mx-auto"}`} style={{ ["--d" as string]: `${Math.max(25, reviews.length * 9)}s` }}>
-              {(reviews.length > 1 ? [...reviews, ...reviews] : reviews).map((t, n) => (
-                <figure key={`${t.id}-${n}`} aria-hidden={n >= reviews.length} className="relative flex w-[300px] shrink-0 flex-col rounded-3xl border border-border bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,.02),0_12px_32px_-18px_rgba(0,0,0,.18)] transition duration-300 hover:-translate-y-1 hover:border-foreground/25 sm:w-[380px] sm:p-7">
-                  <Quote className="absolute top-6 right-6 size-9 fill-foreground/[.04] text-foreground/[.08]" />
-                  <span className="flex gap-0.5">{[1, 2, 3, 4, 5].map((k) => <Star key={k} className={k <= t.rating ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
-                  <blockquote className="mt-4 line-clamp-5 flex-1 font-display text-[16px] leading-relaxed text-foreground/90 sm:text-[17px]">“{t.text}”</blockquote>
-                  <figcaption className="mt-6 flex items-center gap-3 border-t border-dashed border-border pt-5">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-foreground to-foreground/70 text-sm font-bold text-background">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
-                    <span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-semibold capitalize">{t.name}</span><span className="block truncate text-xs text-muted">{t.place || "Happy customer"}</span></span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {reviews.length > 0 && <Testimonials reviews={reviews.map((t) => ({ id: t.id, name: t.name, place: t.place, text: t.text, rating: t.rating }))} />}
 
       {s.about && (
         <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6">
-          {storyImg ? (
-            <div className="grid items-center gap-8 overflow-hidden rounded-3xl bg-foreground/[.03] md:grid-cols-2 md:gap-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={storyImg} alt={s.name} className="aspect-[4/3] w-full object-cover md:aspect-auto md:h-full" />
-              <div className="px-6 pb-10 md:px-14 md:py-16">
-                <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
-                <p className="mt-4 line-clamp-6 font-display text-xl leading-relaxed sm:text-2xl sm:leading-snug">{s.about}</p>
-                <Link href={`${base}/about`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-[13px] font-bold tracking-wide text-background uppercase">Read our story <ArrowRight className="size-4" /></Link>
+          <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+            <div className="relative">
+              {aboutImgs.length >= 2 ? (
+                <div className="relative pr-[20%] pb-[16%]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={aboutImgs[1]} alt="" className="absolute right-0 bottom-0 aspect-square w-[45%] rounded-[1.5rem] border-[6px] border-background object-cover shadow-2xl" />
+                </div>
+              ) : aboutImgs.length === 1 ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+              ) : (
+                <div className="relative isolate grid aspect-[4/5] place-items-center overflow-hidden rounded-[2rem] bg-[#0b0d12] text-white sm:aspect-[5/5]">
+                  <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_30%_10%,rgba(212,160,23,.3),transparent_55%),radial-gradient(ellipse_at_80%_90%,rgba(59,130,246,.22),transparent_55%)]" />
+                  <span className="font-display text-[10rem] leading-none font-extrabold text-white/90 sm:text-[13rem]">{s.name[0]}</span>
+                  <span className="absolute bottom-6 text-[11px] font-bold tracking-[5px] text-white/50 uppercase">Est. {new Date(s.created_at).getFullYear()}</span>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
+              <h2 className="mt-3 font-display text-3xl leading-[1.08] font-extrabold tracking-tight sm:text-5xl">{s.storefront.about.heading || s.tagline || `Meet ${s.name}`}</h2>
+              <p className="mt-5 line-clamp-5 text-[16px] leading-relaxed text-foreground/75 sm:text-[17px]">{s.about.split(/\n\s*\n/)[0]}</p>
+              {perks.length > 0 && (
+                <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-3">
+                  {perks.slice(0, 4).map((h) => { const I = HIGHLIGHT_ICON_MAP[h.icon] ?? BadgeCheck; return <li key={h.title} className="flex items-center gap-2.5 text-[13.5px] font-semibold"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground/[.06]"><I className="size-4" /></span>{h.title}</li>; })}
+                </ul>
+              )}
+              <div className="mt-8 flex flex-wrap items-center gap-5">
+                <Link href={`${base}/about`} className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[13px] font-bold tracking-wide text-background uppercase transition hover:gap-3">Read our story <ArrowRight className="size-4" /></Link>
+                <span className="font-display text-lg italic text-muted">— Team {s.name}</span>
               </div>
             </div>
-          ) : (
-            <div className="rounded-3xl bg-foreground/[.03] px-6 py-12 text-center sm:px-16 sm:py-20">
-              <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
-              <p className="mx-auto mt-5 line-clamp-5 max-w-3xl font-display text-xl leading-relaxed sm:text-[1.7rem] sm:leading-snug">{s.about}</p>
-              <Link href={`${base}/about`} className="mt-7 inline-block text-[13px] font-bold tracking-wide uppercase underline underline-offset-[6px]">Read more</Link>
-            </div>
-          )}
+          </div>
         </section>
       )}
     </>

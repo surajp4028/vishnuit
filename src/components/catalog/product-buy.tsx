@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
+import { Check, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
@@ -11,46 +11,36 @@ type P = {
   options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
 };
 
-/** Phones: full-bleed swipe with counter. Desktop: thumbnail rail + large image with hover zoom. */
+/** Phones: full-bleed swipe with counter. Desktop: 2-up photo grid (Myntra-style) with hover zoom on each photo. */
 export function ProductGallery({ images, name, badge }: { images: string[]; name: string; badge?: string | null }) {
   const [i, setI] = useState(0);
-  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const go = (k: number) => { const n = (k + images.length) % images.length; setI(n); ref.current?.scrollTo({ left: n * ref.current.clientWidth, behavior: "smooth" }); };
   if (!images.length) return <div className="aspect-[4/5] bg-foreground/[.04] sm:rounded-3xl" />;
   return (
-    <div className="flex gap-3 md:sticky md:top-32 md:self-start">
-      {images.length > 1 && (
-        <div className="hidden w-[72px] shrink-0 flex-col gap-2.5 md:flex">
-          {images.map((src, k) => (
-            <button key={k} onMouseEnter={() => go(k)} onClick={() => go(k)} className={cn("aspect-[3/4] overflow-hidden rounded-xl ring-2 ring-offset-2 ring-offset-background transition", i === k ? "ring-foreground" : "ring-transparent opacity-60 hover:opacity-100")}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="size-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="group relative min-w-0 flex-1">
-        <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
-          onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }); }}
-          onMouseLeave={() => setZoom(null)}
-          className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto bg-foreground/[.04] [scrollbar-width:none] md:cursor-zoom-in md:rounded-3xl [&::-webkit-scrollbar]:hidden">
-          {images.map((src, k) => (
-            <div key={k} className="relative size-full shrink-0 snap-center overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={k === 0 ? name : ""} className="size-full object-cover transition-transform duration-200 md:group-hover:scale-[1.8]" style={zoom && k === i ? { transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined} />
-            </div>
-          ))}
+    <div>
+      {/* phone: swipe */}
+      <div className="relative md:hidden">
+        <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto bg-foreground/[.04] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} className="size-full shrink-0 snap-center object-cover" />)}
         </div>
         {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
         {images.length > 1 && (
           <>
-            <span className="pointer-events-none absolute right-4 bottom-4 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur md:hidden">{i + 1} / {images.length}</span>
-            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 md:hidden">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
-            <button onClick={() => go(i - 1)} aria-label="Previous image" className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black opacity-0 shadow transition group-hover:opacity-100 md:grid"><ChevronLeft className="size-5" /></button>
-            <button onClick={() => go(i + 1)} aria-label="Next image" className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black opacity-0 shadow transition group-hover:opacity-100 md:grid"><ChevronRight className="size-5" /></button>
+            <span className="pointer-events-none absolute right-4 bottom-4 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
           </>
         )}
+      </div>
+      {/* desktop: 2-up grid */}
+      <div className={cn("relative hidden gap-2.5 md:grid", images.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+        {images.map((src, k) => (
+          <div key={k} className={cn("group overflow-hidden rounded-2xl bg-foreground/[.04]", images.length > 1 && images.length % 2 === 1 && k === images.length - 1 ? "col-span-2 aspect-[16/10]" : "aspect-[3/4]")}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={k === 0 ? name : ""} loading={k > 1 ? "lazy" : "eager"} className="size-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-110" />
+          </div>
+        ))}
+        {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
       </div>
     </div>
   );

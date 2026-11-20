@@ -28,6 +28,10 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
   const { count, ready } = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const [me, setMe] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/account/me").then((r) => r.json()).then((j) => { const n: string = j?.user?.name || ""; if (j?.user) setMe(n.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "ME"); }).catch(() => {});
+  }, []);
   const path = usePathname();
   const sp = useSearchParams();
   const [menu, setMenu] = useState(false);
@@ -50,7 +54,7 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
         <div className="hidden max-w-md flex-1 md:block"><SearchBox base={base} /></div>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <button onClick={() => setSearch((s) => !s)} aria-label="Search" className="grid size-9 place-items-center rounded-full md:hidden">{search ? <X className="size-5" /> : <Search className="size-5" />}</button>
-          <Link href="/account?tab=orders" aria-label="My orders" className="hidden size-10 place-items-center rounded-full hover:bg-foreground/5 sm:grid"><UserRound className="size-5" /></Link>
+          <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base)}`} aria-label={me ? "My account" : "Log in"} className="grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">{me ? <span className="grid size-8 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{me}</span> : <UserRound className="size-5" />}</Link>
           <Link href={`${base}/cart`} aria-label="Bag" className="relative grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">
             <ShoppingBag className="size-5" />
             {mounted && ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
@@ -74,7 +78,7 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
             <div className="flex items-center justify-between"><span className="truncate font-display text-lg font-extrabold">{name}</span><button onClick={() => setMenu(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full"><X className="size-5" /></button></div>
             <nav className="mt-6 space-y-1">
               {links.map(([h, l]) => <Link key={l} href={base + h} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{l}</Link>)}
-              <Link href="/account?tab=orders" className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">My orders</Link>
+              <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base)}`} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{me ? "My orders" : "Log in / Sign up"}</Link>
             </nav>
             {categories.length > 0 && <>
               <p className="mt-6 px-3 text-[11px] font-bold tracking-[2px] text-muted">CATEGORIES</p>

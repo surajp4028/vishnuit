@@ -6,6 +6,7 @@ import { ChevronDown, Store as StoreIcon } from "lucide-react";
 import { PAGE_KEYS, PAGE_TITLES, getStoreByHandle, getStoreCategories, getStoreProducts, hydrateProduct, imgUrl } from "@/lib/server/catalog";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
 import { ProductBuy, ProductGallery } from "@/components/catalog/product-buy";
+import { StickyColumn } from "@/components/catalog/sticky-column";
 import { ProductCard } from "@/components/catalog/product-card";
 
 export const revalidate = 120;
@@ -45,9 +46,9 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     <>
       <section className="mx-auto max-w-7xl pt-0 sm:px-6 md:pt-8">
         <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parentCat && <> / <Link href={`${base}/shop?c=${parentCat.slug}`} className="hover:text-foreground">{parentCat.name}</Link></>}{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
-        <div className="grid gap-6 md:grid-cols-[1.15fr_1fr] md:gap-12 lg:gap-16">
-          <ProductGallery images={images} name={p.name} badge={off >= 10 ? `${off}% OFF` : null} />
-          <div className="px-4 md:px-0">
+        <div className="grid gap-6 md:grid-cols-[1.35fr_1fr] md:gap-10 lg:gap-14">
+          <StickyColumn><ProductGallery images={images} name={p.name} badge={off >= 10 ? `${off}% OFF` : null} /></StickyColumn>
+          <StickyColumn className="px-4 md:px-0">
             {cat && <Link href={`${base}/shop?c=${cat.slug}`} className="text-[11px] font-bold tracking-[3px] text-muted uppercase hover:text-foreground">{cat.name}</Link>}
             <h1 className="mt-1.5 font-display text-[1.65rem] leading-tight font-extrabold tracking-tight sm:text-4xl">{p.name}</h1>
             <p className="mt-1 text-sm text-muted">by <span className="font-semibold text-foreground">{s.name}</span></p>
@@ -90,7 +91,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
                 <Link href={`${base}/contact`} className="rounded-full border border-border px-4 py-2 text-xs font-bold">Contact</Link>
               </div>
             </div>
-          </div>
+          </StickyColumn>
         </div>
       </section>
       {related.length > 0 && (
