@@ -5,6 +5,7 @@ import { ArrowRight, ShoppingBag, Camera, CheckCircle2, Clock, FileText, LayoutD
 import Link from "next/link";
 import { cn, formatINR } from "@/lib/utils";
 import { field } from "./auth-forms";
+import { ORDER_COLOR, ORDER_FLOW, ORDER_LABEL, PAY_COLOR, PAY_LABEL } from "@/lib/order-status";
 
 export type AccountPayment = {
   plan_id: number | null; plan_name: string; amount: number; status: string; method: string | null;
@@ -12,7 +13,7 @@ export type AccountPayment = {
 };
 type U = { uid: string; name: string; email: string | null; phone: string | null; company: string | null; avatar: string | null; hasPassword: boolean };
 type Tab = "overview" | "orders" | "payments" | "profile";
-export type MyOrder = { order_no: string; store: string; handle: string; subtotal: number; status: string; pay_method: string; pay_status: string; created_at: string; items: { name: string; variant: string | null; qty: number }[]; invoice: string };
+export type MyOrder = { order_no: string; store: string; handle: string; subtotal: number; status: string; pay_method: string; pay_status: string; created_at: string; items: { name: string; variant: string | null; qty: number }[]; invoice: string; status_log?: { s: string; at: string }[]; tracking?: { courier: string; number: string; url: string } | null };
 
 const d = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -88,10 +89,34 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
                     <p className="shrink-0 font-display font-bold">{formatINR(o.subtotal)}</p>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm text-muted">{o.items.map((i) => `${i.name}${i.variant ? ` (${i.variant})` : ""} × ${i.qty}`).join(", ")}</p>
+                  {!["cancelled", "returned"].includes(o.status) && (() => {
+                    const cur = ORDER_FLOW.indexOf(o.status as (typeof ORDER_FLOW)[number]);
+                    const steps = ["new", "confirmed", "shipped", "delivered"] as const;
+                    const at = (s: string) => [...(o.status_log ?? [])].reverse().find((l) => l.s === s)?.at ?? (s === "new" ? o.created_at : undefined);
+                    return (
+                      <ol className="mt-4 grid grid-cols-4">
+                        {steps.map((s, k) => {
+                          const done = ORDER_FLOW.indexOf(s) <= cur;
+                          const t = at(s);
+                          return (
+                            <li key={s} className="relative flex flex-col items-center text-center">
+                              {k > 0 && <span className={cn("absolute top-[9px] right-1/2 h-0.5 w-full", done ? "bg-emerald-500" : "bg-border")} />}
+                              <span className={cn("relative z-10 size-5 rounded-full border-[3px]", done ? "border-emerald-500 bg-emerald-500" : "border-border bg-card")} />
+                              <span className={cn("mt-1.5 text-[11px] font-semibold", !done && "text-muted")}>{ORDER_LABEL[s]}</span>
+                              {done && t && <span className="text-[10px] text-muted">{new Date(t).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    );
+                  })()}
+                  {o.tracking?.number && (
+                    <p className="mt-3 rounded-2xl bg-foreground/[.03] px-4 py-2.5 text-xs">Shipped via <b>{o.tracking.courier || "courier"}</b> · AWB <span className="font-mono font-semibold">{o.tracking.number}</span>{o.tracking.url && <> · <a href={o.tracking.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent underline">Track package</a></>}</p>
+                  )}
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-semibold capitalize">{o.status === "new" ? "Order placed" : o.status}</span>
-                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", o.pay_status === "paid" || o.pay_status === "verified" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600")}>{o.pay_method === "cod" ? "Cash on delivery" : o.pay_status === "paid" || o.pay_status === "verified" ? "Paid" : "Payment pending"}</span>
+                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", ORDER_COLOR[o.status] ?? "bg-foreground/5")}>{ORDER_LABEL[o.status] ?? o.status}</span>
+                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", PAY_COLOR[o.pay_status] ?? "bg-foreground/5")}>{o.pay_method === "cod" && o.pay_status === "pending" ? "Cash on delivery" : PAY_LABEL[o.pay_status] ?? o.pay_status}</span>
                     </div>
                     <a href={o.invoice} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-semibold text-background"><FileText className="size-3.5" /> Invoice</a>
                   </div>

@@ -1,7 +1,7 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
@@ -11,26 +11,47 @@ type P = {
   options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
 };
 
-export function ProductGallery({ images, name }: { images: string[]; name: string }) {
+/** Phones: full-bleed swipe with counter. Desktop: thumbnail rail + large image with hover zoom. */
+export function ProductGallery({ images, name, badge }: { images: string[]; name: string; badge?: string | null }) {
   const [i, setI] = useState(0);
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  if (!images.length) return <div className="aspect-[4/5] rounded-[1.6rem] bg-foreground/[.04]" />;
+  const go = (k: number) => { const n = (k + images.length) % images.length; setI(n); ref.current?.scrollTo({ left: n * ref.current.clientWidth, behavior: "smooth" }); };
+  if (!images.length) return <div className="aspect-[4/5] bg-foreground/[.04] sm:rounded-3xl" />;
   return (
-    <div>
-      <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto rounded-[1.6rem] bg-foreground/[.04] [scrollbar-width:none]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} className="size-full shrink-0 snap-center object-cover" />)}
-      </div>
+    <div className="flex gap-3 md:sticky md:top-32 md:self-start">
       {images.length > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto">
+        <div className="hidden w-[72px] shrink-0 flex-col gap-2.5 md:flex">
           {images.map((src, k) => (
-            <button key={k} onClick={() => ref.current?.scrollTo({ left: k * ref.current.clientWidth, behavior: "smooth" })} className={cn("size-16 shrink-0 overflow-hidden rounded-xl border-2 transition", i === k ? "border-foreground" : "border-transparent opacity-60")}>
+            <button key={k} onMouseEnter={() => go(k)} onClick={() => go(k)} className={cn("aspect-[3/4] overflow-hidden rounded-xl ring-2 ring-offset-2 ring-offset-background transition", i === k ? "ring-foreground" : "ring-transparent opacity-60 hover:opacity-100")}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src} alt="" className="size-full object-cover" />
             </button>
           ))}
         </div>
       )}
+      <div className="group relative min-w-0 flex-1">
+        <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
+          onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }); }}
+          onMouseLeave={() => setZoom(null)}
+          className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto bg-foreground/[.04] [scrollbar-width:none] md:cursor-zoom-in md:rounded-3xl [&::-webkit-scrollbar]:hidden">
+          {images.map((src, k) => (
+            <div key={k} className="relative size-full shrink-0 snap-center overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt={k === 0 ? name : ""} className="size-full object-cover transition-transform duration-200 md:group-hover:scale-[1.8]" style={zoom && k === i ? { transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined} />
+            </div>
+          ))}
+        </div>
+        {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
+        {images.length > 1 && (
+          <>
+            <span className="pointer-events-none absolute right-4 bottom-4 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur md:hidden">{i + 1} / {images.length}</span>
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 md:hidden">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
+            <button onClick={() => go(i - 1)} aria-label="Previous image" className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black opacity-0 shadow transition group-hover:opacity-100 md:grid"><ChevronLeft className="size-5" /></button>
+            <button onClick={() => go(i + 1)} aria-label="Next image" className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black opacity-0 shadow transition group-hover:opacity-100 md:grid"><ChevronRight className="size-5" /></button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -42,59 +63,93 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [err, setErr] = useState("");
+  const [showBar, setShowBar] = useState(false);
+  const ctaRef = useRef<HTMLDivElement>(null);
   const needs = p.options.filter((o) => o.values.length);
   const key = needs.length && needs.every((o) => sel[o.name]) ? needs.map((o) => sel[o.name]).join(" / ") : null;
   const variant = useMemo(() => (key ? p.variants.find((v) => v.key === key) ?? null : null), [key, p.variants]);
   const price = variant?.price ?? p.price;
   const stock = needs.length ? variant?.stock ?? null : p.stock;
-  const soldOut = stock === 0;
+  const allOut = p.variants.length ? p.variants.every((v) => v.stock === 0) : p.stock === 0;
+  const soldOut = stock === 0 || allOut;
+  const off = p.compare_price && p.compare_price > price ? Math.round((1 - price / p.compare_price) * 100) : 0;
+
+  // Show the sticky phone bar once the main buttons scroll out of view.
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setShowBar(!e.isIntersecting && e.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   function line() {
-    if (needs.length && !key) { setErr(`Please choose ${needs.filter((o) => !sel[o.name]).map((o) => o.name.toLowerCase()).join(" & ")}.`); return null; }
+    if (needs.length && !key) {
+      setErr(`Please select ${needs.filter((o) => !sel[o.name]).map((o) => o.name.toLowerCase()).join(" & ")}`);
+      ctaRef.current?.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return null;
+    }
     setErr("");
     return { id: p.id, slug: p.slug, name: p.name, image, variant: key, price, qty };
   }
+  const addToBag = () => { const l = line(); if (l) { add(l); setAdded(true); setTimeout(() => setAdded(false), 1800); } };
+  const buyNow = () => { const l = line(); if (l) { add(l); router.push(`${base}/cart`); } };
 
   return (
     <div>
-      <p className="font-display text-2xl font-bold">{rupee(price)}{p.compare_price && p.compare_price > price ? <span className="ml-3 text-base font-medium text-muted line-through">{rupee(p.compare_price)}</span> : null}</p>
-      <p className="mt-1 text-xs text-muted">Inclusive of all taxes</p>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <p className="font-display text-[1.75rem] font-extrabold tracking-tight">{rupee(price)}</p>
+        {off > 0 && <><p className="text-base text-muted">MRP <span className="line-through">{rupee(p.compare_price!)}</span></p><p className="text-base font-bold text-[#ff905a]">({off}% OFF)</p></>}
+      </div>
+      <p className="mt-0.5 text-xs font-medium text-emerald-600">Inclusive of all taxes</p>
 
       {needs.map((o) => (
         <div key={o.name} className="mt-7">
-          <p className="text-sm font-semibold">{o.name}{sel[o.name] ? <span className="font-normal text-muted"> · {sel[o.name]}</span> : null}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex items-center justify-between"><p className="text-[13px] font-bold tracking-[1.5px] uppercase">Select {o.name}</p>{sel[o.name] && <p className="text-xs text-muted">Selected: <b className="text-foreground">{sel[o.name]}</b></p>}</div>
+          <div className="mt-3 flex flex-wrap gap-2.5">
             {o.values.map((v) => {
               // With one option we know exactly which variant a value maps to, so sold-out sizes can be greyed out.
               const out = needs.length === 1 && p.variants.find((x) => x.key === v)?.stock === 0;
+              const on = sel[o.name] === v;
               return (
-                <button key={v} disabled={out} onClick={() => setSel((s) => ({ ...s, [o.name]: v }))} className={cn("min-w-12 rounded-full border px-4 py-2.5 text-sm font-semibold transition", sel[o.name] === v ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/50", out && "cursor-not-allowed text-muted line-through opacity-50")}>{v}</button>
+                <button key={v} disabled={out} onClick={() => { setSel((s) => ({ ...s, [o.name]: v })); setErr(""); }}
+                  className={cn("relative grid h-12 min-w-12 place-items-center rounded-full border px-4 text-sm font-bold transition", on ? "border-[#ff3f6c] text-[#ff3f6c] ring-1 ring-[#ff3f6c]" : "border-border hover:border-foreground", out && "cursor-not-allowed text-muted opacity-50 after:absolute after:inset-x-2 after:top-1/2 after:h-px after:-rotate-[20deg] after:bg-muted")}>{v}</button>
               );
             })}
           </div>
         </div>
       ))}
+      {err && <p className="mt-3 text-sm font-semibold text-[#ff3f6c]">{err}</p>}
 
-      <div className="mt-7 flex items-center gap-3">
+      <div className="mt-7 flex items-center gap-4">
         <div className="flex items-center rounded-full border border-border">
-          <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Less" className="grid size-12 place-items-center"><Minus className="size-4" /></button>
-          <span className="w-8 text-center font-semibold">{qty}</span>
-          <button onClick={() => setQty((q) => Math.min(stock ?? 99, q + 1))} aria-label="More" className="grid size-12 place-items-center"><Plus className="size-4" /></button>
+          <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Less" className="grid size-11 place-items-center"><Minus className="size-4" /></button>
+          <span className="w-7 text-center font-bold">{qty}</span>
+          <button onClick={() => setQty((q) => Math.min(stock ?? 99, q + 1))} aria-label="More" className="grid size-11 place-items-center"><Plus className="size-4" /></button>
         </div>
-        {stock != null && stock > 0 && stock <= 5 && <span className="text-xs font-semibold text-amber-600">Only {stock} left</span>}
+        {stock != null && stock > 0 && stock <= 5 && <span className="text-sm font-bold text-[#ff3f6c]">Hurry — only {stock} left!</span>}
       </div>
-      {err && <p className="mt-3 text-sm font-medium text-red-500">{err}</p>}
 
-      <div className="mt-6 grid gap-3">
-        <button disabled={soldOut} onClick={() => { const l = line(); if (l) { add(l); setAdded(true); setTimeout(() => setAdded(false), 1600); } }} className="flex items-center justify-center gap-2 rounded-full border-2 border-foreground py-4 text-sm font-bold transition active:scale-[.98] disabled:opacity-40">
-          {added ? <><Check className="size-4" /> Added to cart</> : <><ShoppingBag className="size-4" /> {soldOut ? "Sold out" : "Add to cart"}</>}
+      <div ref={ctaRef} className="mt-6 grid grid-cols-2 gap-3">
+        <button disabled={soldOut} onClick={addToBag} className="flex items-center justify-center gap-2 rounded-2xl border-2 border-foreground py-4 text-[13px] font-extrabold tracking-wide uppercase transition active:scale-[.98] disabled:opacity-40">
+          {added ? <><Check className="size-4" /> Added</> : <><ShoppingBag className="size-4" /> {soldOut ? "Sold out" : "Add to bag"}</>}
         </button>
-        <button disabled={soldOut} onClick={() => { const l = line(); if (l) { add(l); router.push(`${base}/cart`); } }} className="rounded-full bg-foreground py-4 text-sm font-bold text-background transition active:scale-[.98] disabled:opacity-40">Buy now</button>
-        {whatsapp && (
-          <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi ${storeName}, I want to order: ${p.name}${key ? ` (${key})` : ""} × ${qty}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#25D366] py-4 text-sm font-bold text-white">
-            <FaWhatsapp className="size-5" /> Order on WhatsApp
-          </a>
-        )}
+        <button disabled={soldOut} onClick={buyNow} className="flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[13px] font-extrabold tracking-wide text-background uppercase transition active:scale-[.98] disabled:opacity-40"><Zap className="size-4" /> Buy now</button>
+      </div>
+      {whatsapp && (
+        <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi ${storeName}, I want to order: ${p.name}${key ? ` (${key})` : ""} × ${qty}`)}`} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-[#25D366]/40 bg-[#25D366]/[.06] py-3.5 text-[13px] font-bold text-[#128C7E]">
+          <FaWhatsapp className="size-5" /> Order or ask on WhatsApp
+        </a>
+      )}
+
+      {/* phone sticky bar */}
+      <div className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-2.5 pb-[max(.65rem,env(safe-area-inset-bottom))] backdrop-blur-xl transition-transform duration-300 md:hidden", showBar ? "translate-y-0" : "translate-y-full")}>
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1 pl-1"><p className="truncate text-[11px] text-muted">{key || p.name}</p><p className="font-display text-lg leading-tight font-extrabold">{rupee(price)}</p></div>
+          {whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi ${storeName}, about: ${p.name}`)}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="grid size-12 shrink-0 place-items-center rounded-2xl border border-border text-[#25D366]"><FaWhatsapp className="size-5" /></a>}
+          <button disabled={soldOut} onClick={addToBag} className="h-12 shrink-0 rounded-2xl border-2 border-foreground px-4 text-xs font-extrabold uppercase disabled:opacity-40">{added ? "Added ✓" : "Add"}</button>
+          <button disabled={soldOut} onClick={buyNow} className="h-12 shrink-0 rounded-2xl bg-foreground px-5 text-xs font-extrabold text-background uppercase disabled:opacity-40">Buy now</button>
+        </div>
       </div>
     </div>
   );

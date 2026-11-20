@@ -14,7 +14,9 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   const base = `/catalog/@${s.handle}`;
   const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 40 })]);
   const featured = products.filter((p) => p.featured).slice(0, 10);
-  const latest = products.slice(0, 12);
+  const latest = (products.filter((p) => !p.featured).length >= 4 ? products.filter((p) => !p.featured) : products).slice(0, 8);
+  const storyImg = imgUrl(s.storefront.about.images[0]);
+  const priceSteps = [499, 999, 1999, 4999].filter((x) => products.some((p) => p.price <= x)).slice(0, 4);
   const banner = imgUrl(s.banner_key);
   const catTiles = cats.map((c) => ({ ...c, img: imgUrl(products.find((p) => p.category_id === c.id && p.images[0])?.images[0]) })).slice(0, 10);
   const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
@@ -57,16 +59,15 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
       )}
 
       {catTiles.length > 0 && (
-        <section className="mx-auto mt-10 max-w-7xl px-3 sm:mt-14 sm:px-6">
-          <h2 className="text-center text-[13px] font-bold tracking-[4px] text-muted">SHOP BY CATEGORY</h2>
-          <div className="mt-5 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] sm:justify-center sm:gap-7">
-            {catTiles.map((c) => (
-              <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="group flex w-[84px] shrink-0 flex-col items-center gap-2 sm:w-28">
-                <span className="grid size-[84px] place-items-center overflow-hidden rounded-full bg-foreground/[.05] ring-1 ring-border transition group-hover:ring-foreground/40 sm:size-28">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {c.img ? <img src={c.img} alt="" className="size-full object-cover" /> : <span className="font-display text-xl font-bold text-muted">{c.name[0]}</span>}
-                </span>
-                <span className="w-full truncate text-center text-[12.5px] font-semibold">{c.name}</span>
+        <section className="mx-auto mt-12 max-w-7xl sm:mt-16 sm:px-6">
+          <div className="flex items-end justify-between px-3 sm:px-0"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">EXPLORE</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Shop by category</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">See all</Link></div>
+          <div className={`mt-5 flex snap-x gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:grid sm:gap-4 sm:overflow-visible sm:px-0 ${catTiles.length >= 5 ? "sm:grid-cols-5" : catTiles.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+            {catTiles.slice(0, 10).map((c) => (
+              <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="group relative block aspect-[3/4] w-[38vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-foreground/[.05] sm:w-auto">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {c.img ? <img src={c.img} alt="" className="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-105" /> : <span className="absolute inset-0 grid place-items-center font-display text-5xl font-extrabold text-foreground/10">{c.name[0]}</span>}
+                <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent" />
+                <span className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-4"><span className="block font-display text-[15px] leading-tight font-bold sm:text-lg">{c.name}</span><span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-white/75 transition group-hover:gap-2">Shop now <ArrowRight className="size-3" /></span></span>
               </Link>
             ))}
           </div>
@@ -82,6 +83,23 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
         </section>
       )}
 
+      {priceSteps.length > 1 && (
+        <section className="mx-auto mt-12 max-w-7xl px-3 sm:mt-16 sm:px-6">
+          <div className="rounded-3xl bg-[#0b0d12] px-5 py-7 text-white sm:px-10 sm:py-10">
+            <p className="text-[11px] font-bold tracking-[4px] text-white/50">SHOP BY BUDGET</p>
+            <div className={`mt-4 grid gap-2.5 sm:gap-4 ${priceSteps.length === 4 ? "grid-cols-2 sm:grid-cols-4" : priceSteps.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+              {priceSteps.map((x) => (
+                <Link key={x} href={`${base}/shop?max=${x}`} className="group rounded-2xl border border-white/10 bg-white/[.04] px-4 py-4 transition hover:border-white/40 hover:bg-white/[.08] sm:py-6">
+                  <span className="block text-[11px] font-semibold tracking-[2px] text-white/55">UNDER</span>
+                  <span className="mt-1 block font-display text-2xl font-extrabold sm:text-4xl">₹{x.toLocaleString("en-IN")}</span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 transition group-hover:gap-2">Explore <ArrowRight className="size-3" /></span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="mx-auto mt-12 max-w-7xl px-3 sm:mt-16 sm:px-6">
         <div className="flex items-end justify-between"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">JUST IN</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">New arrivals</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">Shop all</Link></div>
         {latest.length ? (
@@ -89,7 +107,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
         ) : (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-12 text-center text-muted">New products are coming soon.</p>
         )}
-        {products.length > 12 && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
+        {products.length > latest.length && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
       </section>
 
       {reviews.length > 0 && (
@@ -124,11 +142,23 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
 
       {s.about && (
         <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6">
-          <div className="rounded-3xl bg-foreground/[.03] px-6 py-12 text-center sm:px-16 sm:py-20">
-            <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
-            <p className="mx-auto mt-5 line-clamp-5 max-w-3xl font-display text-xl leading-relaxed sm:text-[1.7rem] sm:leading-snug">{s.about}</p>
-            <Link href={`${base}/about`} className="mt-7 inline-block text-[13px] font-bold tracking-wide uppercase underline underline-offset-[6px]">Read more</Link>
-          </div>
+          {storyImg ? (
+            <div className="grid items-center gap-8 overflow-hidden rounded-3xl bg-foreground/[.03] md:grid-cols-2 md:gap-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={storyImg} alt={s.name} className="aspect-[4/3] w-full object-cover md:aspect-auto md:h-full" />
+              <div className="px-6 pb-10 md:px-14 md:py-16">
+                <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
+                <p className="mt-4 line-clamp-6 font-display text-xl leading-relaxed sm:text-2xl sm:leading-snug">{s.about}</p>
+                <Link href={`${base}/about`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-[13px] font-bold tracking-wide text-background uppercase">Read our story <ArrowRight className="size-4" /></Link>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-foreground/[.03] px-6 py-12 text-center sm:px-16 sm:py-20">
+              <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
+              <p className="mx-auto mt-5 line-clamp-5 max-w-3xl font-display text-xl leading-relaxed sm:text-[1.7rem] sm:leading-snug">{s.about}</p>
+              <Link href={`${base}/about`} className="mt-7 inline-block text-[13px] font-bold tracking-wide uppercase underline underline-offset-[6px]">Read more</Link>
+            </div>
+          )}
         </section>
       )}
     </>

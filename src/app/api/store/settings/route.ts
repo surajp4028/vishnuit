@@ -91,6 +91,7 @@ export async function PATCH(req: Request) {
       bar: { on: Boolean(bar.on), items: (Array.isArray(bar.items) ? bar.items : []).map((x) => str(x, 120)).filter(Boolean).slice(0, 6) },
       highlights: hl.length ? hl : store.storefront.highlights,
       map: { on: map.on !== false, query: str(map.query, 300), zoom: Math.min(20, Math.max(3, Math.round(Number(map.zoom) || 15))) },
+      about: (() => { const a = (f.about ?? {}) as { images?: unknown; heading?: unknown }; return { images: (Array.isArray(a.images) ? a.images : []).filter((k) => k && ownKey(k)).slice(0, 2).map(String), heading: str(a.heading, 120) }; })(),
     };
   }
 

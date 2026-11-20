@@ -1,24 +1,29 @@
-import { Sparkle } from "lucide-react";
+"use client";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-/** Black offers strip above the store header. One message sits still; several scroll and pause on hover. */
+/** Black offers strip above the store header: one message at a time, arrows to switch, auto-advances (pauses on hover). */
 export function AnnounceBar({ items }: { items: string[] }) {
-  if (!items.length) return null;
-  if (items.length === 1) {
-    return <div className="bg-[#0a0b10] px-4 py-2 text-center text-[11.5px] font-semibold tracking-[1.5px] text-white uppercase sm:text-xs">{items[0]}</div>;
-  }
-  const row = [...items, ...items, ...items];
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const n = items.length;
+  useEffect(() => {
+    if (n < 2 || paused) return;
+    const t = setInterval(() => setI((x) => (x + 1) % n), 4000);
+    return () => clearInterval(t);
+  }, [n, paused]);
+  if (!n) return null;
   return (
-    <div className="group overflow-hidden bg-[#0a0b10] py-2 text-white">
-      <div className="flex w-max animate-[marquee_28s_linear_infinite] group-hover:[animation-play-state:paused]">
-        {[0, 1].map((half) => (
-          <div key={half} aria-hidden={half === 1} className="flex shrink-0 items-center">
-            {row.map((t, n) => (
-              <span key={n} className="flex items-center gap-6 px-6 text-[11.5px] font-semibold tracking-[1.5px] whitespace-nowrap uppercase sm:text-xs">
-                {t}<Sparkle className="size-3 fill-amber-300 text-amber-300" />
-              </span>
-            ))}
-          </div>
-        ))}
+    <div className="bg-[#0a0b10] text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="mx-auto flex h-9 max-w-3xl items-center gap-2 px-2 sm:h-10">
+        {n > 1 && <button onClick={() => setI((x) => (x - 1 + n) % n)} aria-label="Previous offer" className="grid size-7 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"><ChevronLeft className="size-4" /></button>}
+        <div className="relative h-full flex-1 overflow-hidden">
+          {items.map((t, k) => (
+            <p key={k} aria-hidden={k !== i} className={cn("absolute inset-0 flex items-center justify-center truncate px-1 text-center text-[11px] font-semibold tracking-[1.5px] uppercase transition-all duration-500 sm:text-xs", k === i ? "translate-y-0 opacity-100" : k < i ? "-translate-y-full opacity-0" : "translate-y-full opacity-0")}>{t}</p>
+          ))}
+        </div>
+        {n > 1 && <button onClick={() => setI((x) => (x + 1) % n)} aria-label="Next offer" className="grid size-7 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"><ChevronRight className="size-4" /></button>}
       </div>
     </div>
   );

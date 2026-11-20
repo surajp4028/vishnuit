@@ -59,6 +59,7 @@ export type StoreFront = {
   bar: { on: boolean; items: string[] };
   highlights: { icon: HighlightIcon; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
+  about: { images: string[]; heading: string };
 };
 export const emptyFront = (): StoreFront => ({
   banners: [], interval: 5,
@@ -70,6 +71,7 @@ export const emptyFront = (): StoreFront => ({
     { icon: "message", title: "WhatsApp support", sub: "We reply fast", on: true },
   ],
   map: { on: true, query: "", zoom: 15 },
+  about: { images: [], heading: "" },
 });
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
@@ -107,6 +109,7 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     bar: { ...d.bar, ...(f.bar ?? {}) },
     highlights: Array.isArray(f.highlights) && f.highlights.length ? f.highlights : d.highlights,
     map: { ...d.map, ...(f.map ?? {}) },
+    about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "" },
   };
 }
 

@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Loader2, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, Loader2, Lock, Minus, Plus, ShieldCheck, ShoppingBag, Smartphone, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
 import { loadRazorpay } from "@/components/site/plan-checkout";
 
-const field = "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-[15px] outline-none transition focus:border-foreground/50";
+const field = "w-full rounded-xl border border-border bg-background px-3.5 py-3 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-foreground/60 focus:ring-4 focus:ring-foreground/5";
+const box = "rounded-2xl border border-border bg-card p-4 sm:p-5";
+const step = (n: number, t: string) => <p className="flex items-center gap-2.5 font-display text-[15px] font-bold"><span className="grid size-6 place-items-center rounded-full bg-foreground text-[11px] text-background">{n}</span>{t}</p>;
 
 /** Cart + checkout on one page (built for phones). */
 export function Checkout({ handle, base, storeName, pay }: { handle: string; base: string; storeName: string; pay: { cod: boolean; upi: boolean; vpa: string; qr: string | null; razorpay: boolean } }) {
@@ -63,66 +65,102 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
     );
 
   const upiLink = pay.vpa ? `upi://pay?pa=${encodeURIComponent(pay.vpa)}&pn=${encodeURIComponent(storeName)}&am=${total.toFixed(2)}&cu=INR` : null;
+  const count = lines.reduce((n, l) => n + l.qty, 0);
+  const methods = [
+    pay.razorpay && { k: "razorpay" as const, icon: CreditCard, t: "Pay online", d: "UPI, cards, net banking" },
+    pay.upi && { k: "upi" as const, icon: Smartphone, t: "UPI transfer", d: pay.vpa || "Scan QR & share UTR" },
+    pay.cod && { k: "cod" as const, icon: Banknote, t: "Cash on delivery", d: "Pay when it arrives" },
+  ].filter(Boolean) as { k: "cod" | "upi" | "razorpay"; icon: typeof Banknote; t: string; d: string }[];
+  const cta = busy ? <Loader2 className="size-4 animate-spin" /> : <><Lock className="size-4" /> {method === "razorpay" ? "Pay" : "Place order"} · {rupee(total)}</>;
+
   return (
-    <form onSubmit={place} className="mx-auto grid max-w-6xl gap-8 px-4 pt-8 sm:px-6 lg:grid-cols-[1fr_420px]">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Your cart</h1>
-        <div className="mt-6 divide-y divide-border rounded-[1.6rem] border border-border">
-          {lines.map((l, i) => (
-            <div key={`${l.id}-${l.variant}`} className="flex gap-4 p-4">
-              <Link href={`${base}/p/${l.slug}`} className="size-20 shrink-0 overflow-hidden rounded-2xl bg-foreground/5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {l.image && <img src={l.image} alt="" className="size-full object-cover" />}
-              </Link>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <p className="truncate font-semibold">{l.name}</p>
-                {l.variant && <p className="text-xs text-muted">{l.variant}</p>}
-                <div className="mt-auto flex items-center justify-between pt-2">
-                  <div className="flex items-center rounded-full border border-border">
-                    <button type="button" onClick={() => setQty(i, l.qty - 1)} aria-label="Less" className="grid size-9 place-items-center"><Minus className="size-3.5" /></button>
-                    <span className="w-6 text-center text-sm font-semibold">{l.qty}</span>
-                    <button type="button" onClick={() => setQty(i, l.qty + 1)} aria-label="More" className="grid size-9 place-items-center"><Plus className="size-3.5" /></button>
+    <form id="checkout" onSubmit={place} className="mx-auto max-w-6xl px-3 pt-5 pb-32 sm:px-6 sm:pt-8 lg:pb-10">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Checkout <span className="text-base font-semibold text-muted">· {count} item{count > 1 ? "s" : ""}</span></h1>
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-muted"><ShieldCheck className="size-4 text-emerald-600" /> Safe & secure checkout</p>
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_380px] lg:gap-6">
+        <div className="space-y-4">
+          <div className={box}>
+            <div className="flex items-center justify-between">{step(1, "Your bag")}<Link href={`${base}/shop`} className="text-xs font-bold text-muted underline underline-offset-4">Add more</Link></div>
+            <div className="mt-3 divide-y divide-border">
+              {lines.map((l, i) => (
+                <div key={`${l.id}-${l.variant}`} className="flex gap-3 py-3 first:pt-1 last:pb-0">
+                  <Link href={`${base}/p/${l.slug}`} className="h-[72px] w-14 shrink-0 overflow-hidden rounded-lg bg-foreground/5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {l.image && <img src={l.image} alt="" className="size-full object-cover" />}
+                  </Link>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-2"><p className="line-clamp-1 text-[14px] font-semibold">{l.name}</p><b className="shrink-0 text-[14px]">{rupee(l.price * l.qty)}</b></div>
+                    <p className="text-xs text-muted">{l.variant ? `${l.variant} · ` : ""}{rupee(l.price)} each</p>
+                    <div className="mt-auto flex items-center justify-between pt-1.5">
+                      <div className="flex items-center rounded-lg border border-border">
+                        <button type="button" onClick={() => (l.qty > 1 ? setQty(i, l.qty - 1) : remove(i))} aria-label="Less" className="grid size-8 place-items-center"><Minus className="size-3.5" /></button>
+                        <span className="w-6 text-center text-sm font-bold">{l.qty}</span>
+                        <button type="button" onClick={() => setQty(i, l.qty + 1)} aria-label="More" className="grid size-8 place-items-center"><Plus className="size-3.5" /></button>
+                      </div>
+                      <button type="button" onClick={() => remove(i)} className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-red-500"><Trash2 className="size-3.5" /> Remove</button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2"><b>{rupee(l.price * l.qty)}</b><button type="button" onClick={() => remove(i)} aria-label="Remove" className="grid size-9 place-items-center rounded-full text-muted hover:text-red-500"><Trash2 className="size-4" /></button></div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className={box}>
+            {step(2, "Delivery address")}
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+              <input name="name" required placeholder="Full name" autoComplete="name" className={field} />
+              <input name="phone" required inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
+              <textarea name="address" required rows={2} placeholder="House no, street, area, city, PIN code" autoComplete="street-address" className={cn(field, "resize-none sm:col-span-2")} />
+              <input name="email" type="email" placeholder="Email for order updates (optional)" autoComplete="email" className={cn(field, "sm:col-span-2")} />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+          <div className={box}>
+            {step(3, "Payment")}
+            <div className="mt-3 grid gap-2">
+              {methods.map((m) => (
+                <label key={m.k} className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition", method === m.k ? "border-foreground bg-foreground/[.03] ring-1 ring-foreground" : "border-border")}>
+                  <input type="radio" checked={method === m.k} onChange={() => setMethod(m.k)} className="accent-black" />
+                  <m.icon className="size-5 shrink-0 text-foreground/70" />
+                  <span className="min-w-0"><span className="block text-sm font-bold">{m.t}</span><span className="block truncate text-xs text-muted">{m.d}</span></span>
+                </label>
+              ))}
+            </div>
+            {method === "upi" && (
+              <div className="mt-3 space-y-3 rounded-xl bg-foreground/[.03] p-3.5 text-sm">
+                <p>Pay <b>{rupee(total)}</b> to {pay.vpa ? <b className="break-all">{pay.vpa}</b> : "the QR below"}, then enter the UTR / transaction ID.</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {pay.qr && <img src={pay.qr} alt="UPI QR" className="mx-auto w-40 rounded-xl bg-white p-2" />}
+                {upiLink && <a href={upiLink} className="block rounded-full bg-foreground py-2.5 text-center text-sm font-bold text-background sm:hidden">Open UPI app</a>}
+                <input name="utr" required placeholder="UTR / UPI transaction ID" inputMode="numeric" className={field} />
+              </div>
+            )}
+          </div>
+
+          <div className={box}>
+            <p className="text-[11px] font-bold tracking-[2.5px] text-muted">PRICE DETAILS</p>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted">Items ({count})</span><span>{rupee(total)}</span></div>
+              <div className="flex justify-between border-t border-dashed border-border pt-2.5 font-display text-lg font-extrabold"><span>Total</span><span>{rupee(total)}</span></div>
+            </div>
+            {err && <p className="mt-3 rounded-xl bg-red-500/10 px-3.5 py-2.5 text-sm text-red-500">{err}</p>}
+            <button disabled={busy} className="mt-4 hidden w-full items-center justify-center gap-2 rounded-xl bg-foreground py-4 text-sm font-extrabold tracking-wide text-background uppercase disabled:opacity-60 lg:flex">{cta}</button>
+            <p className="mt-3 text-center text-[11px] text-muted">By placing the order you agree to the store&apos;s terms.</p>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-5 lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-[1.6rem] border border-border p-5">
-          <p className="font-display text-lg font-bold">Delivery details</p>
-          <div className="mt-4 space-y-3">
-            <input name="name" required placeholder="Full name" autoComplete="name" className={field} />
-            <input name="phone" required inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
-            <input name="email" type="email" placeholder="Email (optional)" autoComplete="email" className={field} />
-            <textarea name="address" required rows={3} placeholder="House no, street, area, city, PIN code" autoComplete="street-address" className={cn(field, "resize-none")} />
-          </div>
-        </div>
-        <div className="rounded-[1.6rem] border border-border p-5">
-          <p className="font-display text-lg font-bold">Payment</p>
-          <div className="mt-4 grid gap-2.5">
-            {pay.razorpay && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "razorpay" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "razorpay"} onChange={() => setMethod("razorpay")} className="accent-black" /><span><span className="block font-semibold">Pay online</span><span className="block text-xs text-muted">UPI, cards, net banking · secure by Razorpay</span></span></label>}
-            {pay.cod && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "cod" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "cod"} onChange={() => setMethod("cod")} className="accent-black" /><span className="font-semibold">Cash on delivery</span></label>}
-            {pay.upi && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "upi" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "upi"} onChange={() => setMethod("upi")} className="accent-black" /><span className="font-semibold">Pay by UPI</span></label>}
-          </div>
-          {method === "upi" && (
-            <div className="mt-4 space-y-3 rounded-2xl bg-foreground/[.03] p-4 text-sm">
-              <p>Pay <b>{rupee(total)}</b> to {pay.vpa ? <b className="break-all">{pay.vpa}</b> : "the QR below"}, then enter the UTR / transaction ID.</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {pay.qr && <img src={pay.qr} alt="UPI QR" className="mx-auto w-48 rounded-xl bg-white p-2" />}
-              {upiLink && <a href={upiLink} className="block rounded-full bg-foreground py-3 text-center text-sm font-bold text-background sm:hidden">Open UPI app</a>}
-              <input name="utr" required placeholder="UTR / UPI transaction ID" inputMode="numeric" className={field} />
-            </div>
-          )}
-        </div>
-        <div className="rounded-[1.6rem] bg-foreground/[.03] p-5">
-          <div className="flex justify-between text-sm text-muted"><span>Subtotal</span><span>{rupee(total)}</span></div>
-          <div className="mt-2 flex justify-between font-display text-lg font-bold"><span>Total</span><span>{rupee(total)}</span></div>
-          {err && <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-2.5 text-sm text-red-500">{err}</p>}
-          <button disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-4 text-sm font-bold text-background disabled:opacity-60">{busy ? <Loader2 className="size-4 animate-spin" /> : `Place order · ${rupee(total)}`}</button>
+      {/* phone / tablet sticky pay bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-2.5 pb-[max(.7rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
+        {err && <p className="mb-2 line-clamp-2 text-xs font-semibold text-red-500">{err}</p>}
+        <div className="flex items-center gap-3">
+          <div className="pl-1"><p className="text-[11px] text-muted">{count} item{count > 1 ? "s" : ""}</p><p className="font-display text-lg leading-tight font-extrabold">{rupee(total)}</p></div>
+          <button disabled={busy} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-foreground text-[13px] font-extrabold tracking-wide text-background uppercase disabled:opacity-60">{cta}</button>
         </div>
       </div>
     </form>

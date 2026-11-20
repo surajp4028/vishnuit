@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/catalog/cart";
 import { StoreHeader, WhatsAppFloat } from "@/components/catalog/chrome";
 import { StoreFooter } from "@/components/catalog/footer";
 import { AnnounceBar } from "@/components/catalog/announce-bar";
+import { ScrollTop } from "@/components/catalog/scroll-top";
 
 export const revalidate = 120;
 
@@ -30,6 +31,7 @@ export default async function StoreLayout({ children, params }: { children: Reac
   return (
     <CartProvider handle={s.handle}>
       <div className="min-h-dvh bg-background text-foreground">
+        <ScrollTop />
         {s.storefront.bar.on && <AnnounceBar items={s.storefront.bar.items} />}
         <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} name={s.name} logo={logo} categories={cats} /></Suspense>
         <main>{children}</main>

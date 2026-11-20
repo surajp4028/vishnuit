@@ -26,6 +26,8 @@ function SearchBox({ base, autoFocus, onDone }: { base: string; autoFocus?: bool
 /** Compact store header: logo · search · account · cart, with a category strip underneath. */
 export function StoreHeader({ base, name, logo, categories }: { base: string; name: string; logo: string | null; categories: Cat[] }) {
   const { count, ready } = useCart();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const path = usePathname();
   const sp = useSearchParams();
   const [menu, setMenu] = useState(false);
@@ -51,7 +53,7 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
           <Link href="/account?tab=orders" aria-label="My orders" className="hidden size-10 place-items-center rounded-full hover:bg-foreground/5 sm:grid"><UserRound className="size-5" /></Link>
           <Link href={`${base}/cart`} aria-label="Bag" className="relative grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">
             <ShoppingBag className="size-5" />
-            {ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
+            {mounted && ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
           </Link>
         </div>
       </div>
@@ -86,9 +88,12 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
 }
 
 export function WhatsAppFloat({ number, store }: { number: string; store: string }) {
+  const path = usePathname();
+  // Product and cart pages have their own sticky bottom bar on phones.
+  const hideOnPhone = /\/(p\/[^/]+|cart)$/.test(path);
   if (!number) return null;
   return (
-    <a href={`https://wa.me/${number}?text=${encodeURIComponent(`Hi ${store}, I have a question.`)}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="fixed right-4 bottom-5 z-40 grid size-12 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_10px_30px_-8px_rgba(37,211,102,.7)] sm:size-14">
+    <a href={`https://wa.me/${number}?text=${encodeURIComponent(`Hi ${store}, I have a question.`)}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className={`${hideOnPhone ? "max-sm:hidden " : ""}fixed right-4 bottom-5 z-40 grid size-12 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_10px_30px_-8px_rgba(37,211,102,.7)] sm:size-14`}>
       <FaWhatsapp className="size-6 sm:size-7" />
     </a>
   );

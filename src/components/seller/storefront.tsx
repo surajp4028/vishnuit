@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpen, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, input, Toggle } from "@/components/store/ui";
 import { HIGHLIGHT_ICON_MAP, type HighlightIconKey } from "@/components/catalog/highlight-icons";
@@ -11,6 +11,7 @@ export type Front = {
   bar: { on: boolean; items: string[] };
   highlights: { icon: HighlightIconKey; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
+  about: { images: string[]; heading: string };
 };
 
 function Section({ icon: Icon, title, sub, children }: { icon: typeof MapPin; title: string; sub: string; children: React.ReactNode }) {
@@ -97,6 +98,16 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
               </div>
             );
           })}
+        </div>
+      </Section>
+
+      <Section icon={BookOpen} title="About page" sub="Add 1–2 photos of you, your workshop or your products — the layout adjusts automatically. Your story text is in Settings → Profile.">
+        <Field label="Headline (optional)"><input value={f.about.heading} maxLength={120} onChange={(e) => set({ about: { ...f.about, heading: e.target.value } })} placeholder="e.g. Made by hand, in small batches" className={input} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1].map((n) => (
+            <ImagePick key={n} value={f.about.images[n] ?? null} kind="banner" label={n ? "Photo 2 (optional)" : "Photo 1"} aspect="aspect-[4/5]"
+              onChange={(k) => { const imgs = [...f.about.images]; if (k) imgs[n] = k; else imgs.splice(n, 1); set({ about: { ...f.about, images: imgs.filter(Boolean).slice(0, 2) } }); }} />
+          ))}
         </div>
       </Section>
 

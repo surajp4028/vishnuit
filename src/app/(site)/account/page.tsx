@@ -12,7 +12,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const u = await requireUser("/account");
   const [{ tab }, store, cfg] = await Promise.all([searchParams, getStoreForUser(u.id), getCatalogConfig()]);
   const myOrders = await query<Record<string, unknown>>(
-    "SELECT o.order_no, o.items, o.subtotal, o.status, o.pay_method, o.pay_status, o.created_at, s.name store_name, s.handle FROM store_orders o JOIN stores s ON s.id=o.store_id WHERE o.customer_id=? ORDER BY o.id DESC LIMIT 200",
+    "SELECT o.order_no, o.items, o.subtotal, o.status, o.pay_method, o.pay_status, o.created_at, o.status_log, o.tracking, s.name store_name, s.handle FROM store_orders o JOIN stores s ON s.id=o.store_id WHERE o.customer_id=? ORDER BY o.id DESC LIMIT 200",
     [u.id],
   );
   const rows = await query<AccountPayment>(
@@ -32,6 +32,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         pay_method: String(o.pay_method), pay_status: String(o.pay_status), created_at: String(o.created_at),
         items: (typeof o.items === "string" ? JSON.parse(o.items) : o.items) as { name: string; variant: string | null; qty: number }[],
         invoice: orderInvoicePath(String(o.order_no)),
+        status_log: (typeof o.status_log === "string" ? JSON.parse(o.status_log) : o.status_log ?? []) as { s: string; at: string }[],
+        tracking: (typeof o.tracking === "string" ? JSON.parse(o.tracking) : o.tracking ?? null) as { courier: string; number: string; url: string } | null,
       }))}
       initialTab={tab === "payments" || tab === "profile" || tab === "orders" ? tab : "overview"}
     />
