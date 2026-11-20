@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type CartLine = { id: number; slug: string; name: string; image: string | null; variant: string | null; price: number; qty: number; gst?: number | null };
-type Ctx = { lines: CartLine[]; count: number; total: number; add: (l: CartLine) => void; setQty: (i: number, q: number) => void; remove: (i: number) => void; clear: () => void; ready: boolean };
+type Ctx = { open: boolean; setOpen: (v: boolean) => void; lines: CartLine[]; count: number; total: number; add: (l: CartLine) => void; setQty: (i: number, q: number) => void; remove: (i: number) => void; clear: () => void; ready: boolean };
 const CartCtx = createContext<Ctx | null>(null);
 
 /** Per-store cart kept on the phone (localStorage). Prices are re-checked by the server at checkout. */
@@ -10,6 +10,7 @@ export function CartProvider({ handle, children }: { handle: string; children: R
   const key = `vit-cart:${handle}`;
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     try { setLines(JSON.parse(localStorage.getItem(key) || "[]")); } catch {}
     setReady(true);
@@ -25,13 +26,13 @@ export function CartProvider({ handle, children }: { handle: string; children: R
     const next = ls.slice(); next[i] = { ...next[i], qty: Math.min(99, next[i].qty + l.qty), price: l.price }; return next;
   }), []);
   const value = useMemo<Ctx>(() => ({
-    lines, ready, add,
+    lines, ready, add, open, setOpen,
     count: lines.reduce((n, l) => n + l.qty, 0),
     total: Math.round(lines.reduce((n, l) => n + l.price * l.qty, 0) * 100) / 100,
     setQty: (i, q) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, qty: Math.max(1, Math.min(99, q)) } : l))),
     remove: (i) => setLines((ls) => ls.filter((_, j) => j !== i)),
     clear: () => setLines([]),
-  }), [lines, ready, add]);
+  }), [lines, ready, add, open]);
   return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;
 }
 

@@ -25,7 +25,11 @@ const PROVIDERS = [
   ["Google / Squarespace Domains", "Domains → your domain → DNS → Custom records."],
 ] as const;
 
-export function DomainManager({ handle, initial, paid }: { handle: string; initial: string | null; paid: boolean }) {
+/**
+ * Connect / check / remove a store's own domain.
+ * Used on Seller → Domain, and (compact, with the admin endpoint) in Admin → Stores → Manage.
+ */
+export function DomainManager({ handle, initial, paid, endpoint = "/api/store/domain", compact = false }: { handle: string; initial: string | null; paid: boolean; endpoint?: string; compact?: boolean }) {
   const [info, setInfo] = useState<Info>({ domain: initial });
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState<"" | "save" | "check" | "remove">(initial ? "check" : "");
@@ -33,22 +37,22 @@ export function DomainManager({ handle, initial, paid }: { handle: string; initi
 
   const check = useCallback(async () => {
     setBusy("check");
-    const r = await api<Info>("/api/store/domain", "GET");
+    const r = await api<Info>(endpoint, "GET");
     setBusy("");
     if (r.ok) setInfo(r.data);
-  }, []);
+  }, [endpoint]);
   useEffect(() => { if (initial) check(); }, [initial, check]);
 
   async function connect() {
     setErr(""); setBusy("save");
-    const r = await api<Info>("/api/store/domain", "POST", { domain: value });
+    const r = await api<Info>(endpoint, "POST", { domain: value });
     setBusy("");
     if (r.ok) { setInfo(r.data); setValue(""); } else setErr(r.data.error || "Could not connect the domain");
   }
   async function remove() {
     if (!confirm(`Disconnect ${info.domain}? Your store stays open at vishnuit.co.in/catalog/@${handle}.`)) return;
     setBusy("remove");
-    const r = await api("/api/store/domain", "DELETE");
+    const r = await api(endpoint, "DELETE");
     setBusy("");
     if (r.ok) setInfo({ domain: null });
   }
@@ -56,7 +60,7 @@ export function DomainManager({ handle, initial, paid }: { handle: string; initi
   const st = info.status ? STATE[info.status.state] : null;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+    <div className={cn("grid gap-5", !compact && "lg:grid-cols-[1fr_340px]")}>
       <div className="min-w-0 space-y-5">
         {!info.domain ? (
           <div className={cn(card, "p-5 sm:p-6")}>
@@ -121,7 +125,7 @@ export function DomainManager({ handle, initial, paid }: { handle: string; initi
         )}
       </div>
 
-      <aside className={cn(card, "h-fit p-5 sm:p-6")}>
+      {!compact && <aside className={cn(card, "h-fit p-5 sm:p-6")}>
         <p className="font-display font-bold">How it works</p>
         <ol className="mt-4 space-y-4">
           {[
@@ -137,7 +141,7 @@ export function DomainManager({ handle, initial, paid }: { handle: string; initi
           ))}
         </ol>
         <p className="mt-5 rounded-2xl bg-foreground/[.04] px-4 py-3 text-xs text-muted">Your old link <b className="break-all text-foreground">vishnuit.co.in/catalog/@{handle}</b> keeps working too. Products, orders and settings stay the same.</p>
-      </aside>
+      </aside>}
     </div>
   );
 }

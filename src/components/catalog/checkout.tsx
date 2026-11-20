@@ -21,6 +21,10 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
   const [err, setErr] = useState("");
   const [done, setDone] = useState<{ orderNo: string; subtotal: number } | null>(null);
   const [me, setMe] = useState<{ name: string; phone: string | null; email: string | null } | null | undefined>(undefined);
+  // "Checkout" in the bag drawer links to /cart#address — jump straight to the address once the bag has loaded.
+  useEffect(() => {
+    if (ready && lines.length && window.location.hash === "#address") setTimeout(() => document.getElementById("address")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { fetch("/api/account/me").then((r) => r.json()).then((j) => setMe(j?.user ?? null)).catch(() => setMe(null)); }, []);
 
   async function place(e: React.FormEvent<HTMLFormElement>) {
@@ -127,7 +131,7 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
             </div>
           </div>
 
-          <div className={box}>
+          <div id="address" className={cn(box, "scroll-mt-24")}>
             <div className="flex items-center justify-between">{step(2, "Delivery address")}{me === null && <Link href={`${base}/login?next=${encodeURIComponent(`${base}/cart`)}`} className="text-xs font-bold text-muted underline underline-offset-4">Have an account? Log in</Link>}</div>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               <input key={`n${me?.name ?? ""}`} name="name" required defaultValue={me?.name ?? ""} placeholder="Full name" autoComplete="name" className={field} />

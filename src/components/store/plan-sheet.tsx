@@ -4,13 +4,15 @@ import { Check, ChevronLeft, Crown, Loader2, Lock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadRazorpay } from "@/components/site/plan-checkout";
 import { api, btnDark, inr, input } from "./ui";
+import { fmtDate } from "@/lib/dates";
 
 type PlanKey = "free" | "starter" | "growth" | "premium";
-type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean };
+type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean; storageMb?: number };
+const gb = (mb?: number) => (!mb ? "" : mb >= 1024 ? `${+(mb / 1024).toFixed(1)} GB` : `${mb} MB`);
 type Quote = { planName: string; years: number; unit: number; base: number; discount: number; coupon: string | null; taxable: number; gstRate: number; gst: number; total: number };
 
 /** Upgrade / renew: pick plan + 1–4 years, apply coupon, see GST, pay with Razorpay. */
-export function PlanSheet({ plans, current, onClose }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; onClose: () => void }) {
+export function PlanSheet({ plans, current, storePlan, expiresAt, onClose }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; storePlan?: PlanKey; expiresAt?: string | null; onClose: () => void }) {
   const paid = (["starter", "growth", "premium"] as PlanKey[]);
   const [plan, setPlan] = useState<PlanKey>(current === "free" ? "growth" : current);
   const [years, setYears] = useState(1);
@@ -77,7 +79,7 @@ export function PlanSheet({ plans, current, onClose }: { plans: Record<PlanKey, 
                       <span className={cn("grid size-11 shrink-0 place-items-center rounded-2xl", k === "premium" ? "bg-amber-400/20 text-amber-600" : "bg-foreground/5")}>{k === "premium" ? <Crown className="size-5" /> : <span className="font-display font-bold">{p.limit}</span>}</span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 font-display text-lg font-bold">{p.name}{current === k && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">CURRENT</span>}</span>
-                        <span className="block text-xs text-muted">{p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`} · Razorpay checkout · UPI & COD</span>
+                        <span className="block text-xs text-muted">{p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`}{p.storageMb ? ` · ${gb(p.storageMb)} storage` : ""} · Razorpay checkout · UPI & COD</span>
                       </span>
                       <span className="text-right"><span className="block font-display text-lg font-bold">{inr(p.price)}</span><span className="text-[11px] text-muted">/year + GST</span></span>
                     </button>
@@ -106,6 +108,23 @@ export function PlanSheet({ plans, current, onClose }: { plans: Record<PlanKey, 
                   <div className="flex justify-between border-t border-border pt-3 font-display text-lg font-bold"><span>Total</span><span>{inr(quote.total)}</span></div>
                 </div>
               )}
+              {(() => {
+                // Same rule as activation on the server: renewing the same plan before it ends adds the years on top.
+                const cur = expiresAt ? new Date(expiresAt) : null;
+                const stacks = !!cur && (storePlan ?? current) === plan && cur.getTime() > Date.now();
+                const end = new Date(stacks ? cur! : new Date());
+                end.setFullYear(end.getFullYear() + years);
+                const leftDays = stacks ? Math.ceil((cur!.getTime() - Date.now()) / 86400000) : 0;
+                return (
+                  <div className="flex items-start gap-3 rounded-[1.4rem] border border-emerald-500/30 bg-emerald-500/[.06] p-4 text-sm">
+                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                    <div>
+                      <p className="font-semibold">{plans[plan].name} valid till <b>{fmtDate(end)}</b></p>
+                      <p className="mt-0.5 text-xs text-muted">{stacks ? `Your ${leftDays} remaining day${leftDays === 1 ? "" : "s"} (till ${fmtDate(cur)}) + ${years} year${years > 1 ? "s" : ""}.` : `Starts today + ${years} year${years > 1 ? "s" : ""}.${cur && cur.getTime() > Date.now() && (storePlan ?? current) !== plan ? ` Your current ${plans[storePlan ?? current].name} plan ends now.` : ""}`}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <footer className="border-t border-border p-4">
               {err && <p className="mb-3 rounded-2xl bg-red-500/10 px-4 py-2.5 text-sm text-red-500">{err}</p>}

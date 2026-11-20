@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Briefcase, FileText, Inbox, MessageSquareQuote, Sparkles, Target, TrendingUp, Trophy, Wallet } from "lucide-react";
 import { query } from "@/lib/server/db";
-import { formatDate } from "@/lib/utils";
+import { adminDate } from "@/components/admin/fmt";
 
 type Lead = { id: number; name: string; email: string; service: string; status: string; created_at: string; source: string };
 
@@ -14,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default async function Dashboard() {
-  const [counts, statusRows, daily, byService, recent] = await Promise.all([
+  const [counts, statusRows, daily, byService, recent, expiring] = await Promise.all([
     query<Record<string, number>>(
       `SELECT (SELECT COUNT(*) FROM services) services, (SELECT COUNT(*) FROM projects) projects, (SELECT COUNT(*) FROM testimonials) testimonials,
               (SELECT COUNT(*) FROM posts) posts, (SELECT COUNT(*) FROM leads) leads,
@@ -26,6 +26,12 @@ export default async function Dashboard() {
     query<{ d: string; c: number }>("SELECT DATE(created_at) d, COUNT(*) c FROM leads WHERE created_at >= CURDATE() - INTERVAL 13 DAY GROUP BY DATE(created_at)"),
     query<{ service: string; c: number }>("SELECT COALESCE(NULLIF(service,''),'Not specified') service, COUNT(*) c FROM leads GROUP BY 1 ORDER BY c DESC LIMIT 6"),
     query<Lead>("SELECT id,name,email,service,status,created_at,source FROM leads ORDER BY id DESC LIMIT 6"),
+    // Paid catalog plans ending in the next 30 days (or ended in the last 7) — for renewal follow-ups.
+    query<{ id: number; name: string; handle: string; plan: string; plan_expires_at: string }>(
+      `SELECT id, name, handle, plan, plan_expires_at FROM stores
+       WHERE plan<>'free' AND plan_expires_at IS NOT NULL AND plan_expires_at BETWEEN NOW() - INTERVAL 7 DAY AND NOW() + INTERVAL 30 DAY
+       ORDER BY plan_expires_at LIMIT 8`,
+    ).catch(() => []),
   ]);
   const c = Object.fromEntries(Object.entries(counts[0] ?? {}).map(([k, v]) => [k, Number(v)]));
   const st = Object.fromEntries(statusRows.map((r) => [r.status, Number(r.c)]));
@@ -115,7 +121,7 @@ export default async function Dashboard() {
                       <td className="px-5 py-3"><p className="font-medium">{l.name}</p><p className="text-xs text-muted">{l.email}</p></td>
                       <td className="px-5 py-3 text-muted">{l.service || "—"}</td>
                       <td className="px-5 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_COLORS[l.status]}`}>{l.status}</span></td>
-                      <td className="px-5 py-3 text-right text-xs text-muted">{formatDate(l.created_at)}</td>
+                      <td className="px-5 py-3 text-right text-xs text-muted">{adminDate(l.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -136,6 +142,28 @@ export default async function Dashboard() {
           </div>
         </div>
       </div>
+
+      {expiring.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card">
+          <div className="flex items-center justify-between p-5 pb-3"><p className="font-semibold">Store plans expiring soon</p><Link href="/admin/stores" className="text-sm font-medium text-accent">All stores</Link></div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
+              <tbody>
+                {expiring.map((s) => {
+                  const ended = new Date(`${s.plan_expires_at.replace(" ", "T")}Z`).getTime() < Date.now();
+                  return (
+                    <tr key={s.id} className="border-t border-border">
+                      <td className="px-5 py-3"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">@{s.handle}</p></td>
+                      <td className="px-5 py-3 capitalize text-muted">{s.plan}</td>
+                      <td className="px-5 py-3 text-right text-xs"><span className={ended ? "font-semibold text-red-500" : "text-muted"}>{ended ? "Ended" : "Valid till"} {adminDate(s.plan_expires_at)}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[

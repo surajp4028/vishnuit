@@ -3,6 +3,7 @@ import { putObject, s3Configured } from "@/lib/server/s3";
 import { exec } from "@/lib/server/db";
 import { catalogKey, imgUrl } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
+import { storageProblem } from "@/lib/server/storage";
 
 const KINDS = { product: 1600, logo: 600, banner: 2000, qr: 900, category: 900 } as const;
 
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
       .resize({ width: KINDS[kind], height: KINDS[kind], fit: "inside", withoutEnlargement: true })
       .webp({ quality: kind === "qr" ? 95 : 82 })
       .toBuffer({ resolveWithObject: true });
+    const full = await storageProblem(a.store, out.length);
+    if (full) return Response.json({ error: full, code: "storage" }, { status: 413 });
     const key = await putObject(catalogKey(a.store.code, kind), out, "image/webp");
     // Remember it in the store's media library (so it can be reused without re-uploading).
     await exec("INSERT IGNORE INTO store_media (store_id, s3_key, kind, bytes, width, height) VALUES (?,?,?,?,?,?)", [a.store.id, key, kind, out.length, info.width, info.height]).catch(() => {});

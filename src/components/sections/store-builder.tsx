@@ -4,10 +4,13 @@ import { ArrowRight, BadgeCheck, Banknote, Check, FileText, Link2, Package, Shar
 import { FlipWords } from "@/components/ui/flip-words";
 import { Reveal } from "@/components/reveal";
 
-export type StorePlan = { key: string; name: string; limit: number | null; price: number; razorpay: boolean };
+/** A real seller store shown as the live demo (opens in a new tab). Change with NEXT_PUBLIC_DEMO_STORE. */
+export const DEMO_STORE_URL = `/catalog/@${process.env.NEXT_PUBLIC_DEMO_STORE || "pandeyfashion"}`;
+
+export type StorePlan = { key: string; name: string; limit: number | null; price: number; razorpay: boolean; storageMb?: number };
 
 export const STORE_FEATURES = [
-  { icon: Link2, t: "Your own store link", d: "vishnuit.co.in/catalog/@yourbrand — put it in your Instagram bio." },
+  { icon: Link2, t: "Your link — or your own domain", d: "Start at vishnuit.co.in/catalog/@yourbrand, then connect yourbrand.com with free https." },
   { icon: Banknote, t: "COD, UPI & cards", d: "Money goes straight to your bank or UPI. No middleman, no commission." },
   { icon: Truck, t: "Orders & tracking", d: "Confirm → pack → ship → deliver. Customers get every update." },
   { icon: FileText, t: "GST invoices", d: "CGST/SGST or IGST, per-product GST slabs, generated automatically." },
@@ -119,6 +122,7 @@ export function StoreTeaser() {
             <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
               <Link href="/online-store" className="group inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
               <Link href="/account/store" className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:border-accent">Create free store</Link>
+              <a href={DEMO_STORE_URL} target="_blank" rel="noopener" className="inline-flex items-center justify-center gap-1.5 px-2 py-3.5 text-sm font-semibold text-accent hover:underline">See live demo ↗</a>
             </div>
           </div>
           <StoreMockup size="md" />
@@ -141,7 +145,7 @@ export function StorePlans({ plans, gstRate }: { plans: StorePlan[]; gstRate: nu
             <p className="mt-4 font-display text-[2.6rem] leading-none font-extrabold tracking-tight">{p.price ? inr(p.price) : "₹0"}<span className="ml-1 text-sm font-medium text-muted">/year</span></p>
             <p className="mt-1 text-xs text-muted">{p.price ? `+ ${gstRate}% GST · pay for 1–4 years at once` : "Free forever"}</p>
             <ul className="mt-6 flex-1 space-y-2.5 text-sm text-foreground/80">
-              {[p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`, "Own store link & design styles", "COD & UPI orders", p.razorpay ? "Razorpay online payments" : null, "GST invoices & order tracking", "WhatsApp share cards"].filter(Boolean).map((f) => (
+              {[p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`, p.storageMb ? `${p.storageMb >= 1024 ? `${+(p.storageMb / 1024).toFixed(1)} GB` : `${p.storageMb} MB`} photo & video storage` : null, "Own store link & design styles", "COD & UPI orders", p.razorpay ? "Razorpay online payments" : null, p.key !== "free" ? "Connect your own domain (.com / .in)" : null, "GST invoices & order tracking", "WhatsApp share cards"].filter(Boolean).map((f) => (
                 <li key={f} className="flex items-start gap-2"><Check className={`mt-0.5 size-4 shrink-0 ${hot ? "text-accent" : "text-emerald-500"}`} />{f}</li>
               ))}
             </ul>

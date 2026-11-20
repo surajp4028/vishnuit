@@ -7,13 +7,14 @@ import { siteUrl } from "@/lib/site";
 
 /* ---------------- plans (admin can edit prices/limits in Admin → Catalog Stores) ---------------- */
 export type PlanKey = "free" | "starter" | "growth" | "premium";
-export type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean };
+/** limit = products (null = unlimited); storageMb = photos + videos the store may keep. */
+export type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean; storageMb: number };
 export const PLAN_KEYS: PlanKey[] = ["free", "starter", "growth", "premium"];
 export const DEFAULT_PLANS: Record<PlanKey, PlanDef> = {
-  free: { name: "Free", limit: 15, price: 0, razorpay: false },
-  starter: { name: "Starter", limit: 50, price: 499, razorpay: true },
-  growth: { name: "Growth", limit: 100, price: 899, razorpay: true },
-  premium: { name: "Premium", limit: null, price: 9999, razorpay: true },
+  free: { name: "Free", limit: 15, price: 0, razorpay: false, storageMb: 200 },
+  starter: { name: "Starter", limit: 50, price: 499, razorpay: true, storageMb: 1024 },
+  growth: { name: "Growth", limit: 100, price: 899, razorpay: true, storageMb: 3072 },
+  premium: { name: "Premium", limit: null, price: 9999, razorpay: true, storageMb: 10240 },
 };
 /** Back-compat alias used for plan names. */
 export const PLANS = DEFAULT_PLANS;
@@ -102,6 +103,8 @@ export type Product = {
   gst_rate: number | null; hsn: string | null; low_stock: number | null;
   /** Product ids the seller picked for "You may also like". */
   related: number[];
+  /** S3 key of the product video (shown on the product page and as a play badge on cards). */
+  video: string | null;
 };
 export type Category = { id: number; store_id: number; parent_id: number | null; name: string; slug: string; sort: number };
 
@@ -226,6 +229,7 @@ export function hydrateProduct(r: Record<string, unknown>): Product {
     featured: Boolean(Number(r.featured)), created_at: String(r.created_at),
     gst_rate: r.gst_rate == null ? null : Number(r.gst_rate), hsn: r.hsn == null ? null : String(r.hsn), low_stock: r.low_stock == null ? null : Number(r.low_stock),
     related: json<unknown[]>(r.related, []).map(Number).filter((n) => Number.isInteger(n) && n > 0),
+    video: r.video ? String(r.video) : null,
   };
 }
 
@@ -236,6 +240,8 @@ export function effectivePlan(s: Pick<Store, "plan" | "plan_expires_at">): PlanK
   return Date.now() <= end ? s.plan : "free";
 }
 /** Max products for the plan in force (Infinity = unlimited). */
+/** Storage the store may use, in bytes. */
+export const storageLimit = (s: Pick<Store, "plan" | "plan_expires_at">, plans: Record<PlanKey, PlanDef>) => (plans[effectivePlan(s)].storageMb || DEFAULT_PLANS[effectivePlan(s)].storageMb) * 1024 * 1024;
 export const productLimit = (s: Pick<Store, "plan" | "plan_expires_at">, plans: Record<PlanKey, PlanDef>) => plans[effectivePlan(s)].limit ?? Infinity;
 
 /* ---------------- lookups ---------------- */

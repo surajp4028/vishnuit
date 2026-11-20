@@ -1,29 +1,35 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { query } from "@/lib/server/db";
+import { GoogleBadge, UserManage } from "@/components/admin/account-editor";
+import { adminDate } from "@/components/admin/fmt";
 
 export const metadata = { title: "Users" };
 export const dynamic = "force-dynamic";
 
 type Row = {
-  id: number; uid: string; name: string; email: string | null; phone: string | null; source: string; has_password: number; status: string;
+  id: number; uid: string; name: string; email: string | null; phone: string | null; source: string; has_password: number; google: number; status: string;
   created_at: string; last_login: string | null; store_handle: string | null; store_name: string | null; payments: number; paid: number; orders: number;
 };
 const SOURCES: Record<string, string> = { signup: "Signed up", paynow: "Pay Now", plan: "Plan purchase", store: "Store customer", otp: "OTP login" };
-const d = (v: string | null) => (v ? new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—");
+const d = (v: string | null) => adminDate(v);
 
 /** Everyone with an account: sign-ups, Pay Now payers, store owners and their shoppers. */
 export default async function UsersAdmin({ searchParams }: { searchParams: Promise<{ q?: string; f?: string }> }) {
   const { q = "", f = "all" } = await searchParams;
   const where: string[] = [];
   const p: unknown[] = [];
-  if (q.trim()) { where.push("(u.uid LIKE ? OR u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)"); const like = `%${q.trim()}%`; p.push(like, like, like, like); }
+  if (q.trim()) {
+    const like = `%${q.trim()}%`;
+    const idq = /^#?\d+$/.test(q.trim()) ? Number(q.trim().replace("#", "")) : 0; // "#42" from a conflict message
+    where.push("(u.id=? OR u.uid LIKE ? OR u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)"); p.push(idq, like, like, like, like);
+  }
   if (f === "merchants") where.push("s.id IS NOT NULL");
   if (f === "customers") where.push("u.source='store'");
   if (f === "payers") where.push("EXISTS (SELECT 1 FROM payments x WHERE x.user_id=u.id AND x.status='paid')");
   const [rows, totals] = await Promise.all([
     query<Row>(
-      `SELECT u.id, u.uid, u.name, u.email, u.phone, u.source, (u.password_hash IS NOT NULL) has_password, u.status, u.created_at, u.last_login,
+      `SELECT u.id, u.uid, u.name, u.email, u.phone, u.source, (u.password_hash IS NOT NULL) has_password, (u.google_sub IS NOT NULL) google, u.status, u.created_at, u.last_login,
          s.handle store_handle, s.name store_name,
          (SELECT COUNT(*) FROM payments x WHERE x.user_id=u.id) payments,
          (SELECT COALESCE(SUM(amount),0) FROM payments x WHERE x.user_id=u.id AND x.status='paid') paid,
@@ -49,16 +55,16 @@ export default async function UsersAdmin({ searchParams }: { searchParams: Promi
       </div>
       <form className="mt-6 flex flex-col gap-3 md:flex-row md:items-center">
         <input type="hidden" name="f" value={f} />
-        <div className="relative flex-1"><Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" /><input name="q" defaultValue={q} placeholder="Search name, email, phone or VISHNU ID" className="w-full rounded-full border border-border bg-card py-2.5 pr-4 pl-10 text-sm outline-none focus:border-accent" /></div>
+        <div className="relative flex-1"><Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" /><input name="q" defaultValue={q} placeholder="Search name, email, phone, VISHNU ID or #id" className="w-full rounded-full border border-border bg-card py-2.5 pr-4 pl-10 text-sm outline-none focus:border-accent" /></div>
         <div className="flex gap-2 overflow-x-auto">{tab("all", "All")}{tab("merchants", "Store owners")}{tab("customers", "Store customers")}{tab("payers", "Paid us")}</div>
       </form>
       <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[920px] text-sm">
-          <thead><tr className="border-b border-border text-left text-xs text-muted">{["User", "Contact", "Came from", "Store", "Paid us", "Store orders", "Joined", "Last login"].map((h) => <th key={h} className="px-4 py-3 font-medium">{h}</th>)}</tr></thead>
+        <table className="w-full min-w-[980px] text-sm">
+          <thead><tr className="border-b border-border text-left text-xs text-muted">{["User", "Contact", "Came from", "Store", "Paid us", "Store orders", "Joined", "Last login", ""].map((h) => <th key={h} className="px-4 py-3 font-medium">{h}</th>)}</tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3"><p className="font-semibold">{r.name || "—"}</p><p className="font-mono text-[11px] text-muted">{r.uid}{!Number(r.has_password) && " · no password"}</p></td>
+                <td className="px-4 py-3"><p className="font-semibold">{r.name || "—"}</p><p className="font-mono text-[11px] text-muted">#{r.id} · {r.uid}{!Number(r.has_password) && " · no password"}</p>{Number(r.google) ? <div className="mt-1"><GoogleBadge email={r.email} /></div> : null}</td>
                 <td className="px-4 py-3 text-xs"><p>{r.email ?? "—"}</p><p className="text-muted">{r.phone ?? ""}</p></td>
                 <td className="px-4 py-3 text-xs">{SOURCES[r.source] ?? r.source}</td>
                 <td className="px-4 py-3 text-xs">{r.store_handle ? <a href={`/catalog/@${r.store_handle}`} target="_blank" rel="noopener" className="font-semibold text-accent">{r.store_name}</a> : "—"}</td>
@@ -66,9 +72,10 @@ export default async function UsersAdmin({ searchParams }: { searchParams: Promi
                 <td className="px-4 py-3 text-xs">{Number(r.orders) || "—"}</td>
                 <td className="px-4 py-3 text-xs text-muted">{d(r.created_at)}</td>
                 <td className="px-4 py-3 text-xs text-muted">{d(r.last_login)}</td>
+                <td className="px-4 py-3"><UserManage id={r.id} /></td>
               </tr>
             ))}
-            {!rows.length && <tr><td colSpan={8} className="px-4 py-12 text-center text-muted">No users found.</td></tr>}
+            {!rows.length && <tr><td colSpan={9} className="px-4 py-12 text-center text-muted">No users found.</td></tr>}
           </tbody>
         </table>
       </div>

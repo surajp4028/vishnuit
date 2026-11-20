@@ -3,19 +3,21 @@ import { query } from "@/lib/server/db";
 import Link from "next/link";
 import { effectivePlan, getCatalogConfig, type PlanKey } from "@/lib/server/catalog";
 import { StoreRowEdit } from "@/components/admin/store-row-edit";
+import { GoogleBadge, StoreManage } from "@/components/admin/account-editor";
+import { adminDate } from "@/components/admin/fmt";
 
 export const metadata = { title: "Catalog Stores" };
 export const dynamic = "force-dynamic";
 
 type Row = {
   id: number; code: string; handle: string; name: string; plan: PlanKey; plan_expires_at: string | null; status: string; created_at: string;
-  owner: string; email: string | null; phone: string | null; products: number; orders: number; images: number;
+  owner: string; owner_id: number; owner_uid: string; google: number; email: string | null; phone: string | null; products: number; orders: number; images: number;
 };
 
 export default async function StoresAdmin() {
   const [rows, totals, cfg] = await Promise.all([
     query<Row>(
-      `SELECT s.id, s.code, s.handle, s.name, s.plan, s.plan_expires_at, s.status, s.created_at, u.name owner, u.email, u.phone,
+      `SELECT s.id, s.code, s.handle, s.name, s.plan, s.plan_expires_at, s.status, s.created_at, u.name owner, u.id owner_id, u.uid owner_uid, (u.google_sub IS NOT NULL) google, u.email, u.phone,
          (SELECT COUNT(*) FROM store_products p WHERE p.store_id=s.id) products,
          (SELECT COUNT(*) FROM store_orders o WHERE o.store_id=s.id) orders,
          (SELECT COALESCE(SUM(JSON_LENGTH(p.images)),0) FROM store_products p WHERE p.store_id=s.id) images
@@ -58,13 +60,13 @@ export default async function StoresAdmin() {
               return (
                 <tr key={r.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3"><p className="font-semibold">{r.name}</p><p className="text-xs text-muted">@{r.handle} · {r.code}</p></td>
-                  <td className="px-4 py-3"><p>{r.owner || "—"}</p><p className="text-xs text-muted">{r.email ?? r.phone ?? ""}</p></td>
-                  <td className="px-4 py-3"><span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">{PLANS[eff].name}</span>{r.plan_expires_at && <p className="mt-1 text-[11px] text-muted">till {new Date(r.plan_expires_at).toLocaleDateString("en-IN")}</p>}</td>
+                  <td className="px-4 py-3"><p>{r.owner || "—"} <span className="font-mono text-[10px] text-muted">#{r.owner_id}</span></p><p className="text-xs text-muted">{r.email ?? r.phone ?? ""}</p>{Number(r.google) ? <div className="mt-1"><GoogleBadge email={r.email} /></div> : null}</td>
+                  <td className="px-4 py-3"><span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">{PLANS[eff].name}</span>{r.plan_expires_at && <p className="mt-1 text-[11px] text-muted">till {adminDate(r.plan_expires_at)}</p>}</td>
                   <td className="px-4 py-3">{Number(r.products)}{Number.isFinite(limit) ? <span className="text-muted">/{limit}</span> : ""}</td>
                   <td className="px-4 py-3">{Number(r.images)} photos <span className="text-xs text-muted">(~{(Number(r.images) * 0.15).toFixed(1)} MB)</span></td>
                   <td className="px-4 py-3">{Number(r.orders)}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{new Date(r.created_at).toLocaleDateString("en-IN")}</td>
-                  <td className="px-4 py-3"><div className="flex flex-col items-start gap-2"><a href={`/catalog/@${r.handle}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-xs font-semibold text-accent">Open <ExternalLink className="size-3" /></a><StoreRowEdit id={r.id} plan={r.plan} expires={r.plan_expires_at ? new Date(r.plan_expires_at).toISOString() : null} status={r.status} />{r.status !== "active" && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-500">SUSPENDED</span>}</div></td>
+                  <td className="px-4 py-3 text-xs text-muted">{adminDate(r.created_at)}</td>
+                  <td className="px-4 py-3"><div className="flex flex-col items-start gap-2"><a href={`/catalog/@${r.handle}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-xs font-semibold text-accent">Open <ExternalLink className="size-3" /></a><StoreManage id={r.id} /><StoreRowEdit id={r.id} plan={r.plan} expires={r.plan_expires_at ? new Date(r.plan_expires_at).toISOString() : null} status={r.status} />{r.status !== "active" && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-500">SUSPENDED</span>}</div></td>
                 </tr>
               );
             })}

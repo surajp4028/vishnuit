@@ -6,6 +6,7 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
 import { Lightbox } from "./lightbox";
+import { ProductVideo } from "./product-video";
 import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 type P = {
@@ -14,36 +15,50 @@ type P = {
   gst_rate?: number | null; low_stock?: number | null;
 };
 
-/** Phones: full-bleed swipe with counter. Desktop: 2-up photo grid (Myntra-style) with hover zoom on each photo. */
-export function ProductGallery({ images, name, badge }: { images: string[]; name: string; badge?: string | null }) {
+/**
+ * Phones: full-bleed swipe with counter. Desktop: 2-up photo grid (Myntra-style) with hover zoom on each photo.
+ * A product video, if any, sits right after the first photo.
+ */
+export function ProductGallery({ images, name, badge, video }: { images: string[]; name: string; badge?: string | null; video?: string | null }) {
   const [i, setI] = useState(0);
   const [box, setBox] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  if (!images.length) return <div className="aspect-[4/5] bg-foreground/[.04] sm:rounded-3xl" />;
+  if (!images.length && !video) return <div className="aspect-[4/5] bg-foreground/[.04] sm:rounded-3xl" />;
+  // Slides: photos (with their photo index for the lightbox) plus the video after the first photo.
+  const slides: ({ kind: "img"; src: string; k: number } | { kind: "video"; src: string })[] = images.map((src, k) => ({ kind: "img" as const, src, k }));
+  if (video) slides.splice(Math.min(1, slides.length), 0, { kind: "video", src: video });
+  const n = slides.length;
   return (
     <div>
       {/* phone: swipe */}
       <div className="relative px-3 pt-2 md:hidden">
         <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto rounded-2xl bg-foreground/[.04] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} onClick={() => setBox(k)} className="size-full shrink-0 cursor-zoom-in snap-center object-cover" />)}
+          {slides.map((sl, x) => sl.kind === "video"
+            ? <ProductVideo key="video" src={sl.src} className="size-full shrink-0 snap-center" />
+            // eslint-disable-next-line @next/next/no-img-element
+            : <img key={x} src={sl.src} alt={sl.k === 0 ? name : ""} onClick={() => setBox(sl.k)} className="size-full shrink-0 cursor-zoom-in snap-center object-cover" />)}
         </div>
         {badge && <span className="pointer-events-none absolute top-5 left-6 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
-        {images.length > 1 && (
+        {n > 1 && (
           <>
-            <span className="pointer-events-none absolute right-6 bottom-3 rounded-pill bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
-            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center gap-1.5">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
+            <span className="pointer-events-none absolute top-5 right-6 rounded-pill bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {n}</span>
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center gap-1.5">{slides.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
           </>
         )}
       </div>
       {/* desktop: 2-up grid */}
-      <div className={cn("relative hidden gap-2.5 md:grid", images.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
-        {images.map((src, k) => (
-          <div key={k} className={cn("group overflow-hidden rounded-2xl bg-foreground/[.04]", images.length > 1 && images.length % 2 === 1 && k === images.length - 1 ? "col-span-2 aspect-[16/10]" : "aspect-[3/4]")}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt={k === 0 ? name : ""} loading={k > 1 ? "lazy" : "eager"} onClick={() => setBox(k)} className="size-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-105" />
-          </div>
-        ))}
+      <div className={cn("relative hidden gap-2.5 md:grid", n > 1 ? "grid-cols-2" : "grid-cols-1")}>
+        {slides.map((sl, x) => {
+          const wide = n > 1 && n % 2 === 1 && x === n - 1;
+          return sl.kind === "video"
+            ? <ProductVideo key="video" src={sl.src} className={cn("rounded-2xl", wide ? "col-span-2 aspect-[16/10]" : "aspect-[3/4]")} />
+            : (
+              <div key={x} className={cn("group overflow-hidden rounded-2xl bg-foreground/[.04]", wide ? "col-span-2 aspect-[16/10]" : "aspect-[3/4]")}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={sl.src} alt={sl.k === 0 ? name : ""} loading={x > 1 ? "lazy" : "eager"} onClick={() => setBox(sl.k)} className="size-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-105" />
+              </div>
+            );
+        })}
         {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
       </div>
       {box != null && <Lightbox images={images} start={box} alt={name} onClose={() => setBox(null)} />}

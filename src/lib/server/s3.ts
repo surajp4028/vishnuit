@@ -1,5 +1,5 @@
 import "server-only";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 let client: S3Client | null = null;
@@ -26,6 +26,23 @@ export async function putObject(key: string, body: Buffer | Uint8Array, contentT
   }
   await s3().send(new PutObjectCommand({ ...base, ServerSideEncryption: "AES256" }));
   return key;
+}
+
+/**
+ * Signed upload link so the browser can send a big file (product video) straight to S3,
+ * skipping our server's request-size limit. The browser must send exactly `headers`.
+ * Needs a CORS rule on the bucket that allows PUT from the site's origins.
+ */
+export async function signedPutUrl(key: string, contentType: string, seconds = 600) {
+  const headers = { "Content-Type": contentType, "x-amz-server-side-encryption": "AES256" };
+  const url = await getSignedUrl(s3(), new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType, ServerSideEncryption: "AES256" }), { expiresIn: seconds, signableHeaders: new Set(["content-type", "x-amz-server-side-encryption"]) });
+  return { url, headers };
+}
+
+/** Size in bytes of an object, or null if it doesn't exist / can't be read. */
+export async function objectSize(key: string): Promise<number | null> {
+  try { const r = await s3().send(new HeadObjectCommand({ Bucket: bucket(), Key: key })); return r.ContentLength ?? null; }
+  catch { return null; }
 }
 
 /** Short-lived download link for a private object. */

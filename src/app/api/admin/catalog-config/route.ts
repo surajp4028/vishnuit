@@ -17,6 +17,7 @@ export async function PUT(req: Request) {
       limit: k === "free" && limit == null ? DEFAULT_PLANS.free.limit : limit,
       price: k === "free" ? 0 : Math.max(1, Math.round(Number(p.price ?? DEFAULT_PLANS[k].price))),
       razorpay: k === "free" ? false : p.razorpay !== false,
+      storageMb: Math.min(1024 * 1024, Math.max(10, Math.round(Number(p.storageMb ?? DEFAULT_PLANS[k].storageMb) || DEFAULT_PLANS[k].storageMb))),
     };
   }
   const gstRate = Math.min(28, Math.max(0, Number(b.gstRate ?? 18)));

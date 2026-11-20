@@ -1,5 +1,7 @@
 import "server-only";
 import { resolve4, resolveCname } from "node:dns/promises";
+import { revalidatePath } from "next/cache";
+import { exec, queryOne } from "./db";
 
 /*
  * Custom domains for seller stores.
@@ -116,4 +118,42 @@ async function dnsPointsHere(d: string) {
   } catch {
     return false;
   }
+}
+
+/* ---------------- shared by Seller → Domain and Admin → Stores ---------------- */
+type DomainStore = { id: number; handle: string; domain: string | null; domain_ok: boolean | number };
+
+/** Current domain, the DNS records to add, and whether it's live (also refreshes domain_ok). */
+export async function domainInfo(store: DomainStore) {
+  if (!store.domain) return { domain: null };
+  const status = await domainStatus(store.domain);
+  const ok = status.state === "live";
+  if (ok !== Boolean(Number(store.domain_ok))) {
+    await exec("UPDATE stores SET domain_ok=? WHERE id=?", [ok ? 1 : 0, store.id]);
+    revalidatePath(`/catalog/@${store.handle}`, "layout");
+  }
+  return { domain: store.domain, records: dnsRecords(store.domain), status };
+}
+
+/** Connect (or switch to) a domain for a store. Plan checks are the caller's job. */
+export async function connectDomain(store: DomainStore, raw: unknown): Promise<{ ok: true; info: Awaited<ReturnType<typeof domainInfo>> } | { ok: false; status: number; error: string }> {
+  const d = cleanDomain(raw);
+  if (!d) return { ok: false, status: 422, error: "Enter a domain like pandeyfashion.com or shop.pandeyfashion.com." };
+  const taken = await queryOne<{ id: number; handle: string }>("SELECT id, handle FROM stores WHERE (domain=? OR domain=? OR domain=?) AND id<>?", [d, `www.${d}`, d.replace(/^www\./, ""), store.id]);
+  if (taken) return { ok: false, status: 409, error: `This domain is already connected to another store (@${taken.handle}).` };
+  if (store.domain && store.domain !== d && vercelReady()) await vercelRemove(store.domain);
+  if (vercelReady()) {
+    const r = await vercelAdd(d);
+    if (!r.ok) return { ok: false, status: 422, error: r.error };
+  }
+  await exec("UPDATE stores SET domain=?, domain_ok=0 WHERE id=?", [d, store.id]);
+  revalidatePath(`/catalog/@${store.handle}`, "layout");
+  return { ok: true, info: { domain: d, records: dnsRecords(d), status: await domainStatus(d) } };
+}
+
+/** Disconnect: the store keeps working at vishnuit.co.in/catalog/@handle. */
+export async function disconnectDomain(store: DomainStore) {
+  if (store.domain && vercelReady()) await vercelRemove(store.domain);
+  await exec("UPDATE stores SET domain=NULL, domain_ok=0 WHERE id=?", [store.id]);
+  revalidatePath(`/catalog/@${store.handle}`, "layout");
 }

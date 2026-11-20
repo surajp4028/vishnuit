@@ -43,6 +43,7 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
       status: b.status === "draft" ? "draft" : "active",
       featured: b.featured ? 1 : 0,
       gst_rate: gstIn, hsn,
+      video: isCatalogKey(b.video, storeCode, "video") ? (b.video as string) : null,
       related: [...new Set((Array.isArray(b.related) ? b.related : []).map(Number).filter((n) => Number.isInteger(n) && n > 0))].slice(0, 12),
       low_stock: b.low_stock === "" || b.low_stock == null ? null : Math.min(9999, Math.max(0, Math.floor(Number(b.low_stock) || 0))),
     },

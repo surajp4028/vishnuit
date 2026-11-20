@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { adminDate } from "@/components/admin/fmt";
 
 export type CouponRow = {
   id: number; code: string; kind: "percent" | "flat"; value: number; plan: string | null; max_uses: number | null; used: number;
@@ -65,7 +66,7 @@ export function CouponsManager({ rows }: { rows: CouponRow[] }) {
                 <td className="px-4 py-3">{c.kind === "percent" ? `${Number(c.value)}% off` : `₹${Number(c.value).toLocaleString("en-IN")} off`}</td>
                 <td className="px-4 py-3 text-xs">{c.user_uid ? <span className="font-semibold">{c.user_name || c.user_uid} <span className="font-mono text-muted">{c.user_uid}</span></span> : "Everyone"}{c.plan ? <span className="block text-muted capitalize">{c.plan} only</span> : null}</td>
                 <td className="px-4 py-3">{c.used}{c.max_uses ? ` / ${c.max_uses}` : ""}</td>
-                <td className="px-4 py-3 text-xs">{c.valid_till ? new Date(c.valid_till).toLocaleDateString("en-IN") : "—"}</td>
+                <td className="px-4 py-3 text-xs">{adminDate(c.valid_till)}</td>
                 <td className="px-4 py-3"><button onClick={() => toggle(c)} className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", Number(c.active) ? "bg-emerald-500/10 text-emerald-600" : "bg-foreground/10 text-muted")}>{Number(c.active) ? "Active" : "Off"}</button></td>
                 <td className="px-4 py-3"><button onClick={() => remove(c)} aria-label="Delete" className="text-muted hover:text-red-500"><Trash2 className="size-4" /></button></td>
               </tr>

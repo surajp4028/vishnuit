@@ -1,18 +1,18 @@
 "use client";
 import { useMemo, useState } from "react";
-import { AlertTriangle, ChevronLeft, Copy, ExternalLink, Loader2, PackagePlus, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react";
+import { Film, AlertTriangle, ChevronLeft, Copy, ExternalLink, Loader2, PackagePlus, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flattenTree } from "@/lib/category-tree";
 import { isColourOption } from "@/lib/colors";
 import { ValuesEditor, type Attr } from "@/components/seller/attributes";
-import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, Toggle } from "./ui";
+import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, ProgressRing, Toggle, uploadVideo } from "./ui";
 
 type Variant = { key: string; price: number | null; stock: number | null; sku?: string | null };
 export type P = {
   id: number; category_id: number | null; name: string; slug: string; description: string | null; price: number; compare_price: number | null;
   sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[]; swatches?: Record<string, string> }[];
   variants: Variant[]; status: "active" | "draft"; featured: boolean;
-  gst_rate?: number | null; hsn?: string | null; low_stock?: number | null; related?: number[];
+  gst_rate?: number | null; hsn?: string | null; low_stock?: number | null; related?: number[]; video?: string | null;
 };
 export type C = { id: number; name: string; slug: string; parent_id?: number | null; sort?: number };
 
@@ -234,6 +234,7 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
     category_id: src?.category_id ?? null as number | null, images: src?.images ?? [], status: initial?.status ?? "active", featured: initial?.featured ?? false,
     options: (src?.options ?? []).map((o) => ({ name: o.name, values: [...o.values], swatches: o.swatches ?? {} })) as Opt[],
     related: (src?.related ?? []) as number[],
+    video: (src?.video ?? null) as string | null,
     variants: (src?.variants ?? []).map((v) => ({ ...v, sku: initial ? v.sku ?? null : null })) as Variant[],
   }));
   const [busy, setBusy] = useState(false);
@@ -299,6 +300,11 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
         )}
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
           <div className={section}><Gallery value={f.images} onChange={(v) => set("images", v)} /></div>
+
+          <div className={section}>
+            {h("Video", "Optional · MP4, WebM or MOV up to 50 MB. Plays on the product page; cards show a ▶ button.")}
+            <VideoPick value={f.video} onChange={(v) => set("video", v)} />
+          </div>
 
           <div className={section}>
             {h("Basics")}
@@ -462,6 +468,40 @@ function RelatedPicker({ value, onChange, all }: { value: number[]; onChange: (v
           {q.trim() && !hits.length && <p className="mt-1.5 text-xs text-muted">No product matches “{q}”.</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+/** One product video: upload with % progress, preview, replace or remove. */
+function VideoPick({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const [pct, setPct] = useState<number | null>(null);
+  const [err, setErr] = useState("");
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setErr("");
+    if (file.size > 50 * 1024 * 1024) return setErr("Video must be under 50 MB.");
+    setPct(0);
+    try { const r = await uploadVideo(file, setPct); onChange(r.key); }
+    catch (e) { setErr((e as Error).message); }
+    finally { setPct(null); }
+  }
+  const choose = (
+    <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-semibold hover:border-foreground/40", pct != null && "pointer-events-none opacity-50")}>
+      <Film className="size-4" />{value ? "Replace video" : "Add video"}
+      <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+    </label>
+  );
+  return (
+    <div className="space-y-3">
+      {value && pct == null && (
+        <div className="relative w-40 overflow-hidden rounded-2xl bg-black">
+          <video src={imgUrl(value)!} muted playsInline loop autoPlay className="aspect-[3/4] w-full object-cover" />
+          <button type="button" onClick={() => onChange(null)} aria-label="Remove video" className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-black/60 text-white"><X className="size-4" /></button>
+        </div>
+      )}
+      {pct != null && <div className="flex items-center gap-3 rounded-2xl border border-border p-3"><ProgressRing pct={pct} /><span className="text-sm font-semibold">Uploading video… {pct}%</span></div>}
+      <div className="flex flex-wrap items-center gap-3">{choose}{value && pct == null && <button type="button" onClick={() => onChange(null)} className="text-sm font-semibold text-red-600">Remove</button>}</div>
+      {err && <p className="rounded-2xl bg-red-500/10 px-4 py-2.5 text-sm text-red-600">{err}</p>}
     </div>
   );
 }

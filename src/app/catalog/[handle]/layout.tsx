@@ -42,7 +42,7 @@ export default async function StoreLayout({ children, params }: { children: Reac
         <StorePixels meta={s.storefront.pixels.meta} ga={s.storefront.pixels.ga} />
         {s.storefront.closed.on && <div className="bg-amber-400 px-4 py-2 text-center text-[12.5px] font-semibold text-black">{s.storefront.closed.message || "We're taking a short break — you can browse, and orders open again soon."}</div>}
         {s.storefront.bar.on && <AnnounceBar items={s.storefront.bar.items} />}
-        <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} name={s.name} logo={logo} categories={cats} /></Suspense>
+        <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} handle={s.handle} name={s.name} logo={logo} categories={cats} /></Suspense>
         <main>{children}</main>
         <StoreFooter store={s} base={base} logo={logo} categories={cats} />
         <WhatsAppFloat number={s.contact.whatsapp ?? ""} store={s.name} />

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Images, Loader2, Upload, X } from "lucide-react";
+import { ImagePlus, Images, Loader2, Trash2, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const input = "w-full rounded-2xl border border-border bg-background px-4 py-3 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-foreground/40 focus:ring-4 focus:ring-foreground/5";
@@ -12,6 +12,28 @@ export async function api<T = Record<string, unknown>>(url: string, method: stri
   const r = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
   const j = (await r.json().catch(() => ({}))) as T & { error?: string; code?: string };
   return { ok: r.ok, data: j };
+}
+
+/**
+ * Upload a product video straight to S3 (signed link from our API), with progress.
+ * Big files never pass through our server, so there's no request-size limit problem.
+ */
+export async function uploadVideo(file: File, onProgress?: (pct: number) => void): Promise<{ key: string; url: string }> {
+  const sign = await api<{ key: string; url: string; headers: Record<string, string> }>("/api/store/video", "POST", { type: file.type, size: file.size });
+  if (!sign.ok) throw new Error(sign.data.error || "Could not start the upload");
+  await new Promise<void>((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open("PUT", sign.data.url);
+    for (const [h, v] of Object.entries(sign.data.headers)) x.setRequestHeader(h, v);
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(Math.min(99, Math.round((e.loaded / e.total) * 100))); };
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error("Upload failed — please try again.")));
+    x.onerror = () => reject(new Error("Upload blocked — check your connection (or storage CORS settings)."));
+    x.send(file);
+  });
+  const done = await api<{ key: string; url: string }>("/api/store/video", "PUT", { key: sign.data.key, size: file.size });
+  if (!done.ok) throw new Error(done.data.error || "Upload failed");
+  onProgress?.(100);
+  return done.data;
 }
 
 /** Upload one image; onProgress gets 0–100 while the file is sent (then 100 while it's processed). */
@@ -70,12 +92,22 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
   const [sel, setSel] = useState<string[]>([]);
   const [ups, setUps] = useState<{ id: string; name: string; pct: number }[]>([]);
   const [err, setErr] = useState("");
+  const [usage, setUsage] = useState<Usage | null>(null);
+  const [deleting, setDeleting] = useState("");
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!open) return;
     setSel([]); setItems(null);
-    fetch(`/api/store/media${all ? "" : `?kind=${kind}`}`).then((r) => r.json()).then((j) => setItems(j.items ?? [])).catch(() => setItems([]));
+    fetch(`/api/store/media${all ? "" : `?kind=${kind}`}`).then((r) => r.json()).then((j) => { setItems(j.items ?? []); if (j.usage) setUsage(j.usage); }).catch(() => setItems([]));
   }, [open, all, kind]);
+  async function remove(key: string) {
+    if (!confirm("Delete this photo from your library? This frees up storage and can't be undone.")) return;
+    setErr(""); setDeleting(key);
+    const r = await api<{ usage: Usage }>(`/api/store/media?k=${encodeURIComponent(key)}`, "DELETE");
+    setDeleting("");
+    if (r.ok) { setItems((it) => (it ?? []).filter((m) => m.key !== key)); setSel((s) => s.filter((k) => k !== key)); setUsage((u) => (u ? { ...u, ...r.data.usage } : u)); }
+    else setErr(r.data.error || "Could not delete");
+  }
   if (!open) return null;
   const toggle = (k: string) => setSel((s) => (s.includes(k) ? s.filter((x) => x !== k) : multiple ? [...s, k] : [k]));
   async function upload(files: File[]) {
@@ -99,6 +131,7 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
           <div className="flex-1"><p className="font-display text-lg font-bold">Media library</p><p className="text-xs text-muted">Choose photos you&apos;ve uploaded before, or upload new ones.</p></div>
           <button onClick={() => ref.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-semibold"><Upload className="size-4" /> Upload</button>
         </header>
+        {usage && <StorageBar usage={usage} className="border-b border-border px-4 py-2.5" />}
         <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs">
           <button onClick={() => setAll(false)} className={cn("rounded-full px-3 py-1.5 font-semibold", !all ? "bg-foreground text-background" : "text-muted")}>{kind === "product" ? "Product photos" : "This type"}</button>
           <button onClick={() => setAll(true)} className={cn("rounded-full px-3 py-1.5 font-semibold", all ? "bg-foreground text-background" : "text-muted")}>All media</button>
@@ -114,11 +147,16 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
             {items?.map((m) => {
               const on = sel.includes(m.key);
               return (
-                <button key={m.key} onClick={() => toggle(m.key)} className={cn("relative aspect-square overflow-hidden rounded-xl bg-foreground/5 ring-offset-2 ring-offset-background transition", on ? "ring-2 ring-foreground" : "hover:opacity-90")}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={m.url} alt="" loading="lazy" className="size-full object-cover" />
-                  {on && <span className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{multiple ? sel.indexOf(m.key) + 1 : "✓"}</span>}
-                </button>
+                <div key={m.key} className="group relative">
+                  <button onClick={() => toggle(m.key)} className={cn("relative block aspect-square w-full overflow-hidden rounded-xl bg-foreground/5 ring-offset-2 ring-offset-background transition", on ? "ring-2 ring-foreground" : "hover:opacity-90", deleting === m.key && "opacity-40")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={m.url} alt="" loading="lazy" className="size-full object-cover" />
+                    {on && <span className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{multiple ? sel.indexOf(m.key) + 1 : "✓"}</span>}
+                  </button>
+                  <button onClick={() => remove(m.key)} disabled={!!deleting} aria-label="Delete photo" title="Delete to free storage" className="absolute top-1.5 left-1.5 grid size-7 place-items-center rounded-full bg-black/55 text-white opacity-100 transition hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100">
+                    {deleting === m.key ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -131,6 +169,19 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
         </footer>
         <input ref={ref} type="file" accept="image/*" multiple={multiple} hidden onChange={(e) => { const fs = Array.from(e.target.files ?? []); e.target.value = ""; if (fs.length) upload(fs); }} />
       </div>
+    </div>
+  );
+}
+
+type Usage = { used: number; limit: number; files: number; label: string };
+
+/** "120 MB of 1 GB" bar — amber from 80%, red when full. */
+export function StorageBar({ usage, className }: { usage: Usage; className?: string }) {
+  const pct = Math.min(100, Math.round((usage.used / Math.max(1, usage.limit)) * 100));
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between text-xs"><span className="font-semibold">Storage</span><span className={cn(pct >= 100 ? "font-bold text-red-600" : pct >= 80 ? "font-semibold text-amber-700" : "text-muted")}>{usage.label} used{pct >= 100 ? " · full" : ""}</span></div>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-foreground/10"><div className={cn("h-full rounded-full", pct >= 100 ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${Math.max(pct, usage.used ? 2 : 0)}%` }} /></div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { imgUrl, type Product } from "@/lib/server/catalog";
 import { CardImages } from "./card-images";
+import { VideoBadge } from "./product-video";
 import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 const rupee = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
@@ -18,6 +19,7 @@ export function ProductCard({ p, base, store }: { p: Product; base: string; stor
         <CardImages images={p.images.slice(0, 5).map((k) => imgUrl(k)!).filter(Boolean)} alt={p.name} dim={soldOut} />
         {soldOut && <span className="absolute inset-x-3 bottom-3 rounded-lg bg-background/95 py-1.5 text-center text-[11px] font-bold tracking-wider">SOLD OUT</span>}
         {lowStock && <span className="absolute bottom-3 left-3 rounded-md bg-background/95 px-2 py-1 text-[10px] font-bold text-[#ff3f6c]">Only {left} left</span>}
+        {p.video && <VideoBadge src={imgUrl(p.video)!} name={p.name} />}
         {p.featured && !soldOut && <span className="absolute top-2.5 left-2.5 rounded-md bg-foreground/85 px-2 py-0.5 text-[10px] font-bold tracking-wider text-background">BESTSELLER</span>}
       </div>
       <div className="mt-2.5 px-0.5">

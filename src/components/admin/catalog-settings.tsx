@@ -3,7 +3,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 type PlanKey = "free" | "starter" | "growth" | "premium";
-type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean };
+type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean; storageMb: number };
 type Features = { enabled: boolean; newStores: boolean; storefronts: boolean; accountCard: boolean; accountTab: boolean; menuLink: boolean };
 type Config = { plans: Record<PlanKey, PlanDef>; gstRate: number; sellerGstin: string; sellerLegalName: string; features: Features };
 
@@ -63,6 +63,7 @@ export function CatalogSettings({ initial }: { initial: Config }) {
               <p className="text-xs font-bold tracking-widest text-muted uppercase">{k}</p>
               <label className="block"><span className="mb-1 block text-xs text-muted">Name</span><input value={c.plans[k].name ?? ""} onChange={(e) => setPlan(k, { name: e.target.value })} className={inputCls} /></label>
               <label className="block"><span className="mb-1 block text-xs text-muted">Product limit</span><input value={c.plans[k].limit ?? ""} onChange={(e) => setPlan(k, { limit: e.target.value === "" ? null : Number(e.target.value.replace(/\D/g, "")) })} placeholder="Unlimited" className={inputCls} /></label>
+              <label className="block"><span className="mb-1 block text-xs text-muted">Storage (MB) — photos + videos</span><input value={c.plans[k].storageMb ?? ""} onChange={(e) => setPlan(k, { storageMb: Number(e.target.value.replace(/\D/g, "")) })} placeholder="1024 = 1 GB" inputMode="numeric" className={inputCls} /></label>
               <label className="block"><span className="mb-1 block text-xs text-muted">Price / year (₹)</span><input value={k === "free" ? 0 : c.plans[k].price} disabled={k === "free"} onChange={(e) => setPlan(k, { price: Number(e.target.value.replace(/\D/g, "")) })} className={inputCls} /></label>
               {k !== "free" && (
                 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={c.plans[k].razorpay} onChange={(e) => setPlan(k, { razorpay: e.target.checked })} /> Allow merchant Razorpay checkout</label>

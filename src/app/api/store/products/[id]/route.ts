@@ -23,8 +23,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if ("error" in p) return Response.json({ error: p.error }, { status: 422 });
     const d = p.data;
     await exec(
-      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, low_stock=?, images=?, options=?, variants=?, related=?, status=?, featured=? WHERE id=? AND store_id=?",
-      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related.filter((r) => r !== id))), d.status, d.featured, id, store.id],
+      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, low_stock=?, images=?, video=?, options=?, variants=?, related=?, status=?, featured=? WHERE id=? AND store_id=?",
+      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), d.video, JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related.filter((r) => r !== id))), d.status, d.featured, id, store.id],
     );
     await mergeIntoLibrary(store.id, p.data.options).catch(() => {});
   }
@@ -33,12 +33,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return Response.json({ ok: true, product: hydrateProduct(row!) });
 }
 
-/** Delete a product. With ?images=1 its photos are also removed from S3 (unless another product still uses them). */
+/** Delete a product. With ?images=1 its photos (and video) are also removed from S3 (unless another product still uses them). */
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const a = await requireStoreApi();
   if (a instanceof Response) return a;
   const id = Number((await params).id);
-  const row = await queryOne<{ images: unknown }>("SELECT images FROM store_products WHERE id=? AND store_id=?", [id, a.store.id]);
+  const row = await queryOne<{ images: unknown; video: string | null }>("SELECT images, video FROM store_products WHERE id=? AND store_id=?", [id, a.store.id]);
   if (!row) return Response.json({ error: "Product not found." }, { status: 404 });
   await exec("DELETE FROM store_products WHERE id=? AND store_id=?", [id, a.store.id]);
   revalidatePath(`/catalog/@${a.store.handle}`, "layout");
@@ -46,9 +46,11 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   const keys = (typeof row.images === "string" ? JSON.parse(row.images) : (row.images as string[] | null)) ?? [];
   let removed = 0, failed = 0, err = "";
+  // The product's video goes too (unless another product uses the same one).
+  if (row.video) keys.push(row.video);
   for (const k of keys) {
     if (!isCatalogKey(k, a.store.code)) continue;
-    const used = await queryOne("SELECT id FROM store_products WHERE store_id=? AND JSON_CONTAINS(images, JSON_QUOTE(?))", [a.store.id, k]);
+    const used = await queryOne("SELECT id FROM store_products WHERE store_id=? AND (JSON_CONTAINS(images, JSON_QUOTE(?)) OR video=?)", [a.store.id, k, k]);
     if (used) continue;
     const r = await deleteObject(k);
     if (r.ok) { removed++; await exec("DELETE FROM store_media WHERE store_id=? AND s3_key=?", [a.store.id, k]); } else { failed++; err = r.error ?? ""; }
