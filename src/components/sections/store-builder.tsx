@@ -22,28 +22,60 @@ export const STORE_STEPS = [
 ];
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/** Real screenshot inside a laptop frame. */
+/**
+ * MacBook-style laptop: thin black bezel with camera, screenshot screen with a soft glass glare,
+ * hinge, and a brushed-aluminium base with the opening notch. Everything scales with width.
+ */
 export function LaptopFrame({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
   return (
-    <div className={className}>
-      <div className="rounded-t-[1.1rem] border border-black/10 bg-[#0f1115] p-[1.6%] pb-[1.2%] shadow-[0_30px_80px_-30px_rgba(15,23,42,.45)]">
-        <div className="mx-auto mb-[1%] size-1.5 rounded-full bg-white/20" />
-        <div className="relative aspect-[16/10] overflow-hidden rounded-[.35rem] bg-white">
+    <div className={`relative ${className}`}>
+      {/* lid */}
+      <div className="relative rounded-[2.2%/3.4%] bg-[#0b0c0f] p-[1.3%] pt-[2.4%]" style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,.09), 0 0 0 1px rgba(15,23,42,.18), 0 40px 80px -36px rgba(15,23,42,.55)" }}>
+        <span className="absolute top-[0.9%] left-1/2 size-[0.7%] min-h-1 min-w-1 -translate-x-1/2 rounded-full bg-[#2b2f36] ring-1 ring-white/10" />
+        <div className="relative aspect-[16/10] overflow-hidden rounded-[0.6%] bg-white">
           <Image src={src} alt={alt} fill sizes="(min-width:1024px) 640px, 90vw" className="object-cover object-top" />
+          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,.18)_0%,rgba(255,255,255,0)_38%)]" />
         </div>
       </div>
-      <div className="relative mx-[-6%] h-3 rounded-b-[1.2rem] bg-gradient-to-b from-[#d9dce3] to-[#a9aeb8] shadow-[0_18px_30px_-12px_rgba(15,23,42,.5)]"><div className="absolute top-0 left-1/2 h-1.5 w-[18%] -translate-x-1/2 rounded-b-lg bg-[#8d929c]" /></div>
+      {/* hinge + base */}
+      <div className="relative mx-[1.5%] h-[5px] rounded-b-[3px] bg-gradient-to-b from-[#2a2d33] to-[#16181c]" />
+      <div className="relative mx-[-7%] h-[clamp(8px,2.4vw,14px)] rounded-b-[50%_100%] bg-gradient-to-b from-[#f1f2f4] via-[#d4d7dd] to-[#a7acb5]" style={{ boxShadow: "0 1px 0 rgba(255,255,255,.7) inset, 0 22px 32px -18px rgba(15,23,42,.55)" }}>
+        <span className="absolute top-0 left-1/2 h-[45%] w-[14%] -translate-x-1/2 rounded-b-[6px] bg-gradient-to-b from-[#b7bcc4] to-[#d6d9de]" />
+      </div>
     </div>
   );
 }
 
-/** Real screenshot inside a phone frame. */
+/**
+ * iPhone-style phone: titanium edge with side buttons, thin black bezel, Dynamic Island.
+ * Corner radii are % based so it looks right at any size.
+ */
 export function PhoneFrame({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
   return (
-    <div className={`rounded-[2.4rem] border border-black/10 bg-[#0f1115] p-[3.5%] shadow-[0_30px_70px_-20px_rgba(15,23,42,.55)] ${className}`}>
-      <div className="relative aspect-[9/19.5] overflow-hidden rounded-[2rem] bg-white">
-        <Image src={src} alt={alt} fill sizes="240px" className="object-cover object-top" />
-        <div className="absolute top-2 left-1/2 h-[3.2%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
+    <div className={`${/\b(absolute|fixed)\b/.test(className) ? "" : "relative "}${className}`}>
+      {/* side buttons */}
+      <span className="absolute top-[17%] -left-[1.6%] h-[4%] w-[1.8%] rounded-l-sm bg-gradient-to-r from-[#5b6068] to-[#2a2d33]" />
+      <span className="absolute top-[24%] -left-[1.6%] h-[7.5%] w-[1.8%] rounded-l-sm bg-gradient-to-r from-[#5b6068] to-[#2a2d33]" />
+      <span className="absolute top-[33%] -left-[1.6%] h-[7.5%] w-[1.8%] rounded-l-sm bg-gradient-to-r from-[#5b6068] to-[#2a2d33]" />
+      <span className="absolute top-[27%] -right-[1.6%] h-[11%] w-[1.8%] rounded-r-sm bg-gradient-to-l from-[#5b6068] to-[#2a2d33]" />
+      {/* titanium frame */}
+      <div className="rounded-[17%/7.9%] p-[1.6%]" style={{ background: "linear-gradient(145deg,#8a8f98 0%,#3b3f46 22%,#1d1f23 50%,#3b3f46 78%,#8a8f98 100%)", boxShadow: "0 30px 60px -22px rgba(15,23,42,.6), 0 0 0 1px rgba(15,23,42,.25)" }}>
+        {/* black bezel */}
+        <div className="rounded-[15.6%/7.3%] bg-black p-[3.2%]">
+          <div className="relative aspect-[9/19.5] overflow-hidden rounded-[12.5%/5.8%] bg-white [container-type:inline-size]">
+            {/* status bar (the screenshot starts below it, like a real iPhone) */}
+            <div className="absolute inset-x-0 top-0 z-10 flex h-[6%] items-center justify-between bg-white px-[9%] pt-[1%] text-black">
+              <span className="text-[clamp(6px,2.4cqw,11px)] font-semibold" style={{ fontSize: "min(4.2cqw, 12px)" }}>9:41</span>
+              <span className="flex items-center gap-[3cqw]">
+                <svg viewBox="0 0 18 12" className="w-[7cqw]"><rect x="0" y="8" width="3" height="4" rx="1" /><rect x="5" y="5.5" width="3" height="6.5" rx="1" /><rect x="10" y="3" width="3" height="9" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /></svg>
+                <svg viewBox="0 0 25 12" className="w-[8.5cqw]"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45" /><rect x="2" y="2" width="16" height="8" rx="1.6" /><rect x="22.5" y="4" width="1.8" height="4" rx=".8" opacity=".45" /></svg>
+              </span>
+            </div>
+            <div className="absolute inset-x-0 top-[6%] bottom-0"><Image src={src} alt={alt} fill sizes="260px" className="object-cover object-top" /></div>
+            <span className="absolute top-[1.3%] left-1/2 z-20 h-[3.3%] w-[31%] -translate-x-1/2 rounded-full bg-black" />
+            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,.16)_0%,rgba(255,255,255,0)_40%)]" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -52,14 +84,14 @@ export function PhoneFrame({ src, alt, className = "" }: { src: string; alt: str
 /** Laptop + phone composition with two floating cards. */
 export function StoreMockup({ size = "lg" }: { size?: "md" | "lg" }) {
   return (
-    <div className={`relative mx-auto w-full ${size === "lg" ? "max-w-[640px] pb-14" : "max-w-[520px] pb-10"}`}>
-      <LaptopFrame src="/stores/desktop-home-v2.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[88%]" />
-      <PhoneFrame src="/stores/phone-product-v2.webp" alt="Product page on a phone" className={`absolute bottom-0 left-0 ${size === "lg" ? "w-[30%]" : "w-[29%]"}`} />
-      <div className="absolute -top-4 left-[14%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
+    <div className={`relative mx-auto w-full pt-6 pb-[7%] ${size === "lg" ? "max-w-[640px]" : "max-w-[520px]"}`}>
+      <LaptopFrame src="/stores/desktop-home-v2.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[86%]" />
+      <PhoneFrame src="/stores/phone-product-v2.webp" alt="Product page on a phone" className="absolute bottom-0 left-[2%] w-[23%] drop-shadow-[0_25px_35px_rgba(15,23,42,.35)]" />
+      <div className="absolute top-0 left-[18%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
         <span className="grid size-8 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><ShoppingBag className="size-4" /></span>
         <span><span className="block text-[12px] font-bold text-slate-900">New order · ₹2,499</span><span className="block text-[11px] text-slate-500">Cash on delivery</span></span>
       </div>
-      <div className="absolute right-[-2%] bottom-6 flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
+      <div className="absolute right-0 bottom-[2%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
         <span className="grid size-8 place-items-center rounded-full bg-amber-400/15 text-amber-600"><BadgeCheck className="size-4" /></span>
         <span><span className="block text-[12px] font-bold text-slate-900">UPI payment received</span><span className="block text-[11px] text-slate-500">GST invoice sent</span></span>
       </div>
@@ -70,7 +102,7 @@ export function StoreMockup({ size = "lg" }: { size?: "md" | "lg" }) {
 /** Short, light home-page teaser. The full story and pricing live on /online-store. */
 export function StoreTeaser() {
   return (
-    <section id="online-store" className="container-x scroll-mt-24 py-14 md:py-20">
+    <section id="online-store" className="container-x scroll-mt-24 pt-14 pb-2 md:pt-20 md:pb-4">
       <Reveal>
         <div className="relative isolate grid items-center gap-10 overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-[#f6f8ff] via-white to-[#fff8e8] p-7 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:p-12 dark:from-card dark:via-card dark:to-card">
           <div className="pointer-events-none absolute -top-24 -left-24 -z-10 size-80 rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.14),transparent)]" />
