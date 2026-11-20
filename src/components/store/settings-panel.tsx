@@ -7,7 +7,7 @@ import { api, btnDark, card, Field, ImagePick, input, Toggle } from "./ui";
 type PageKey = "privacy" | "terms" | "refund" | "shipping";
 export type S = {
   id: number; code: string; handle: string; name: string; tagline: string; about: string; logo_key: string | null; banner_key: string | null;
-  contact: { phone?: string; whatsapp?: string; email?: string; address?: string; instagram?: string; facebook?: string };
+  contact: { phone?: string; whatsapp?: string; email?: string; address?: string; instagram?: string; facebook?: string; youtube?: string; pinterest?: string; x?: string };
   pages: Record<PageKey, { on: boolean; content: string }>;
   payments: { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; hasSecret: boolean } };
   planName: string; limit: number | null; plan_expires_at: string | null; razorpayAllowed: boolean;
@@ -63,8 +63,15 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
             <Field label="Phone"><input value={s.contact.phone ?? ""} onChange={(e) => c("phone", e.target.value)} inputMode="tel" className={input} /></Field>
             <Field label="WhatsApp number" hint="With country code, e.g. 919876543210"><input value={s.contact.whatsapp ?? ""} onChange={(e) => c("whatsapp", e.target.value.replace(/\D/g, ""))} inputMode="numeric" className={input} /></Field>
             <Field label="Email" hint="New-order alerts are sent here"><input value={s.contact.email ?? ""} onChange={(e) => c("email", e.target.value)} type="email" className={input} /></Field>
-            <Field label="Instagram link"><input value={s.contact.instagram ?? ""} onChange={(e) => c("instagram", e.target.value)} placeholder="https://instagram.com/…" className={input} /></Field>
             <div className="sm:col-span-2"><Field label="Address"><textarea value={s.contact.address ?? ""} onChange={(e) => c("address", e.target.value)} rows={2} className={cn(input, "resize-y")} /></Field></div>
+          </div>
+          <div className={cn(card, "space-y-3 p-5")}>
+            <div><p className="font-display text-lg font-bold">Social links</p><p className="text-sm text-muted">Shown as icons in your store footer and on the Contact page. Leave empty to hide.</p></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {([["instagram", "Instagram", "https://instagram.com/yourbrand"], ["facebook", "Facebook", "https://facebook.com/yourbrand"], ["youtube", "YouTube", "https://youtube.com/@yourbrand"], ["pinterest", "Pinterest", "https://pinterest.com/yourbrand"], ["x", "X (Twitter)", "https://x.com/yourbrand"]] as const).map(([k, l, ph]) => (
+                <Field key={k} label={l}><input value={s.contact[k] ?? ""} onChange={(e) => c(k, e.target.value.trim())} inputMode="url" placeholder={ph} className={input} /></Field>
+              ))}
+            </div>
           </div>
         </>
       )}

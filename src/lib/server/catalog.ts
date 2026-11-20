@@ -43,7 +43,7 @@ export const getCatalogConfig = cache(async (): Promise<CatalogConfig> => {
 });
 
 /* ---------------- types ---------------- */
-export type StoreContact = { phone?: string; whatsapp?: string; email?: string; address?: string; instagram?: string; facebook?: string };
+export type StoreContact = { phone?: string; whatsapp?: string; email?: string; address?: string; instagram?: string; facebook?: string; youtube?: string; pinterest?: string; x?: string };
 export type StorePage = { on: boolean; content: string };
 export type StorePages = { privacy: StorePage; terms: StorePage; refund: StorePage; shipping: StorePage };
 export type StoreTax = { gstin: string; legalName: string; rate: number; inclusive: boolean; hsn: string; invoicePrefix: string };

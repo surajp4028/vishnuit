@@ -26,6 +26,7 @@ export async function PATCH(req: Request) {
   const contact = b.contact ? {
     phone: str(c.phone, 20), whatsapp: str(c.whatsapp, 20).replace(/\D/g, ""), email: str(c.email, 190),
     address: str(c.address, 400), instagram: httpsOnly(str(c.instagram, 200)), facebook: httpsOnly(str(c.facebook, 200)),
+    youtube: httpsOnly(str(c.youtube, 200)), pinterest: httpsOnly(str(c.pinterest, 200)), x: httpsOnly(str(c.x, 200)),
   } : store.contact;
 
   let pages: StorePages = store.pages;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { FaInstagram, FaWhatsapp } from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaPinterestP, FaWhatsapp, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { getStoreByHandle } from "@/lib/server/catalog";
 
 export const metadata: Metadata = { title: "Contact" };
@@ -17,6 +17,10 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
     c.phone && { icon: Phone, label: "Call", value: c.phone, href: `tel:${c.phone}` },
     c.email && { icon: Mail, label: "Email", value: c.email, href: `mailto:${c.email}` },
     c.instagram && { icon: FaInstagram, label: "Instagram", value: c.instagram.replace(/^https?:\/\/(www\.)?/, ""), href: c.instagram },
+    c.facebook && { icon: FaFacebookF, label: "Facebook", value: c.facebook.replace(/^https?:\/\/(www\.)?/, ""), href: c.facebook },
+    c.youtube && { icon: FaYoutube, label: "YouTube", value: c.youtube.replace(/^https?:\/\/(www\.)?/, ""), href: c.youtube },
+    c.pinterest && { icon: FaPinterestP, label: "Pinterest", value: c.pinterest.replace(/^https?:\/\/(www\.)?/, ""), href: c.pinterest },
+    c.x && { icon: FaXTwitter, label: "X", value: c.x.replace(/^https?:\/\/(www\.)?/, ""), href: c.x },
     c.address && { icon: MapPin, label: "Visit", value: c.address, href: `https://www.google.com/maps/search/${encodeURIComponent(c.address)}` },
   ].filter(Boolean) as { icon: typeof Phone; label: string; value: string; href: string }[];
   return (

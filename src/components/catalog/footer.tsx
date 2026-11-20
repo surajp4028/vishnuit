@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Banknote, CreditCard, Mail, MapPin, Phone, ShieldCheck, Smartphone } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaWhatsapp } from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaPinterestP, FaWhatsapp, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { PAGE_KEYS, PAGE_TITLES, type Store } from "@/lib/server/catalog";
 
 const colHead = "text-[10.5px] font-semibold tracking-[3.5px] text-white/35";
@@ -22,6 +22,9 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
     c.whatsapp && { href: `https://wa.me/${c.whatsapp}`, icon: FaWhatsapp, label: "WhatsApp" },
     c.instagram && { href: c.instagram, icon: FaInstagram, label: "Instagram" },
     c.facebook && { href: c.facebook, icon: FaFacebookF, label: "Facebook" },
+    c.youtube && { href: c.youtube, icon: FaYoutube, label: "YouTube" },
+    c.pinterest && { href: c.pinterest, icon: FaPinterestP, label: "Pinterest" },
+    c.x && { href: c.x, icon: FaXTwitter, label: "X" },
   ].filter(Boolean) as { href: string; icon: typeof FaWhatsapp; label: string }[];
 
   return (
