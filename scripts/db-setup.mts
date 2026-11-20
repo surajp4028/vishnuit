@@ -37,9 +37,12 @@ console.log(`✓ database "${DB}" and tables ready`);
 for (const sql of [
   "ALTER TABLE leads ADD COLUMN city VARCHAR(80) NULL AFTER budget",
   "ALTER TABLE leads ADD COLUMN utm TEXT NULL AFTER page",
+  "ALTER TABLE payments ADD COLUMN user_id INT NULL AFTER plan_name",
+  "ALTER TABLE payments ADD COLUMN invoice_key VARCHAR(400) NULL AFTER paid_at",
+  "ALTER TABLE payments ADD INDEX idx_user (user_id)",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
-  catch (e) { if ((e as { code?: string }).code !== "ER_DUP_FIELDNAME") throw e; }
+  catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }
 }
 
 const j = (v: unknown) => JSON.stringify(v ?? null);

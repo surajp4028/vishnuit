@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { exec } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
 import { createOrder, rzpConfigured } from "@/lib/server/razorpay";
+import { findOrCreateUser } from "@/lib/server/users";
 import { getSettings } from "@/lib/server/content";
 
 const clean = (v: unknown, max = 190) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -28,10 +29,12 @@ export async function POST(req: Request) {
   if (!Number.isFinite(amount) || amount < MIN || amount > MAX) return Response.json({ error: `Enter an amount between ₹${MIN} and ₹${MAX.toLocaleString("en-IN")}.` }, { status: 422 });
 
   try {
+    // Every payer gets an account (created silently if new) so they can later see payments & invoices.
+    const user = await findOrCreateUser({ name, email, phone, company, source: "paynow" });
     const order = await createOrder(amount * 100, `vit_pay_${Date.now()}`, { purpose, name, email, phone });
     await exec(
-      "INSERT INTO payments (plan_id, plan_name, amount, name, email, phone, company, notes, rzp_order_id) VALUES (NULL,?,?,?,?,?,?,?,?)",
-      [purpose, amount, name, email, phone, company, "Pay Now (header)", order.id],
+      "INSERT INTO payments (user_id, plan_id, plan_name, amount, name, email, phone, company, notes, rzp_order_id) VALUES (?,NULL,?,?,?,?,?,?,?,?)",
+      [user.id, purpose, amount, name, email, phone, company, "Pay Now (header)", order.id],
     );
     return Response.json({ orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID });
   } catch (e) {

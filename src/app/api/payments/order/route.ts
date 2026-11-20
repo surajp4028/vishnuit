@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { exec, queryOne } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
 import { createOrder, rzpConfigured } from "@/lib/server/razorpay";
+import { findOrCreateUser } from "@/lib/server/users";
 
 const clean = (v: unknown, max = 190) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
@@ -25,10 +26,12 @@ export async function POST(req: Request) {
   if (!plan || plan.price <= 0) return Response.json({ error: "Plan not found." }, { status: 404 });
 
   try {
+    // Every payer gets an account (created silently if new) so they can later see payments & invoices.
+    const user = await findOrCreateUser({ name, email, phone, company, source: "plan" });
     const order = await createOrder(plan.price * 100, `vit_${Date.now()}`, { plan: plan.name, name, email, phone });
     await exec(
-      "INSERT INTO payments (plan_id, plan_name, amount, name, email, phone, company, notes, rzp_order_id) VALUES (?,?,?,?,?,?,?,?,?)",
-      [plan.id, plan.name, plan.price, name, email, phone, company, notes, order.id],
+      "INSERT INTO payments (user_id, plan_id, plan_name, amount, name, email, phone, company, notes, rzp_order_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      [user.id, plan.id, plan.name, plan.price, name, email, phone, company, notes, order.id],
     );
     return Response.json({ orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID, plan: plan.name });
   } catch (e) {

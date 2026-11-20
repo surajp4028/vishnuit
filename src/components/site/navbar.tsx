@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { PayNowButton } from "./pay-now";
+import { UserMenu } from "./user-menu";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
@@ -80,10 +81,11 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <UserMenu />
           {payNow && (payNow.desktop || payNow.mobile) && <PayNowButton desktop={payNow.desktop} mobile={payNow.mobile} />}
           <Link
             href={ctaHref}
-            className="group hidden items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90 sm:inline-flex"
+            className="group hidden items-center gap-1.5 whitespace-nowrap rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90 xl:inline-flex"
           >
             {ctaLabel}
             <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

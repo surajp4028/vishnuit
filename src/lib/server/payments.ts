@@ -3,10 +3,36 @@ import { exec, queryOne } from "./db";
 import { sendMail } from "./mail";
 import { getSettings } from "./content";
 import { formatINR } from "@/lib/utils";
-import { invoicePath } from "./invoice";
+import { invoiceNumber, invoicePath } from "./invoice";
+import { renderInvoicePdf } from "./invoice-pdf";
+import { payeePath, putObject, s3Configured } from "./s3";
 import { siteUrl } from "@/lib/site";
 
-type Payment = { id: number; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; status: string };
+type Payment = { id: number; user_id: number | null; plan_id: number | null; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; paid_at: string | null; created_at: string };
+
+/** Render the invoice PDF and keep a copy in S3 under the payer's folder: vishnu/payee/<UID>/invoices/<no>.pdf */
+export async function saveInvoicePdf(orderId: string) {
+  if (!s3Configured()) return null;
+  const p = await queryOne<Payment>("SELECT * FROM payments WHERE rzp_order_id=?", [orderId]);
+  if (!p || p.status !== "paid" || !p.user_id) return null;
+  const u = await queryOne<{ uid: string }>("SELECT uid FROM users WHERE id=?", [p.user_id]);
+  if (!u) return null;
+  const s = await getSettings();
+  const date = new Date(p.paid_at ?? p.created_at);
+  const number = invoiceNumber(p.id, date);
+  const pdf = await renderInvoicePdf({
+    number, paid: true,
+    date: date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }),
+    seller: { name: s.branding.siteName, address: s.contact.address, phone: s.contact.phone, email: s.contact.email, web: "www.vishnuit.co.in" },
+    buyer: { name: p.name, company: p.company, email: p.email, phone: p.phone },
+    item: p.plan_id ? `${p.plan_name} plan - website development` : p.plan_name,
+    amount: Number(p.amount),
+    payment: { method: p.method, paymentId: p.rzp_payment_id, orderId },
+  });
+  const key = await putObject(payeePath(u.uid, `invoices/${number.replace(/\//g, "-")}.pdf`), pdf, "application/pdf");
+  await exec("UPDATE payments SET invoice_key=? WHERE id=?", [key, p.id]);
+  return key;
+}
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
@@ -19,6 +45,7 @@ export async function markPaid(orderId: string, paymentId: string, method: strin
   if (r.affectedRows === 0) return; // already processed
   const p = await queryOne<Payment>("SELECT * FROM payments WHERE rzp_order_id=?", [orderId]);
   if (!p) return;
+  await saveInvoicePdf(orderId).catch((e) => console.error("[invoice] pdf/s3 failed:", (e as Error).message));
   const s = await getSettings();
   const amount = formatINR(p.amount);
   const admin = process.env.CONTACT_TO_EMAIL || s.contact.email;

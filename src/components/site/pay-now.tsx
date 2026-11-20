@@ -109,7 +109,7 @@ export function PayNowButton({ desktop, mobile }: { desktop: boolean; mobile: bo
   return (
     <>
       <button onClick={() => setOpen(true)}
-        className={cn("items-center rounded-full border border-black bg-white px-4 py-[7px] text-sm font-semibold text-black transition hover:bg-black hover:text-white dark:border-white dark:bg-transparent dark:text-white dark:hover:bg-white dark:hover:text-black",
+        className={cn("items-center whitespace-nowrap rounded-full border border-black bg-white px-4 py-[7px] text-sm font-semibold text-black transition hover:bg-black hover:text-white dark:border-white dark:bg-transparent dark:text-white dark:hover:bg-white dark:hover:text-black",
           desktop && mobile ? "inline-flex" : desktop ? "hidden sm:inline-flex" : "inline-flex sm:hidden")}>
         Pay Now
       </button>
