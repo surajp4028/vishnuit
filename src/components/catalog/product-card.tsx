@@ -1,25 +1,23 @@
 import Link from "next/link";
 import { imgUrl, type Product } from "@/lib/server/catalog";
+import { CardImages } from "./card-images";
 import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 const rupee = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 
 /** Fashion-style product tile: tall image, hover swap, tight price row with % off. */
 export function ProductCard({ p, base, store }: { p: Product; base: string; store?: string }) {
-  const img = imgUrl(p.images[0]);
-  const second = imgUrl(p.images[1]);
   const off = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
   const soldOut = p.variants.length ? p.variants.every((v) => v.stock === 0) : p.stock === 0;
-  const lowStock = !soldOut && (p.variants.length ? false : p.stock != null && p.stock <= 3);
+  const threshold = p.low_stock ?? 5;
+  const left = p.variants.length ? (p.variants.some((v) => v.stock != null) ? p.variants.reduce((n, v) => n + (v.stock ?? 0), 0) : null) : p.stock;
+  const lowStock = !soldOut && left != null && left > 0 && left <= threshold;
   return (
     <Link href={`${base}/p/${p.slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-foreground/[.04] sm:rounded-2xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {img && <img src={img} alt={p.name} loading="lazy" className={`absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-[1.03] ${soldOut ? "opacity-60 grayscale" : ""}`} />}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {second && !soldOut && <img src={second} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-0 transition duration-700 group-hover:opacity-100" />}
+        <CardImages images={p.images.slice(0, 5).map((k) => imgUrl(k)!).filter(Boolean)} alt={p.name} dim={soldOut} />
         {soldOut && <span className="absolute inset-x-3 bottom-3 rounded-lg bg-background/95 py-1.5 text-center text-[11px] font-bold tracking-wider">SOLD OUT</span>}
-        {lowStock && <span className="absolute bottom-3 left-3 rounded-md bg-background/95 px-2 py-1 text-[10px] font-bold text-[#ff3f6c]">Only {p.stock} left</span>}
+        {lowStock && <span className="absolute bottom-3 left-3 rounded-md bg-background/95 px-2 py-1 text-[10px] font-bold text-[#ff3f6c]">Only {left} left</span>}
         {p.featured && !soldOut && <span className="absolute top-2.5 left-2.5 rounded-md bg-foreground/85 px-2 py-0.5 text-[10px] font-bold tracking-wider text-background">BESTSELLER</span>}
       </div>
       <div className="mt-2.5 px-0.5">

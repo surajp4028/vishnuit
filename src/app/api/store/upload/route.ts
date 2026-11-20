@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { putObject, s3Configured } from "@/lib/server/s3";
+import { exec } from "@/lib/server/db";
 import { catalogKey, imgUrl } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
 
@@ -17,12 +18,14 @@ export async function POST(req: Request) {
   if (!(file instanceof File) || !file.type.startsWith("image/")) return Response.json({ error: "Choose an image." }, { status: 422 });
   if (file.size > 12 * 1024 * 1024) return Response.json({ error: "Image must be under 12 MB." }, { status: 422 });
   try {
-    const out = await sharp(Buffer.from(await file.arrayBuffer()))
+    const { data: out, info } = await sharp(Buffer.from(await file.arrayBuffer()))
       .rotate()
       .resize({ width: KINDS[kind], height: KINDS[kind], fit: "inside", withoutEnlargement: true })
       .webp({ quality: kind === "qr" ? 95 : 82 })
-      .toBuffer();
+      .toBuffer({ resolveWithObject: true });
     const key = await putObject(catalogKey(a.store.code, kind), out, "image/webp");
+    // Remember it in the store's media library (so it can be reused without re-uploading).
+    await exec("INSERT IGNORE INTO store_media (store_id, s3_key, kind, bytes, width, height) VALUES (?,?,?,?,?,?)", [a.store.id, key, kind, out.length, info.width, info.height]).catch(() => {});
     return Response.json({ ok: true, key, url: imgUrl(key) });
   } catch (e) {
     console.error("[store/upload]", (e as Error).message);

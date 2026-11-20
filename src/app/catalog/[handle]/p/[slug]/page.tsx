@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
             <p className="mt-1 text-sm text-muted">by <span className="font-semibold text-foreground">{s.name}</span></p>
             <div className="mt-5 border-t border-border pt-5">
               <ProductBuy
-                p={{ id: p.id, slug: p.slug, name: p.name, price: p.price, compare_price: p.compare_price, stock: p.stock, options: p.options, variants: p.variants, gst_rate: p.gst_rate }}
+                p={{ id: p.id, slug: p.slug, name: p.name, price: p.price, compare_price: p.compare_price, stock: p.stock, options: p.options, variants: p.variants, gst_rate: p.gst_rate, low_stock: p.low_stock }}
                 image={images[0] ?? null} base={base} whatsapp={s.contact.whatsapp ?? ""} storeName={s.name}
               />
             </div>

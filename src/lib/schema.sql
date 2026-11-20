@@ -272,3 +272,16 @@ CREATE TABLE IF NOT EXISTS coupons (
   note VARCHAR(200) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS store_media (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  store_id INT NOT NULL,
+  s3_key VARCHAR(400) NOT NULL,
+  kind VARCHAR(20) NOT NULL DEFAULT 'product',
+  bytes INT NULL,
+  width INT NULL,
+  height INT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_key (s3_key),
+  INDEX (store_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

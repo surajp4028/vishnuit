@@ -94,9 +94,9 @@ export type Store = {
 export type Product = {
   id: number; store_id: number; category_id: number | null; name: string; slug: string; description: string | null;
   price: number; compare_price: number | null; sku: string | null; stock: number | null; images: string[];
-  options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null }[];
+  options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null; sku?: string | null }[];
   status: "active" | "draft"; featured: boolean; created_at: string;
-  gst_rate: number | null; hsn: string | null;
+  gst_rate: number | null; hsn: string | null; low_stock: number | null;
 };
 export type Category = { id: number; store_id: number; parent_id: number | null; name: string; slug: string; sort: number };
 
@@ -218,7 +218,7 @@ export function hydrateProduct(r: Record<string, unknown>): Product {
     stock: r.stock == null ? null : Number(r.stock),
     images: json<string[]>(r.images, []), options: json(r.options, []), variants: json(r.variants, []),
     featured: Boolean(Number(r.featured)), created_at: String(r.created_at),
-    gst_rate: r.gst_rate == null ? null : Number(r.gst_rate), hsn: r.hsn == null ? null : String(r.hsn),
+    gst_rate: r.gst_rate == null ? null : Number(r.gst_rate), hsn: r.hsn == null ? null : String(r.hsn), low_stock: r.low_stock == null ? null : Number(r.low_stock),
   };
 }
 

@@ -24,7 +24,7 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
     .filter((o) => o.name && o.values.length)
     .slice(0, 3);
   const variants = (Array.isArray(b.variants) ? b.variants : [])
-    .map((v: { key?: unknown; price?: unknown; stock?: unknown }) => ({ key: str(v?.key, 120), price: num(v?.price), stock: v?.stock === "" || v?.stock == null ? null : Math.max(0, Math.floor(Number(v.stock))) }))
+    .map((v: { key?: unknown; price?: unknown; stock?: unknown; sku?: unknown }) => ({ key: str(v?.key, 120), price: num(v?.price), stock: v?.stock === "" || v?.stock == null ? null : Math.max(0, Math.floor(Number(v.stock))), sku: str(v?.sku, 60) || null }))
     .filter((v) => v.key)
     .slice(0, 200);
   const cat = b.category_id ? Number(b.category_id) : null;
@@ -42,6 +42,7 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
       status: b.status === "draft" ? "draft" : "active",
       featured: b.featured ? 1 : 0,
       gst_rate: gstIn, hsn,
+      low_stock: b.low_stock === "" || b.low_stock == null ? null : Math.min(9999, Math.max(0, Math.floor(Number(b.low_stock) || 0))),
     },
   } as const;
 }

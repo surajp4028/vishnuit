@@ -1,14 +1,15 @@
 "use client";
 import { useState } from "react";
 import { ProductsPanel, type C, type P } from "@/components/store/products-panel";
+import type { Attr } from "@/components/seller/attributes";
 import { OrdersPanel, type O } from "@/components/store/orders-panel";
 import { SettingsPanel, type S } from "@/components/store/settings-panel";
 import { cn } from "@/lib/utils";
 
-export function ProductsPage({ products, categories, limit }: { products: P[]; categories: C[]; limit: number | null }) {
+export function ProductsPage({ products, categories, limit, handle, attributes }: { products: P[]; categories: C[]; limit: number | null; handle: string; attributes: Attr[] }) {
   const [p, setP] = useState(products);
   const [c, setC] = useState(categories);
-  return <ProductsPanel products={p} setProducts={setP} categories={c} setCategories={setC} limit={limit} />;
+  return <ProductsPanel products={p} setProducts={setP} categories={c} setCategories={setC} limit={limit} handle={handle} attributes={attributes} />;
 }
 
 export function OrdersPage({ orders, openId }: { orders: O[]; openId?: number }) {

@@ -5,17 +5,19 @@ import { Check, Minus, Plus, Share2, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
+import { Lightbox } from "./lightbox";
 import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 type P = {
   id: number; slug: string; name: string; price: number; compare_price: number | null; stock: number | null;
   options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null }[];
-  gst_rate?: number | null;
+  gst_rate?: number | null; low_stock?: number | null;
 };
 
 /** Phones: full-bleed swipe with counter. Desktop: 2-up photo grid (Myntra-style) with hover zoom on each photo. */
 export function ProductGallery({ images, name, badge }: { images: string[]; name: string; badge?: string | null }) {
   const [i, setI] = useState(0);
+  const [box, setBox] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   if (!images.length) return <div className="aspect-[4/5] bg-foreground/[.04] sm:rounded-3xl" />;
   return (
@@ -24,7 +26,7 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
       <div className="relative px-3 pt-2 md:hidden">
         <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto rounded-2xl bg-foreground/[.04] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} className="size-full shrink-0 snap-center object-cover" />)}
+          {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} onClick={() => setBox(k)} className="size-full shrink-0 cursor-zoom-in snap-center object-cover" />)}
         </div>
         {badge && <span className="pointer-events-none absolute top-5 left-6 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
         {images.length > 1 && (
@@ -39,11 +41,12 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
         {images.map((src, k) => (
           <div key={k} className={cn("group overflow-hidden rounded-2xl bg-foreground/[.04]", images.length > 1 && images.length % 2 === 1 && k === images.length - 1 ? "col-span-2 aspect-[16/10]" : "aspect-[3/4]")}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt={k === 0 ? name : ""} loading={k > 1 ? "lazy" : "eager"} className="size-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-110" />
+            <img src={src} alt={k === 0 ? name : ""} loading={k > 1 ? "lazy" : "eager"} onClick={() => setBox(k)} className="size-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-105" />
           </div>
         ))}
         {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
       </div>
+      {box != null && <Lightbox images={images} start={box} alt={name} onClose={() => setBox(null)} />}
     </div>
   );
 }
@@ -138,7 +141,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
           <span className="w-7 text-center font-bold">{qty}</span>
           <button onClick={() => setQty((q) => Math.min(stock ?? 99, q + 1))} aria-label="More" className="grid size-11 place-items-center"><Plus className="size-4" /></button>
         </div>
-        {stock != null && stock > 0 && stock <= 5 && <span className="text-sm font-bold text-[#ff3f6c]">Hurry — only {stock} left!</span>}
+        {stock != null && stock > 0 && stock <= (p.low_stock ?? 5) && <span className="text-sm font-bold text-[#ff3f6c]">Hurry — only {stock} left!</span>}
       </div>
 
       <div ref={ctaRef} className="mt-6 grid grid-cols-2 gap-3">
