@@ -58,7 +58,7 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
           </div>
         </header>
         <section className="grid gap-5 py-6 sm:grid-cols-2">
-          <div><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">BILL / SHIP TO{o.state ? ` · PLACE OF SUPPLY: ${stateName(String(o.state)).toUpperCase()} (${String(o.state)})` : ""}</p><p className="mt-2 font-semibold">{String(o.name)}</p><p className="text-sm whitespace-pre-line text-[#5b6475]">{String(o.address ?? "")}{"\n"}{String(o.phone)}{o.email ? ` · ${o.email}` : ""}</p></div>
+          <div><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">BILL / SHIP TO{o.state ? ` · PLACE OF SUPPLY: ${stateName(String(o.state)).toUpperCase()} (${String(o.state)})` : ""}</p>{o.buyer_company ? <p className="mt-2 font-semibold">{String(o.buyer_company)}</p> : null}<p className={o.buyer_company ? "text-sm font-medium" : "mt-2 font-semibold"}>{String(o.name)}</p>{o.buyer_gstin ? <p className="mt-0.5 text-sm font-semibold">GSTIN: {String(o.buyer_gstin)}</p> : null}<p className="text-sm whitespace-pre-line text-[#5b6475]">{String(o.address ?? "")}{"\n"}{String(o.phone)}{o.email ? ` · ${o.email}` : ""}</p></div>
           <div className="sm:text-right"><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">PAYMENT</p><p className="mt-2 text-sm">{o.pay_method === "cod" ? "Cash on delivery" : o.pay_method === "razorpay" ? "Online (Razorpay)" : "UPI"}</p>{o.utr ? <p className="text-sm text-[#5b6475]">Ref: <span className="font-mono">{String(o.utr)}</span></p> : null}</div>
         </section>
         <div className="overflow-x-auto">

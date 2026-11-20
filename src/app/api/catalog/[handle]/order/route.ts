@@ -28,7 +28,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   const phone = normPhone(b.phone);
   const email = b.email ? normEmail(b.email) : null;
   const address = str(b.address, 600);
-  const state = GST_STATES.some(([c]) => c === b.state) ? String(b.state) : null;
+  // Business buyers can add their GSTIN (optional) — it goes on their tax invoice, and its state decides CGST+SGST vs IGST.
+  const gstinRaw = String(b.gstin ?? "").trim().toUpperCase();
+  const gstin = gstinRaw || null;
+  if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return Response.json({ error: "GSTIN looks wrong — it has 15 characters, e.g. 07ABCDE1234F1Z5. Leave it empty if you don't have one." }, { status: 422 });
+  if (gstin && !GST_STATES.some(([c]) => c === gstin.slice(0, 2))) return Response.json({ error: "GSTIN state code isn't valid." }, { status: 422 });
+  const company = gstin ? String(b.company ?? "").trim().slice(0, 160) || null : null;
+  const state = gstin ? gstin.slice(0, 2) : GST_STATES.some(([c]) => c === b.state) ? String(b.state) : null;
   const method = b.pay_method === "upi" ? "upi" : b.pay_method === "cod" ? "cod" : b.pay_method === "razorpay" ? "razorpay" : null;
   const rzpSecret = decryptSecret(store.payments.razorpay.secret_enc);
   const rzpOn = store.payments.razorpay.on && !!store.payments.razorpay.key_id && !!rzpSecret && (await getCatalogConfig()).plans[effectivePlan(store)].razorpay;
@@ -120,8 +126,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
       }
     }
     await c.execute(
-      "INSERT INTO store_orders (store_id, order_no, customer_id, name, phone, email, address, state, items, items_total, shipping, tax, subtotal, pay_method, utr, rzp_order_id, pay_status, status_log) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      [store.id, orderNo, customer.id, name, phone, email, `${address}\n${stateName(state)}`, state, JSON.stringify(items), itemsTotal, quote.shipping, JSON.stringify(quote), subtotal, method, method === "upi" ? utr : null, rzp?.id ?? null, "pending", JSON.stringify([{ s: "new", at: new Date().toISOString() }])],
+      "INSERT INTO store_orders (store_id, order_no, customer_id, name, phone, email, address, state, buyer_gstin, buyer_company, items, items_total, shipping, tax, subtotal, pay_method, utr, rzp_order_id, pay_status, status_log) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [store.id, orderNo, customer.id, name, phone, email, `${address}\n${stateName(state)}`, state, gstin, company, JSON.stringify(items), itemsTotal, quote.shipping, JSON.stringify(quote), subtotal, method, method === "upi" ? utr : null, rzp?.id ?? null, "pending", JSON.stringify([{ s: "new", at: new Date().toISOString() }])],
     );
   }).catch((e) => { if (e instanceof StockError) stockErr = e.message; else throw e; });
   if (stockErr) return Response.json({ error: stockErr }, { status: 409 });

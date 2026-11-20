@@ -9,7 +9,7 @@ import { api, card, inr } from "./ui";
 export type O = {
   id: number; order_no: string; name: string; phone: string; email: string | null; address: string | null;
   items: { id: number; name: string; variant: string | null; price: number; qty: number }[];
-  subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string; invoice?: string;
+  subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string; invoice?: string; buyer_gstin?: string | null; buyer_company?: string | null;
   status_log?: StatusLog; tracking?: Tracking | null; shipping?: number;
 };
 const FILTERS = ["all", "new", "confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "returned", "pay:pending"];
@@ -62,8 +62,9 @@ export function OrdersPanel({ orders, setOrders, openId }: { orders: O[]; setOrd
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-background sm:items-center sm:justify-center sm:bg-black/50 sm:p-6">
-          <div className="flex h-full w-full flex-col bg-background sm:h-auto sm:max-h-[92dvh] sm:max-w-xl sm:rounded-[2rem] sm:border sm:border-border">
+        // Right-side panel (full screen on phones); tap outside to close.
+        <div onClick={() => openOrder(null)} className="fixed inset-0 z-[80] flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_.2s_ease]">
+          <div onClick={(e) => e.stopPropagation()} className="flex h-full w-full animate-[slideInRight_.32s_cubic-bezier(.2,.8,.2,1)] flex-col bg-background shadow-[-30px_0_80px_-20px_rgba(0,0,0,.35)] sm:max-w-xl sm:rounded-l-[2rem] sm:border-l sm:border-border">
             <header className="flex items-center gap-3 border-b border-border px-4 py-3">
               <button onClick={() => openOrder(null)} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className="size-5 sm:hidden" /><X className="hidden size-5 sm:block" /></button>
               <div className="flex-1"><h2 className="font-display text-lg font-bold">Order #{open.order_no}</h2><p className="text-xs text-muted">{when(open.created_at)}</p></div>
@@ -73,6 +74,7 @@ export function OrdersPanel({ orders, setOrders, openId }: { orders: O[]; setOrd
               <div className={cn(card, "p-4")}>
                 <p className="font-semibold">{open.name}</p>
                 <p className="mt-1 text-sm text-muted whitespace-pre-line">{open.address}</p>
+                {open.buyer_gstin && <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-lg bg-foreground/[.05] px-2.5 py-1 text-xs"><b>GSTIN</b><span className="font-mono">{open.buyer_gstin}</span>{open.buyer_company && <span className="text-muted">· {open.buyer_company}</span>}</p>}
                 <div className="mt-3 flex gap-2">
                   <a href={`tel:${open.phone}`} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-semibold"><Phone className="size-4" /> Call</a>
                   <a href={`https://wa.me/${open.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${open.name}, about your order #${open.order_no}`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white"><FaWhatsapp className="size-4" /> WhatsApp</a>

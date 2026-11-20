@@ -98,7 +98,7 @@ export async function PATCH(req: Request) {
       highlights: hl.length ? hl : store.storefront.highlights,
       map: { on: map.on !== false, query: str(map.query, 300), zoom: Math.min(20, Math.max(3, Math.round(Number(map.zoom) || 15))) },
       look: f.look === "minimal" || f.look === "soft" ? f.look : "sharp",
-      shipping: (() => { const x = (f.shipping ?? {}) as Record<string, unknown>; const n = (v: unknown) => Math.min(1_000_000, Math.max(0, Math.round((Number(v) || 0) * 100) / 100)); return { cod: n(x.cod), upi: n(x.upi), razorpay: n(x.razorpay), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder) }; })(),
+      shipping: (() => { const x = (f.shipping ?? {}) as Record<string, unknown>; const n = (v: unknown) => Math.min(1_000_000, Math.max(0, Math.round((Number(v) || 0) * 100) / 100)); return { cod: n(x.cod), upi: n(x.upi), razorpay: n(x.razorpay), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder), perItem: x.perItem !== false }; })(),
       closed: (() => { const x = (f.closed ?? {}) as Record<string, unknown>; return { on: Boolean(x.on), message: str(x.message, 200) }; })(),
       favicon: f.favicon && ownKey(f.favicon) ? String(f.favicon) : null,
       pixels: (() => { const x = (f.pixels ?? {}) as Record<string, unknown>; return { meta: str(x.meta, 20).replace(/\D/g, ""), ga: str(x.ga, 20).toUpperCase() }; })(),
@@ -110,7 +110,7 @@ export async function PATCH(req: Request) {
   if (b.shipping && !b.storefront) {
     const x = b.shipping as Record<string, unknown>;
     const n = (v: unknown) => Math.min(1_000_000, Math.max(0, Math.round((Number(v) || 0) * 100) / 100));
-    storefront = { ...storefront, shipping: { cod: n(x.cod), upi: n(x.upi), razorpay: n(x.razorpay), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder) } };
+    storefront = { ...storefront, shipping: { cod: n(x.cod), upi: n(x.upi), razorpay: n(x.razorpay), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder), perItem: x.perItem !== false } };
   }
 
   await exec("UPDATE stores SET name=?, tagline=?, about=?, logo_key=?, banner_key=?, contact=?, pages=?, payments=?, tax=?, testimonials=?, storefront=? WHERE id=?", [

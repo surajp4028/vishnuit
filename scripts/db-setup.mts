@@ -67,6 +67,8 @@ for (const sql of [
   "ALTER TABLE stores ADD UNIQUE KEY uniq_domain (domain)",
   "ALTER TABLE stores ADD COLUMN domain_ok TINYINT(1) NOT NULL DEFAULT 0 AFTER domain",
   "ALTER TABLE store_products ADD COLUMN video VARCHAR(255) NULL AFTER images",
+  "ALTER TABLE store_orders ADD COLUMN buyer_gstin VARCHAR(15) NULL AFTER state",
+  "ALTER TABLE store_orders ADD COLUMN buyer_company VARCHAR(160) NULL AFTER buyer_gstin",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }

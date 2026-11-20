@@ -65,7 +65,8 @@ export type StoreFront = {
   /** home = show the "Our story" block on the home page (default on). */
   about: { images: string[]; heading: string; home: boolean };
   look: "sharp" | "minimal" | "soft";
-  shipping: { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
+  /** perItem: charge × quantity (default) instead of once per order. */
+  shipping: { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number; perItem: boolean };
   closed: { on: boolean; message: string };
   pixels: { meta: string; ga: string };
   favicon: string | null;
@@ -82,7 +83,7 @@ export const emptyFront = (): StoreFront => ({
   map: { on: true, query: "", zoom: 15 },
   about: { images: [], heading: "", home: true },
   look: "sharp",
-  shipping: { cod: 79, upi: 49, razorpay: 49, freeAbove: 1500, minOrder: 0 },
+  shipping: { cod: 79, upi: 49, razorpay: 49, freeAbove: 1500, minOrder: 0, perItem: true },
   closed: { on: false, message: "" },
   pixels: { meta: "", ga: "" },
   favicon: null,
@@ -137,7 +138,7 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
       if (!f.shipping) return d.shipping;
       const flat = Number(x.flat) || 0;
       const m = (v: unknown) => (v == null ? flat : Number(v) || 0);
-      return { cod: m(x.cod), upi: m(x.upi), razorpay: m(x.razorpay), freeAbove: Number(x.freeAbove) || 0, minOrder: Number(x.minOrder) || 0 };
+      return { cod: m(x.cod), upi: m(x.upi), razorpay: m(x.razorpay), freeAbove: Number(x.freeAbove) || 0, minOrder: Number(x.minOrder) || 0, perItem: x.perItem !== false };
     })(),
     closed: { on: Boolean(f.closed?.on), message: f.closed?.message ?? "" },
     pixels: { meta: f.pixels?.meta ?? "", ga: f.pixels?.ga ?? "" },
@@ -348,9 +349,11 @@ export type OrderQuote = {
 export const GST_RATES = [0, 3, 5, 12, 18, 28] as const;
 
 /** Delivery charge for a payment method (free above the threshold). */
-export function shippingFor(items: number, sh: StoreFront["shipping"], method: PayMethod) {
+/** Delivery charge: free at/above the free-delivery amount, else the method's rate (× quantity when charged per item). */
+export function shippingFor(items: number, qty: number, sh: StoreFront["shipping"], method: PayMethod) {
   if (sh.freeAbove > 0 && items >= sh.freeAbove) return 0;
-  return Math.max(0, sh[method] || 0);
+  const rate = Math.max(0, sh[method] || 0);
+  return sh.perItem === false ? rate : Math.round(rate * Math.max(1, qty) * 100) / 100;
 }
 
 /**
@@ -375,7 +378,7 @@ export function quoteOrder(lines: { price: number; qty: number; gst_rate?: numbe
   const gst = r2(rates.reduce((n, g) => n + g.gst, 0));
   const taxable = r2(rates.reduce((n, g) => n + g.taxable, 0));
   const taxed = rates.filter((g) => g.rate > 0);
-  const shipping = shippingFor(items, s.storefront.shipping, method);
+  const shipping = shippingFor(items, lines.reduce((n, l) => n + l.qty, 0), s.storefront.shipping, method);
   const igst = Boolean(taxed.length && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
   const total = r2((s.tax.inclusive ? items : items + gst) + shipping);
   return { items, shipping, rate: taxed.length === 1 ? taxed[0].rate : 0, inclusive: s.tax.inclusive, taxable, gst, igst, total, rates, method };

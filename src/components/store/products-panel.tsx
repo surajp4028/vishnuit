@@ -278,8 +278,9 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
   const h = (t: string, sub?: string) => <div><p className="font-display text-[15px] font-bold">{t}</p>{sub && <p className="text-xs text-muted">{sub}</p>}</div>;
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col bg-background sm:items-center sm:justify-center sm:bg-black/50 sm:p-6">
-      <div className="flex h-full w-full flex-col bg-background sm:h-auto sm:max-h-[94dvh] sm:max-w-3xl sm:rounded-[2rem] sm:border sm:border-border">
+    // Right-side panel (full screen on phones). Clicking outside doesn't close it, so a half-filled product isn't lost.
+    <div className="fixed inset-0 z-[80] flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_.2s_ease]">
+      <div className="flex h-full w-full animate-[slideInRight_.32s_cubic-bezier(.2,.8,.2,1)] flex-col bg-background shadow-[-30px_0_80px_-20px_rgba(0,0,0,.35)] sm:max-w-2xl sm:rounded-l-[2rem] sm:border-l sm:border-border">
         <header className="flex items-center gap-3 border-b border-border px-4 py-3">
           <button onClick={onClose} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className="size-5 sm:hidden" /><X className="hidden size-5 sm:block" /></button>
           <h2 className="flex-1 font-display text-lg font-bold">{initial ? "Edit product" : copyFrom ? "Duplicate product" : "New product"}</h2>

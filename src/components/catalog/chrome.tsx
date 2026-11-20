@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { Loader2, Menu, Minus, Plus, Search, ShoppingBag, Trash2, UserRound, X } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
@@ -252,27 +253,47 @@ export function StoreHeader({ base, handle, name, logo, categories, allPick }: {
 
       {bagOpen && mounted && createPortal(<CartDrawer base={base} onClose={() => setBag(false)} />, document.body)}
       {/* Rendered into <body>: the header's backdrop-blur would otherwise clip a fixed drawer to the header's height. */}
-      {menu && mounted && createPortal((
-        <div className="fixed inset-0 z-[95] md:hidden" onClick={() => setMenu(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <aside className="absolute inset-y-0 left-0 h-dvh w-[82%] max-w-xs overflow-y-auto bg-background p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between"><span className="truncate font-display text-lg font-extrabold">{name}</span><button onClick={() => setMenu(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full"><X className="size-5" /></button></div>
-            <nav className="mt-6 space-y-1">
-              {links.map(([h, l]) => <Link key={l} href={base + h || "/"} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{l}</Link>)}
-              <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base || "/")}`} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{me ? "My orders" : "Log in / Sign up"}</Link>
-            </nav>
-            {categories.length > 0 && <>
-              <p className="mt-6 px-3 text-[11px] font-bold tracking-[2px] text-muted">CATEGORIES</p>
-              <nav className="mt-2 space-y-1">{categories.map((c) => (
-                <div key={c.slug}>
-                  <Link href={`${base}/shop?c=${c.slug}`} className="block rounded-xl px-3 py-2.5 text-[15px] font-semibold hover:bg-foreground/5">{c.name}</Link>
-                  {c.children?.map((k) => <Link key={k.slug} href={`${base}/shop?c=${k.slug}`} className="ml-3 block border-l border-border py-2 pr-3 pl-4 text-[14px] text-muted hover:text-foreground">{k.name}</Link>)}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {menu && (
+            <div key="store-menu" className="fixed inset-0 z-[95] md:hidden">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }} onClick={() => setMenu(false)} className="absolute inset-0 bg-black/45 backdrop-blur-[3px]" />
+              <motion.aside
+                role="dialog" aria-modal="true" aria-label="Menu"
+                initial={{ x: "-105%" }} animate={{ x: 0 }} exit={{ x: "-105%" }}
+                transition={{ type: "spring", stiffness: 340, damping: 34 }}
+                drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={{ left: 0.4, right: 0 }}
+                onDragEnd={(_, i) => { if (i.offset.x < -80 || i.velocity.x < -500) setMenu(false); }}
+                className="absolute inset-y-0 left-0 flex h-dvh w-[84%] max-w-[340px] flex-col bg-background shadow-[30px_0_80px_-20px_rgba(0,0,0,.35)]"
+              >
+                <div className="flex items-center justify-between border-b border-border/70 px-5 py-4">
+                  <span className="truncate font-display text-lg font-extrabold">{name}</span>
+                  <motion.button initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ delay: 0.1 }} onClick={() => setMenu(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full border border-border"><X className="size-4" /></motion.button>
                 </div>
-              ))}</nav>
-            </>}
-          </aside>
-        </div>
-      ), document.body)}
+                <motion.div initial="hide" animate="show" variants={{ show: { transition: { staggerChildren: 0.045, delayChildren: 0.08 } } }} className="flex-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-8">
+                  {[...links.map(([h, l]) => ({ href: base + h || "/", label: l })), { href: me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base || "/")}`, label: me ? "My orders" : "Log in / Sign up" }].map((x) => (
+                    <motion.div key={x.label} variants={{ hide: { opacity: 0, x: -20 }, show: { opacity: 1, x: 0 } }}>
+                      <Link href={x.href} onClick={() => setMenu(false)} className="flex items-center justify-between rounded-xl px-3 py-3 text-[16px] font-semibold active:bg-foreground/5">{x.label}<span className="text-muted">›</span></Link>
+                    </motion.div>
+                  ))}
+                  {categories.length > 0 && (
+                    <motion.div variants={{ hide: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}>
+                      <p className="mt-5 px-3 text-[11px] font-bold tracking-[3px] text-muted">CATEGORIES</p>
+                      <nav className="mt-2 space-y-0.5">{categories.map((c) => (
+                        <div key={c.slug}>
+                          <Link href={`${base}/shop?c=${c.slug}`} onClick={() => setMenu(false)} className="block rounded-xl px-3 py-2.5 text-[15px] font-semibold active:bg-foreground/5">{c.name}</Link>
+                          {c.children?.map((k) => <Link key={k.slug} href={`${base}/shop?c=${k.slug}`} onClick={() => setMenu(false)} className="ml-3 block border-l border-border py-2 pr-3 pl-4 text-[14px] text-muted active:text-foreground">{k.name}</Link>)}
+                        </div>
+                      ))}</nav>
+                    </motion.div>
+                  )}
+                </motion.div>
+              </motion.aside>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </header>
   );
 }

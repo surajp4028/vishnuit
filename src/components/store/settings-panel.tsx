@@ -16,7 +16,7 @@ export type S = {
   pageDefaults?: Record<PageKey, string>;
   storefront?: { shipping: Ship };
 };
-type Ship = { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
+type Ship = { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number; perItem?: boolean };
 type Testi = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
 const TITLES: Record<PageKey, string> = { privacy: "Privacy Policy", terms: "Terms & Conditions", refund: "Refund & Exchange Policy", shipping: "Shipping Policy" };
 
@@ -28,7 +28,7 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
   const c = (k: keyof S["contact"], v: string) => setS({ ...s, contact: { ...s.contact, [k]: v } });
   const tm = s.testimonials ?? { on: false, items: [] };
   const [ship, setShip] = useState<Ship>(store.storefront?.shipping ?? { cod: 0, upi: 0, razorpay: 0, freeAbove: 0, minOrder: 0 });
-  const money = (k: keyof Ship) => <label className="flex items-center rounded-2xl border border-border bg-background px-4 focus-within:border-foreground/40"><span className="text-muted">₹</span><input inputMode="numeric" value={ship[k] || ""} onChange={(e) => setShip({ ...ship, [k]: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} placeholder="0" className="w-full bg-transparent px-2 py-3 text-[15px] outline-none" /></label>;
+  const money = (k: Exclude<keyof Ship, "perItem">) => <label className="flex items-center rounded-2xl border border-border bg-background px-4 focus-within:border-foreground/40"><span className="text-muted">₹</span><input inputMode="numeric" value={ship[k] || ""} onChange={(e) => setShip({ ...ship, [k]: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} placeholder="0" className="w-full bg-transparent px-2 py-3 text-[15px] outline-none" /></label>;
   const setTm = (x: Partial<S["testimonials"]>) => setS({ ...s, testimonials: { ...tm, ...x } });
   const setItem = (id: string, x: Partial<Testi>) => setTm({ items: tm.items.map((t) => (t.id === id ? { ...t, ...x } : t)) });
 
@@ -169,7 +169,12 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
         <div className="space-y-4">
           <div className={cn(card, "space-y-4 p-5")}>
             <div><p className="font-display text-lg font-bold">Delivery charge by payment method</p><p className="text-sm text-muted">Charge more for Cash on Delivery (higher courier cost & returns) and less for prepaid. 0 = free.</p></div>
-            {([["cod", "Cash on delivery", "Most couriers charge extra for COD"], ["upi", "UPI transfer", "Shopper pays to your UPI / QR"], ["razorpay", "Online (Razorpay)", "Cards, UPI, net banking"]] as [keyof Ship, string, string][]).map(([k, l, d]) => (
+            <div className="grid grid-cols-2 gap-1 rounded-full border border-border p-1 text-[13px] font-semibold">
+              {([[true, "Per item (× quantity)"], [false, "Once per order"]] as [boolean, string][]).map(([v, l]) => (
+                <button key={l} type="button" onClick={() => setShip({ ...ship, perItem: v })} className={cn("rounded-full py-2", (ship.perItem !== false) === v ? "bg-foreground text-background" : "text-muted")}>{l}</button>
+              ))}
+            </div>
+            {([["cod", "Cash on delivery", "Most couriers charge extra for COD"], ["upi", "UPI transfer", "Shopper pays to your UPI / QR"], ["razorpay", "Online (Razorpay)", "Cards, UPI, net banking"]] as [Exclude<keyof Ship, "perItem">, string, string][]).map(([k, l, d]) => (
               <div key={k} className="grid grid-cols-[1fr_8.5rem] items-center gap-3 sm:grid-cols-[1fr_11rem]">
                 <span><span className="block text-[15px] font-semibold">{l}</span><span className="block text-xs text-muted">{d}</span></span>
                 {money(k)}
@@ -181,7 +186,7 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
             <Field label="Minimum order value" hint="Orders below this can't be placed. 0 = no minimum.">{money("minOrder")}</Field>
           </div>
           <p className="rounded-2xl bg-foreground/[.03] px-4 py-3 text-sm text-muted">
-            Shoppers will see: {(["cod", "upi", "razorpay"] as const).map((k) => `${k === "cod" ? "COD" : k === "upi" ? "UPI" : "Online"} ${ship[k] ? `₹${ship[k]}` : "free"}`).join(" · ")}{ship.freeAbove ? ` — FREE delivery above ₹${ship.freeAbove.toLocaleString("en-IN")}` : ""}{ship.minOrder ? ` · minimum order ₹${ship.minOrder.toLocaleString("en-IN")}` : ""}. Update your announcement bar in Storefront to match.
+            Shoppers will see: {(["cod", "upi", "razorpay"] as const).map((k) => `${k === "cod" ? "COD" : k === "upi" ? "UPI" : "Online"} ${ship[k] ? `₹${ship[k]}${ship.perItem !== false ? " per item" : ""}` : "free"}`).join(" · ")}{ship.freeAbove ? ` — FREE delivery above ₹${ship.freeAbove.toLocaleString("en-IN")}` : ""}{ship.minOrder ? ` · minimum order ₹${ship.minOrder.toLocaleString("en-IN")}` : ""}. Update your announcement bar in Storefront to match.
           </p>
         </div>
       )}
