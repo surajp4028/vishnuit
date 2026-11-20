@@ -5,6 +5,7 @@ import { ArrowRight, ShoppingBag, Camera, CheckCircle2, Clock, FileText, LayoutD
 import Link from "next/link";
 import { cn, formatINR } from "@/lib/utils";
 import { field } from "./auth-forms";
+import { PhoneVerify } from "./phone-verify";
 import { ORDER_COLOR, ORDER_FLOW, ORDER_LABEL, PAY_COLOR, PAY_LABEL } from "@/lib/order-status";
 
 export type AccountPayment = {
@@ -212,6 +213,7 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
     setBusy("");
     if (r.ok) { f.reset(); onChange({ ...user, hasPassword: true }); setPwMsg({ ok: true, t: "Password saved. Other devices were signed out." }); } else setPwMsg({ ok: false, t: j.error || "Could not save password." });
   }
+  const [editPhone, setEditPhone] = useState(false);
   const Note = ({ m }: { m: { ok: boolean; t: string } | null }) => (m ? <p className={cn("text-sm font-medium", m.ok ? "text-emerald-600" : "text-red-500")}>{m.t}</p> : null);
 
   return (
@@ -229,7 +231,21 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
         </div>
         <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Full name</span><input name="name" defaultValue={user.name} required className={field} /></label>
         <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Email</span><input name="email" type="email" defaultValue={user.email ?? ""} className={field} /></label>
-        <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Mobile (login with OTP)</span><input value={user.phone ?? "—"} disabled className={cn(field, "opacity-60")} /></label>
+        <div>
+          <span className="mb-1.5 block text-xs font-medium text-muted">Mobile (login with OTP)</span>
+          {user.phone && !editPhone ? (
+            <div className="flex items-center gap-2">
+              <input value={user.phone} disabled className={cn(field, "opacity-70")} />
+              <button type="button" onClick={() => setEditPhone(true)} className="shrink-0 rounded-full border border-border px-4 py-2.5 text-sm font-semibold hover:border-accent">Change</button>
+            </div>
+          ) : (
+            <PhoneVerify
+              title={user.phone ? "Change your mobile number" : "Add your mobile number"}
+              hint="Used for OTP login, order updates and your store's WhatsApp. We'll send a code by SMS."
+              onDone={(p) => { onChange({ ...user, phone: p }); setEditPhone(false); }}
+            />
+          )}
+        </div>
         <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Company / GSTIN (optional)</span><input name="company" defaultValue={user.company ?? ""} className={field} /></label>
         <Note m={msg} />
         <button disabled={busy === "info"} className="w-full rounded-full bg-foreground py-3 text-sm font-bold text-background disabled:opacity-60">{busy === "info" ? "Saving…" : "Save details"}</button>
