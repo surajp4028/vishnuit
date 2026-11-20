@@ -18,6 +18,8 @@ export async function checkCoupon(code: string, userId: number, plan: PlanKey): 
   if (c.max_uses != null && Number(c.used) >= Number(c.max_uses)) return "This coupon has been fully used.";
   if (c.user_id && Number(c.user_id) !== userId) return "This coupon is not for your account.";
   if (c.plan && c.plan !== plan) return `This coupon only works on the ${c.plan} plan.`;
+  const usedBefore = await queryOne("SELECT id FROM payments WHERE user_id=? AND kind='subscription' AND status='paid' AND JSON_UNQUOTE(JSON_EXTRACT(meta, '$.coupon'))=? LIMIT 1", [userId, c.code]);
+  if (usedBefore) return "You've already used this coupon.";
   return { ...c, value: Number(c.value) };
 }
 
@@ -31,14 +33,16 @@ export async function quotePlan(userId: number, plan: string, yearsIn: unknown, 
   const base = r2(p.price * years);
   let discount = 0;
   let coupon: string | null = null;
-  if (couponCode?.trim()) {
-    const c = await checkCoupon(couponCode, userId, plan as PlanKey);
+  const code = typeof couponCode === "string" ? couponCode : couponCode == null ? "" : String(couponCode);
+  if (code.trim()) {
+    const c = await checkCoupon(code, userId, plan as PlanKey);
     if (typeof c === "string") return { error: c };
     discount = r2(Math.min(base, c.kind === "flat" ? c.value : (base * c.value) / 100));
     coupon = c.code;
   }
   const taxable = r2(base - discount);
   const gst = r2((taxable * cfg.gstRate) / 100);
+  if (r2(taxable + gst) < 1) return { error: "This coupon makes the total ₹0 — please contact us to activate the plan." };
   return { plan: plan as PlanKey, planName: p.name, years, unit: p.price, base, discount, coupon, taxable, gstRate: cfg.gstRate, gst, total: r2(taxable + gst), limit: p.limit };
 }
 
@@ -59,6 +63,6 @@ export async function activateSubscription(paymentId: number) {
   const end = new Date(start);
   end.setFullYear(end.getFullYear() + m.years);
   await exec("UPDATE stores SET plan=?, plan_expires_at=?, reminder_sent_at=NULL WHERE id=?", [m.plan, end, m.store_id]);
-  if (m.coupon) await exec("UPDATE coupons SET used=used+1 WHERE code=?", [m.coupon]);
+  if (m.coupon) await exec("UPDATE coupons SET used=used+1 WHERE code=? AND (max_uses IS NULL OR used<max_uses)", [m.coupon]);
   await exec("UPDATE payments SET meta=JSON_SET(meta, '$.applied', true, '$.starts', ?, '$.ends', ?) WHERE id=?", [start.toISOString(), end.toISOString(), paymentId]);
 }

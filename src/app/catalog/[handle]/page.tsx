@@ -52,7 +52,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
             {perks.map((x) => { const I = HIGHLIGHT_ICON_MAP[x.icon] ?? BadgeCheck; return (
               <div key={x.title} className="flex items-center gap-3 rounded-2xl border border-border px-3 py-3 sm:px-4 sm:py-4">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground/[.05] sm:size-10"><I className="size-[18px] text-foreground/75" /></span>
-                <span className="min-w-0"><span className="block truncate text-[12.5px] font-semibold sm:text-[13.5px]">{x.title}</span>{x.sub && <span className="block truncate text-[11px] text-muted sm:text-xs">{x.sub}</span>}</span>
+                <span className="min-w-0"><span className="block text-[12.5px] leading-tight font-semibold sm:text-[13.5px]">{x.title}</span>{x.sub && <span className="mt-0.5 block text-[11px] leading-tight text-muted sm:text-xs">{x.sub}</span>}</span>
               </div>
             ); })}
           </div>
@@ -62,7 +62,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
       {catTiles.length > 0 && (
         <section className="mx-auto mt-12 max-w-7xl sm:mt-16 sm:px-6">
           <div className="flex items-end justify-between px-3 sm:px-0"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">EXPLORE</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Shop by category</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">See all</Link></div>
-          <div className={`mt-5 flex snap-x gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:grid sm:gap-4 sm:overflow-visible sm:px-0 ${catTiles.length >= 5 ? "sm:grid-cols-5" : catTiles.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+          <div className={`mt-5 flex snap-x scroll-px-3 gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:grid sm:gap-4 sm:overflow-visible sm:px-0 ${catTiles.length >= 5 ? "sm:grid-cols-5" : catTiles.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
             {catTiles.slice(0, 10).map((c) => (
               <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="group relative block aspect-[3/4] w-[38vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-foreground/[.05] sm:w-auto">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -78,7 +78,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
       {featured.length > 0 && (
         <section className="mx-auto mt-12 max-w-7xl sm:mt-16 sm:px-6">
           <div className="flex items-end justify-between px-3 sm:px-0"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">MOST LOVED</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Bestsellers</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">View all</Link></div>
-          <div className="mt-5 flex snap-x gap-3 overflow-x-auto px-3 pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:gap-x-5 sm:gap-y-8 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+          <div className="mt-5 flex snap-x scroll-px-3 gap-3 overflow-x-auto px-3 pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:gap-x-5 sm:gap-y-8 sm:overflow-visible sm:px-0 lg:grid-cols-5">
             {featured.map((p) => <div key={p.id} className="w-[44vw] shrink-0 snap-start sm:w-auto"><ProductCard p={p} base={base} /></div>)}
           </div>
         </section>
@@ -92,7 +92,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
               {priceSteps.map((x) => (
                 <Link key={x} href={`${base}/shop?max=${x}`} className="group rounded-2xl border border-white/10 bg-white/[.04] px-4 py-4 transition hover:border-white/40 hover:bg-white/[.08] sm:py-6">
                   <span className="block text-[11px] font-semibold tracking-[2px] text-white/55">UNDER</span>
-                  <span className="mt-1 block font-display text-2xl font-extrabold sm:text-4xl">₹{x.toLocaleString("en-IN")}</span>
+                  <span className="mt-1 block font-display text-[1.3rem] font-extrabold sm:text-4xl">₹{x.toLocaleString("en-IN")}</span>
                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 transition group-hover:gap-2">Explore <ArrowRight className="size-3" /></span>
                 </Link>
               ))}

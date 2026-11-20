@@ -3,6 +3,8 @@ import { exec } from "@/lib/server/db";
 import { PAGE_KEYS, effectivePlan, encryptSecret, getCatalogConfig, getStoreForUser, storeForOwner, type StorePages, type StorePayments, type StoreTax, type StoreTestimonials, type StoreFront, HIGHLIGHT_ICONS, type HighlightIcon } from "@/lib/server/catalog";
 import { requireStoreApi, str } from "@/lib/server/store-auth";
 
+/** Social links must be real https URLs (blocks javascript: and other schemes). */
+const httpsOnly = (u: string) => (/^https:\/\/[^\s/]+\.[^\s]+$/i.test(u) ? u : u && !u.includes(":") && !u.startsWith("/") ? `https://${u.replace(/^\/+/, "")}` : "");
 const keyOk = (k: unknown) => k === null || (typeof k === "string" && /^catalog\/VISHNU\d{5,10}\/[a-z]+\/[\w.-]+$/.test(k));
 
 /** Save store profile, contact, policy pages and payment methods. */
@@ -23,7 +25,7 @@ export async function PATCH(req: Request) {
   const c = (b.contact ?? {}) as Record<string, unknown>;
   const contact = b.contact ? {
     phone: str(c.phone, 20), whatsapp: str(c.whatsapp, 20).replace(/\D/g, ""), email: str(c.email, 190),
-    address: str(c.address, 400), instagram: str(c.instagram, 200), facebook: str(c.facebook, 200),
+    address: str(c.address, 400), instagram: httpsOnly(str(c.instagram, 200)), facebook: httpsOnly(str(c.facebook, 200)),
   } : store.contact;
 
   let pages: StorePages = store.pages;
@@ -75,10 +77,13 @@ export async function PATCH(req: Request) {
   let storefront: StoreFront = store.storefront;
   if (b.storefront) {
     const f = b.storefront as Record<string, unknown>;
-    const linkOk = (l: string) => !l || l.startsWith("/") || /^https?:\/\/[^\s]+$/.test(l);
+    const linkOk = (l: string) => !l || (l.startsWith("/") && !l.startsWith("//") && !l.includes("\\")) || /^https?:\/\/[^\s]+$/.test(l);
     const banners = (Array.isArray(f.banners) ? (f.banners as Record<string, unknown>[]) : []).slice(0, 6).filter((x) => ownKey(x.key) && x.key).map((x, i) => ({
       id: str(x.id, 24) || `b${Date.now().toString(36)}${i}`, key: String(x.key), title: str(x.title, 80), subtitle: str(x.subtitle, 160), cta: str(x.cta, 30), link: str(x.link, 300),
     }));
+    const px = (f.pixels ?? {}) as Record<string, unknown>;
+    if (px.meta && !/^\d{10,20}$/.test(String(px.meta).replace(/\D/g, ""))) return Response.json({ error: "Meta Pixel ID should be 15–16 digits." }, { status: 422 });
+    if (px.ga && !/^G-[A-Z0-9]{4,15}$/i.test(String(px.ga))) return Response.json({ error: "Google Analytics ID looks like G-XXXXXXXXXX." }, { status: 422 });
     if (banners.some((x) => !linkOk(x.link))) return Response.json({ error: "Banner link must start with / or https://" }, { status: 422 });
     const bar = (f.bar ?? {}) as { on?: unknown; items?: unknown };
     const hl = (Array.isArray(f.highlights) ? (f.highlights as Record<string, unknown>[]) : []).slice(0, 4).map((x) => ({
@@ -92,6 +97,10 @@ export async function PATCH(req: Request) {
       highlights: hl.length ? hl : store.storefront.highlights,
       map: { on: map.on !== false, query: str(map.query, 300), zoom: Math.min(20, Math.max(3, Math.round(Number(map.zoom) || 15))) },
       look: f.look === "minimal" || f.look === "soft" ? f.look : "sharp",
+      shipping: (() => { const x = (f.shipping ?? {}) as Record<string, unknown>; const n = (v: unknown) => Math.min(1_000_000, Math.max(0, Math.round((Number(v) || 0) * 100) / 100)); return { flat: n(x.flat), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder) }; })(),
+      closed: (() => { const x = (f.closed ?? {}) as Record<string, unknown>; return { on: Boolean(x.on), message: str(x.message, 200) }; })(),
+      favicon: f.favicon && ownKey(f.favicon) ? String(f.favicon) : null,
+      pixels: (() => { const x = (f.pixels ?? {}) as Record<string, unknown>; return { meta: str(x.meta, 20).replace(/\D/g, ""), ga: str(x.ga, 20).toUpperCase() }; })(),
       about: (() => { const a = (f.about ?? {}) as { images?: unknown; heading?: unknown }; return { images: (Array.isArray(a.images) ? a.images : []).filter((k) => k && ownKey(k)).slice(0, 2).map(String), heading: str(a.heading, 120) }; })(),
     };
   }

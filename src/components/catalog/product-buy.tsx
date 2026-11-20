@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
+import { Check, Minus, Plus, Share2, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
@@ -131,6 +131,12 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
           <FaWhatsapp className="size-5" /> Order or ask on WhatsApp
         </a>
       )}
+      <button type="button" onClick={async () => {
+        const url = window.location.href;
+        const text = `${p.name} — ${rupee(price)} at ${storeName}`;
+        try { if (navigator.share) { await navigator.share({ title: p.name, text, url }); return; } } catch { return; }
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`, "_blank", "noopener");
+      }} className="mt-3 flex w-full items-center justify-center gap-2 py-2 text-[13px] font-semibold text-muted hover:text-foreground"><Share2 className="size-4" /> Share this product</button>
 
       {/* phone sticky bar */}
       <div className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-2.5 pb-[max(.65rem,env(safe-area-inset-bottom))] backdrop-blur-xl transition-transform duration-300 md:hidden", showBar ? "translate-y-0" : "translate-y-full")}>

@@ -58,13 +58,13 @@ export function ProductsPanel({ products, setProducts, categories, setCategories
       ) : (
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {list.map((p) => (
-            <div key={p.id} className={cn(card, "flex gap-3.5 p-3")}>
+            <div key={p.id} className={cn(card, "flex min-w-0 gap-3.5 p-3")}>
               <button onClick={() => setEdit(p)} className="size-24 shrink-0 overflow-hidden rounded-2xl bg-foreground/5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {p.images[0] ? <img src={imgUrl(p.images[0])!} alt="" className="size-full object-cover" /> : null}
               </button>
               <div className="flex min-w-0 flex-1 flex-col">
-                <button onClick={() => setEdit(p)} className="truncate text-left font-semibold">{p.name}</button>
+                <button onClick={() => setEdit(p)} className="block w-full truncate text-left font-semibold">{p.name}</button>
                 <p className="mt-0.5 text-sm"><b>{inr(p.price)}</b>{p.compare_price ? <span className="ml-1.5 text-xs text-muted line-through">{inr(p.compare_price)}</span> : null}</p>
                 <p className="mt-0.5 text-xs text-muted">{p.variants.length ? `${p.variants.length} variants` : p.stock == null ? "Stock not tracked" : p.stock === 0 ? "Out of stock" : `${p.stock} in stock`}</p>
                 <div className="mt-auto flex items-center gap-2 pt-2">

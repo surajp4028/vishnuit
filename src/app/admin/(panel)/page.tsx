@@ -102,7 +102,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card xl:col-span-2">
+        <div className="min-w-0 rounded-2xl border border-border bg-card xl:col-span-2">
           <div className="flex items-center justify-between p-5 pb-3"><p className="font-semibold">Recent leads</p><Link href="/admin/leads" className="text-sm font-medium text-accent">View all</Link></div>
           {recent.length === 0 ? (
             <p className="px-5 pb-6 text-sm text-muted">No leads yet. Enquiries from the contact form will appear here and in your inbox.</p>

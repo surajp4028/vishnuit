@@ -18,7 +18,7 @@ export type OrderRow = {
   id: number; order_no: string; name: string; phone: string; email: string | null; address: string | null;
   items: { id: number; name: string; variant: string | null; price: number; qty: number }[];
   subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string; invoice: string;
-  status_log: { s: string; at: string }[]; tracking: { courier: string; number: string; url: string } | null;
+  status_log: { s: string; at: string }[]; shipping: number; tracking: { courier: string; number: string; url: string } | null;
 };
 export async function storeOrders(storeId: number, limit = 500) {
   const { orderInvoicePath } = await import("./invoice");
@@ -28,6 +28,6 @@ export async function storeOrders(storeId: number, limit = 500) {
     items: typeof r.items === "string" ? JSON.parse(r.items) : (r.items as OrderRow["items"]),
     status_log: typeof r.status_log === "string" ? JSON.parse(r.status_log) : (r.status_log ?? []),
     tracking: typeof r.tracking === "string" ? JSON.parse(r.tracking) : (r.tracking ?? null),
-    subtotal: Number(r.subtotal), created_at: String(r.created_at), invoice: orderInvoicePath(String(r.order_no)),
+    subtotal: Number(r.subtotal), shipping: Number(r.shipping ?? 0), created_at: String(r.created_at), invoice: orderInvoicePath(String(r.order_no)),
   })) as OrderRow[];
 }

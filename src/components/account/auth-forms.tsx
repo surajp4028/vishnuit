@@ -43,7 +43,7 @@ async function post(url: string, body: unknown) {
   return { ok: r.ok, ...j } as { ok: boolean; error?: string; code?: string };
 }
 
-const safeNext = (n: string | null, fallback = "/account") => (n && n.startsWith("/") && !n.startsWith("//") ? n : fallback);
+const safeNext = (n: string | null, fallback = "/account") => (n && n.startsWith("/") && !n.startsWith("//") && !n.includes("\\") && !/[\u0000-\u001f]/.test(n) ? n : fallback);
 
 /** `base` = a store's path (/catalog/@handle): keeps login/register inside that store and returns there. */
 export function LoginForm({ base }: { base?: string } = {}) {

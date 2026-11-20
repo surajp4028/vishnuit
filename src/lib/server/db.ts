@@ -44,3 +44,19 @@ export async function exec(sql: string, params: unknown[] = []) {
   const [res] = await pool().execute(sql, params as never[]);
   return res as ResultSetHeader;
 }
+
+/** Runs `fn` inside a transaction on one connection; rolls back if it throws. */
+export async function transaction<T>(fn: (c: import("mysql2/promise").PoolConnection) => Promise<T>): Promise<T> {
+  const c = await pool().getConnection();
+  try {
+    await c.beginTransaction();
+    const out = await fn(c);
+    await c.commit();
+    return out;
+  } catch (e) {
+    await c.rollback().catch(() => {});
+    throw e;
+  } finally {
+    c.release();
+  }
+}

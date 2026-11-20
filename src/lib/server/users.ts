@@ -73,8 +73,10 @@ export async function findOrCreateUser(input: { name?: string; email?: string | 
     return u;
   }
   const uid = await newUid();
+  // A public form can't prove the email belongs to the phone's owner, so a phone-based silent
+  // account starts without the email (it's still kept on the order/payment and can be added after OTP).
   const r = await exec("INSERT INTO users (uid,name,email,phone,company,source) VALUES (?,?,?,?,?,?)", [
-    uid, (input.name ?? "").slice(0, 120), email, phone, input.company?.slice(0, 190) || null, input.source,
+    uid, (input.name ?? "").slice(0, 120), phone ? null : email, phone, input.company?.slice(0, 190) || null, input.source,
   ]);
   return (await queryOne<User>("SELECT * FROM users WHERE id=?", [r.insertId]))!;
 }
@@ -130,11 +132,10 @@ export async function consumeToken(kind: "reset" | "otp", target: string, code: 
     "SELECT id,user_id,code_hash,attempts FROM user_tokens WHERE target=? AND kind=? AND used_at IS NULL AND expires_at>NOW() ORDER BY id DESC LIMIT 1",
     [target, kind],
   );
-  if (!t || t.attempts >= 5) return null;
-  if (t.code_hash !== sha(code)) {
-    await exec("UPDATE user_tokens SET attempts=attempts+1 WHERE id=?", [t.id]);
-    return null;
-  }
-  await exec("UPDATE user_tokens SET used_at=NOW() WHERE id=?", [t.id]);
-  return t;
+  if (!t) return null;
+  // Count the attempt first (atomically), so parallel guesses can't slip past the limit.
+  const tried = await exec("UPDATE user_tokens SET attempts=attempts+1 WHERE id=? AND attempts<5 AND used_at IS NULL", [t.id]);
+  if (!tried.affectedRows || t.code_hash !== sha(code)) return null;
+  const used = await exec("UPDATE user_tokens SET used_at=NOW() WHERE id=? AND used_at IS NULL", [t.id]);
+  return used.affectedRows ? t : null;
 }

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { queryOne } from "@/lib/server/db";
-import { hydrateStore, imgUrl, orderTax } from "@/lib/server/catalog";
+import { hydrateStore, imgUrl, orderTax, type OrderQuote } from "@/lib/server/catalog";
 import { orderInvoiceTokenOk } from "@/lib/server/invoice";
+import { stateName } from "@/lib/gst-states";
 import { PrintButton } from "@/components/site/print-button";
 
 export const metadata: Metadata = { title: "Invoice", robots: { index: false, follow: false } };
@@ -22,8 +23,12 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
   if (!sr) notFound();
   const s = hydrateStore(sr);
   const items = (typeof o.items === "string" ? JSON.parse(o.items) : o.items) as Item[];
+  // `subtotal` is what the shopper paid. New orders carry the exact breakdown taken at checkout;
+  // older ones are treated as GST-inclusive so the invoice never shows more than was charged.
   const subtotal = Number(o.subtotal);
-  const tx = orderTax(subtotal, s.tax);
+  const q: OrderQuote | null = o.tax ? (typeof o.tax === "string" ? JSON.parse(o.tax) : (o.tax as OrderQuote)) : null;
+  const legacy = orderTax(subtotal, { ...s.tax, inclusive: true });
+  const tx = q ? { rate: q.rate, taxable: q.taxable, gst: q.gst, total: subtotal, shipping: q.shipping, igst: q.igst } : { ...legacy, total: subtotal, shipping: 0, igst: false };
   const paid = o.pay_status === "paid" || o.pay_status === "verified";
   const date = new Date(String(o.created_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   const logo = imgUrl(s.logo_key);
@@ -50,7 +55,7 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
           </div>
         </header>
         <section className="grid gap-5 py-6 sm:grid-cols-2">
-          <div><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">BILL / SHIP TO</p><p className="mt-2 font-semibold">{String(o.name)}</p><p className="text-sm whitespace-pre-line text-[#5b6475]">{String(o.address ?? "")}{"\n"}{String(o.phone)}{o.email ? ` · ${o.email}` : ""}</p></div>
+          <div><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">BILL / SHIP TO{o.state ? ` · PLACE OF SUPPLY: ${stateName(String(o.state)).toUpperCase()} (${String(o.state)})` : ""}</p><p className="mt-2 font-semibold">{String(o.name)}</p><p className="text-sm whitespace-pre-line text-[#5b6475]">{String(o.address ?? "")}{"\n"}{String(o.phone)}{o.email ? ` · ${o.email}` : ""}</p></div>
           <div className="sm:text-right"><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">PAYMENT</p><p className="mt-2 text-sm">{o.pay_method === "cod" ? "Cash on delivery" : o.pay_method === "razorpay" ? "Online (Razorpay)" : "UPI"}</p>{o.utr ? <p className="text-sm text-[#5b6475]">Ref: <span className="font-mono">{String(o.utr)}</span></p> : null}</div>
         </section>
         <div className="overflow-x-auto">
@@ -65,9 +70,14 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
           <div className="w-full max-w-xs space-y-1.5 text-sm">
             {tx.rate ? (<>
               <div className="flex justify-between text-[#5b6475]"><span>Taxable value</span><span>{money(tx.taxable)}</span></div>
-              <div className="flex justify-between text-[#5b6475]"><span>CGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
-              <div className="flex justify-between text-[#5b6475]"><span>SGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
-            </>) : <div className="flex justify-between text-[#5b6475]"><span>Subtotal</span><span>{money(subtotal)}</span></div>}
+              {tx.igst ? (
+                <div className="flex justify-between text-[#5b6475]"><span>IGST @ {tx.rate}%</span><span>{money(tx.gst)}</span></div>
+              ) : (<>
+                <div className="flex justify-between text-[#5b6475]"><span>CGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
+                <div className="flex justify-between text-[#5b6475]"><span>SGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
+              </>)}
+            </>) : <div className="flex justify-between text-[#5b6475]"><span>Items</span><span>{money(q ? q.items : subtotal)}</span></div>}
+            {tx.shipping > 0 && <div className="flex justify-between text-[#5b6475]"><span>Shipping</span><span>{money(tx.shipping)}</span></div>}
             <div className="mt-2 flex justify-between rounded-xl bg-[#0a0f1f] px-4 py-3 text-base font-bold text-white"><span>{paid ? "Total paid" : "Total"}</span><span>{money(tx.total)}</span></div>
           </div>
         </div>

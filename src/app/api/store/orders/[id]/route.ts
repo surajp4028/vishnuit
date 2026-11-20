@@ -1,25 +1,13 @@
+import { after } from "next/server";
 import { exec, queryOne } from "@/lib/server/db";
-import { hydrateProduct } from "@/lib/server/catalog";
+import { sendMail } from "@/lib/server/mail";
+import { siteUrl } from "@/lib/site";
+import { restock } from "@/lib/server/stock";
 import { requireStoreApi, str } from "@/lib/server/store-auth";
-import { ORDER_STATUSES, PAY_STATUSES, type StatusLog } from "@/lib/order-status";
+import { ORDER_LABEL, ORDER_STATUSES, PAY_STATUSES, type StatusLog } from "@/lib/order-status";
 
 type Row = { id: number; status: string; items: unknown; status_log: unknown };
 const parse = <T,>(v: unknown, d: T): T => { if (v == null) return d; if (typeof v === "string") { try { return JSON.parse(v) as T; } catch { return d; } } return v as T; };
-
-/** Put stock back when an order is cancelled or returned (and take it again if it's re-opened). */
-async function restock(items: { id: number; variant: string | null; qty: number }[], storeId: number, sign: 1 | -1) {
-  for (const i of items) {
-    const r = await queryOne<Record<string, unknown>>("SELECT * FROM store_products WHERE id=? AND store_id=?", [i.id, storeId]);
-    if (!r) continue;
-    if (i.variant) {
-      const p = hydrateProduct(r);
-      const variants = p.variants.map((v) => (v.key === i.variant && v.stock != null ? { ...v, stock: Math.max(0, v.stock + sign * i.qty) } : v));
-      await exec("UPDATE store_products SET variants=? WHERE id=?", [JSON.stringify(variants), i.id]);
-    } else {
-      await exec("UPDATE store_products SET stock=GREATEST(0, stock+?) WHERE id=? AND stock IS NOT NULL", [sign * i.qty, i.id]);
-    }
-  }
-}
 
 /** Merchant updates an order: status (with history), payment status, tracking and a private note. */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +24,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const log = parse<StatusLog>(o.status_log, []);
     log.push({ s: b.status, at: new Date().toISOString() });
     await exec("UPDATE store_orders SET status=?, status_log=? WHERE id=?", [b.status, JSON.stringify(log.slice(-30)), id]);
+    // Tell the shopper about the steps that matter to them.
+    const st = b.status;
+    if (["confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"].includes(st)) {
+      after(async () => {
+        const row = await queryOne<{ email: string | null; name: string; order_no: string; tracking: unknown }>("SELECT email, name, order_no, tracking FROM store_orders WHERE id=?", [id]);
+        if (!row?.email) return;
+        const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+        const t = (typeof row.tracking === "string" ? JSON.parse(row.tracking) : row.tracking) as { courier?: string; number?: string; url?: string } | null;
+        const link = `${siteUrl()}/catalog/@${a.store.handle}/account`;
+        const line = st === "cancelled" ? "Your order has been cancelled. If you paid online, the store will process your refund." : st === "delivered" ? "Your order has been delivered. We hope you love it!" : `Your order is now <b>${ORDER_LABEL[st]}</b>.`;
+        await sendMail({
+          to: row.email,
+          subject: `${ORDER_LABEL[st]}: order ${row.order_no} — ${a.store.name}`,
+          text: `Hi ${row.name}, order ${row.order_no} is now ${ORDER_LABEL[st]}. Track: ${link}`,
+          html: `<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:24px auto;border:1px solid #e6e8ef;border-radius:16px;overflow:hidden"><div style="background:#0a0f1f;color:#fff;padding:20px 24px"><div style="font-size:12px;letter-spacing:2px;color:#f5c542">${esc(a.store.name)}</div><div style="font-size:20px;font-weight:700;margin-top:4px">Order ${esc(row.order_no)} · ${ORDER_LABEL[st]}</div></div><div style="padding:20px 24px;font-size:14px;color:#222"><p>Hi ${esc(row.name)},</p><p>${line}</p>${t?.number ? `<p>Courier: <b>${esc(t.courier || "—")}</b> · AWB <b>${esc(t.number)}</b>${t.url ? ` · <a href="${esc(t.url)}">Track package</a>` : ""}</p>` : ""}<p><a href="${link}" style="background:#0a0f1f;color:#fff;text-decoration:none;padding:10px 18px;border-radius:999px">View my order</a></p></div></div>`,
+        }).catch(() => {});
+      });
+    }
   }
   if (typeof b.pay_status === "string" && (PAY_STATUSES as readonly string[]).includes(b.pay_status)) await exec("UPDATE store_orders SET pay_status=? WHERE id=?", [b.pay_status, id]);
   if (b.tracking && typeof b.tracking === "object") {

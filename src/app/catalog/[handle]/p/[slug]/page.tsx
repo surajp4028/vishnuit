@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { queryOne } from "@/lib/server/db";
+import { siteUrl } from "@/lib/site";
 import { ChevronDown, Store as StoreIcon } from "lucide-react";
 import { PAGE_KEYS, PAGE_TITLES, getStoreByHandle, getStoreCategories, getStoreProducts, hydrateProduct, imgUrl } from "@/lib/server/catalog";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
@@ -22,7 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   const { handle, slug } = await params;
   const d = await load(handle, slug);
   if (!d) return {};
-  return { title: d.p.name, description: d.p.description?.slice(0, 160) || undefined, openGraph: { images: d.p.images[0] ? [imgUrl(d.p.images[0])!] : undefined } };
+  const price = `₹${d.p.price.toLocaleString("en-IN")}`;
+  const description = `${price}${d.p.compare_price && d.p.compare_price > d.p.price ? ` (${Math.round((1 - d.p.price / d.p.compare_price) * 100)}% OFF)` : ""} · ${(d.p.description || `Shop ${d.p.name} at ${d.s.name}`).slice(0, 140)}`;
+  const url = `/catalog/@${d.s.handle}/p/${d.p.slug}`;
+  return { title: d.p.name, description, openGraph: { title: `${d.p.name} — ${price}`, description, url, siteName: d.s.name }, twitter: { card: "summary_large_image", title: `${d.p.name} — ${price}`, description }, alternates: { canonical: url } };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ handle: string; slug: string }> }) {
@@ -42,8 +46,16 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const acc = "group border-b border-border [&_summary::-webkit-details-marker]:hidden";
   const sum = "flex cursor-pointer list-none items-center justify-between py-5 text-[13px] font-extrabold tracking-[1.5px] uppercase";
 
+  const inStock = p.variants.length ? p.variants.some((v) => v.stock !== 0) : p.stock !== 0;
+  const ld = {
+    "@context": "https://schema.org", "@type": "Product", name: p.name, image: images, description: p.description || undefined, sku: p.sku || undefined,
+    brand: { "@type": "Brand", name: s.name }, category: cat?.name,
+    offers: { "@type": "Offer", priceCurrency: "INR", price: p.price, availability: `https://schema.org/${inStock ? "InStock" : "OutOfStock"}`, url: `${siteUrl()}${base}/p/${p.slug}`, seller: { "@type": "Organization", name: s.name } },
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <section className="mx-auto max-w-7xl pt-0 sm:px-6 md:pt-8">
         <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parentCat && <> / <Link href={`${base}/shop?c=${parentCat.slug}`} className="hover:text-foreground">{parentCat.name}</Link></>}{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
         <div className="grid gap-6 md:grid-cols-[1.35fr_1fr] md:gap-10 lg:gap-14">

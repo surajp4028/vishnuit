@@ -14,7 +14,7 @@ export default async function StoreLogin({ params, searchParams }: { params: Pro
   const s = await getStoreByHandle(handle);
   if (!s) notFound();
   const base = `/catalog/@${s.handle}`;
-  if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") ? next : `${base}/account`);
+  if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : `${base}/account`);
   return (
     <StoreAuthShell store={s.name} base={base} logo={imgUrl(s.logo_key)} title="Welcome back" subtitle={`Log in to track your ${s.name} orders.`}>
       <Suspense><LoginForm base={base} /></Suspense>

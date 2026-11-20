@@ -10,7 +10,7 @@ export type O = {
   id: number; order_no: string; name: string; phone: string; email: string | null; address: string | null;
   items: { id: number; name: string; variant: string | null; price: number; qty: number }[];
   subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string; invoice?: string;
-  status_log?: StatusLog; tracking?: Tracking | null;
+  status_log?: StatusLog; tracking?: Tracking | null; shipping?: number;
 };
 const FILTERS = ["all", "new", "confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "returned", "pay:pending"];
 const PAY_METHOD: Record<string, string> = { cod: "Cash on delivery", upi: "UPI", razorpay: "Online (Razorpay)" };
@@ -82,7 +82,8 @@ export function OrdersPanel({ orders, setOrders, openId }: { orders: O[]; setOrd
                 {open.items.map((i, k) => (
                   <div key={k} className="flex justify-between gap-3 px-4 py-3 text-sm"><span>{i.name}{i.variant ? <span className="text-muted"> · {i.variant}</span> : null} × {i.qty}</span><b>{inr(i.price * i.qty)}</b></div>
                 ))}
-                <div className="flex justify-between px-4 py-3 font-display font-bold"><span>Total</span><span>{inr(open.subtotal)}</span></div>
+                {open.shipping ? <div className="flex justify-between px-4 py-2.5 text-sm text-muted"><span>Shipping</span><span>{inr(open.shipping)}</span></div> : null}
+                <div className="flex justify-between px-4 py-3 font-display font-bold"><span>Total charged</span><span>{inr(open.subtotal)}</span></div>
               </div>
               <div className={cn(card, "p-4")}>
                 <div className="flex items-center justify-between gap-2">

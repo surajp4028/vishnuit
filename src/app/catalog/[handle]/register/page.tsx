@@ -14,7 +14,7 @@ export default async function StoreRegister({ params, searchParams }: { params: 
   const s = await getStoreByHandle(handle);
   if (!s) notFound();
   const base = `/catalog/@${s.handle}`;
-  if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") ? next : `${base}/account`);
+  if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : `${base}/account`);
   return (
     <StoreAuthShell store={s.name} base={base} logo={imgUrl(s.logo_key)} title="Create your account" subtitle={`Faster checkout and order tracking at ${s.name}.`}>
       <Suspense><RegisterForm base={base} /></Suspense>

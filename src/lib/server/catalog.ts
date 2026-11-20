@@ -61,6 +61,10 @@ export type StoreFront = {
   map: { on: boolean; query: string; zoom: number };
   about: { images: string[]; heading: string };
   look: "sharp" | "minimal" | "soft";
+  shipping: { flat: number; freeAbove: number; minOrder: number };
+  closed: { on: boolean; message: string };
+  pixels: { meta: string; ga: string };
+  favicon: string | null;
 };
 export const emptyFront = (): StoreFront => ({
   banners: [], interval: 5,
@@ -74,6 +78,10 @@ export const emptyFront = (): StoreFront => ({
   map: { on: true, query: "", zoom: 15 },
   about: { images: [], heading: "" },
   look: "sharp",
+  shipping: { flat: 0, freeAbove: 0, minOrder: 0 },
+  closed: { on: false, message: "" },
+  pixels: { meta: "", ga: "" },
+  favicon: null,
 });
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
@@ -112,6 +120,10 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     highlights: Array.isArray(f.highlights) && f.highlights.length ? f.highlights : d.highlights,
     map: { ...d.map, ...(f.map ?? {}) },
     look: f.look === "minimal" || f.look === "soft" ? f.look : "sharp",
+    shipping: { flat: Number(f.shipping?.flat) || 0, freeAbove: Number(f.shipping?.freeAbove) || 0, minOrder: Number(f.shipping?.minOrder) || 0 },
+    closed: { on: Boolean(f.closed?.on), message: f.closed?.message ?? "" },
+    pixels: { meta: f.pixels?.meta ?? "", ga: f.pixels?.ga ?? "" },
+    favicon: typeof f.favicon === "string" ? f.favicon : null,
     about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "" },
   };
 }
@@ -286,6 +298,19 @@ export function storeForOwner(s: Store, plans: Record<PlanKey, PlanDef>) {
   };
 }
 export type OwnerStore = ReturnType<typeof storeForOwner>;
+
+export type OrderQuote = { items: number; shipping: number; rate: number; inclusive: boolean; taxable: number; gst: number; igst: boolean; total: number };
+/**
+ * What the shopper pays: items (+ GST when prices exclude it) + shipping.
+ * GST is on the items; interstate (buyer state ≠ GSTIN state) → IGST, else CGST + SGST.
+ */
+export function quoteOrder(items: number, s: Pick<Store, "tax" | "storefront">, buyerState?: string | null): OrderQuote {
+  const tx = orderTax(items, s.tax);
+  const sh = s.storefront.shipping;
+  const shipping = sh.flat > 0 && !(sh.freeAbove > 0 && items >= sh.freeAbove) ? sh.flat : 0;
+  const igst = Boolean(tx.rate && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
+  return { items, shipping, rate: tx.rate, inclusive: s.tax.inclusive, taxable: tx.taxable, gst: tx.gst, igst, total: Math.round((tx.total + shipping) * 100) / 100 };
+}
 
 /** GST split for an order total under the store's tax settings. */
 export function orderTax(total: number, tax: StoreTax) {

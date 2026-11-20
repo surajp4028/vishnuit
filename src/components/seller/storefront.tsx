@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowDown, ArrowUp, BookOpen, Check, Palette, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BarChart3, BookOpen, Check, Moon, Palette, Truck, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, input, Toggle } from "@/components/store/ui";
 import { HIGHLIGHT_ICON_MAP, type HighlightIconKey } from "@/components/catalog/highlight-icons";
@@ -13,6 +13,10 @@ export type Front = {
   map: { on: boolean; query: string; zoom: number };
   about: { images: string[]; heading: string };
   look: "sharp" | "minimal" | "soft";
+  shipping: { flat: number; freeAbove: number; minOrder: number };
+  closed: { on: boolean; message: string };
+  pixels: { meta: string; ga: string };
+  favicon: string | null;
 };
 
 
@@ -69,6 +73,31 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
               <p className="text-xs text-muted">{l.like}</p>
             </button>
           ))}
+        </div>
+      </Section>
+
+      <Section icon={Images} title="Browser tab icon (favicon)" sub="The small square icon in the browser tab and bookmarks. Empty = your logo is used.">
+        <div className="w-28"><ImagePick value={f.favicon} onChange={(k) => set({ favicon: k })} kind="logo" label="Square icon, 512×512" /></div>
+      </Section>
+
+      <Section icon={Moon} title="Store open / closed" sub="Going on a break? Close the store — shoppers can browse but not order.">
+        <Toggle on={!f.closed.on} onChange={(v) => set({ closed: { ...f.closed, on: !v } })} label={f.closed.on ? "Store is CLOSED" : "Store is open for orders"} sub={f.closed.on ? "A notice shows on every page and checkout is paused" : "Shoppers can place orders"} />
+        {f.closed.on && <input value={f.closed.message} maxLength={200} onChange={(e) => set({ closed: { ...f.closed, message: e.target.value } })} placeholder="e.g. We're on a short break till 25 Nov — orders open soon!" className={input} />}
+      </Section>
+
+      <Section icon={Truck} title="Shipping & order rules" sub="Shown at checkout and added to the order total. Leave 0 to turn a rule off.">
+        <div className="grid gap-3 sm:grid-cols-3">
+          {([["flat", "Delivery charge (₹)", "e.g. 79"], ["freeAbove", "Free delivery above (₹)", "e.g. 999"], ["minOrder", "Minimum order (₹)", "e.g. 299"]] as const).map(([k, l, ph]) => (
+            <Field key={k} label={l}><input inputMode="numeric" value={f.shipping[k] || ""} onChange={(e) => set({ shipping: { ...f.shipping, [k]: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 } })} placeholder={ph} className={input} /></Field>
+          ))}
+        </div>
+        <p className="text-xs text-muted">{f.shipping.flat ? `Shoppers pay ₹${f.shipping.flat} delivery${f.shipping.freeAbove ? `, free above ₹${f.shipping.freeAbove}` : ""}.` : "Delivery is free on all orders."}{f.shipping.minOrder ? ` Orders below ₹${f.shipping.minOrder} can't be placed.` : ""}</p>
+      </Section>
+
+      <Section icon={BarChart3} title="Tracking pixels" sub="Run Instagram/Facebook ads or see visitors in Google Analytics. Paste only the ID.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Meta Pixel ID" hint="15–16 digits from Events Manager"><input inputMode="numeric" value={f.pixels.meta} onChange={(e) => set({ pixels: { ...f.pixels, meta: e.target.value.replace(/\D/g, "") } })} placeholder="e.g. 1234567890123456" className={input} /></Field>
+          <Field label="Google Analytics ID" hint="Looks like G-XXXXXXXXXX"><input value={f.pixels.ga} onChange={(e) => set({ pixels: { ...f.pixels, ga: e.target.value.toUpperCase().trim() } })} placeholder="G-XXXXXXXXXX" className={input} /></Field>
         </div>
       </Section>
 

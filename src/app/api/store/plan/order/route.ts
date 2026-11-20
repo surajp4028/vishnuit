@@ -1,4 +1,4 @@
-import { exec } from "@/lib/server/db";
+import { exec, queryOne } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
 import { createOrder, rzpConfigured } from "@/lib/server/razorpay";
 import { requireStoreApi } from "@/lib/server/store-auth";
@@ -14,6 +14,14 @@ export async function POST(req: Request) {
   const q = await quotePlan(a.user.id, b.plan, b.years, b.coupon);
   if ("error" in q) return Response.json(q, { status: 422 });
   const { user, store } = a;
+  // Limited coupons: count payments started in the last 30 minutes too, so one code can't be opened many times at once.
+  if (q.coupon) {
+    const c = await queryOne<{ max_uses: number | null; used: number }>("SELECT max_uses, used FROM coupons WHERE code=?", [q.coupon]);
+    if (c?.max_uses != null) {
+      const open = await queryOne<{ n: number }>("SELECT COUNT(*) n FROM payments WHERE kind='subscription' AND status<>'paid' AND created_at > NOW() - INTERVAL 30 MINUTE AND JSON_UNQUOTE(JSON_EXTRACT(meta, '$.coupon'))=?", [q.coupon]);
+      if (Number(c.used) + Number(open?.n ?? 0) >= Number(c.max_uses)) return Response.json({ error: "This coupon has been fully used." }, { status: 422 });
+    }
+  }
   const label = `Catalog ${q.planName} plan · ${q.years} year${q.years > 1 ? "s" : ""}`;
   try {
     const order = await createOrder(Math.round(q.total * 100), `vit_plan_${store.id}_${Date.now()}`, { kind: "subscription", store: store.handle, plan: q.plan, years: String(q.years) });

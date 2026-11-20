@@ -6,6 +6,7 @@ import { siteUrl } from "@/lib/site";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 type Row = { id: number; name: string; handle: string; plan: PlanKey; plan_expires_at: string; reminder_sent_at: string | null; email: string | null; owner: string };
 
 /**
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
         to: r.email,
         subject: `Your ${plans[r.plan].name} plan for ${r.name} ends on ${fmt(r.plan_expires_at)}`,
         text: `Hi ${r.owner || "there"}, your ${plans[r.plan].name} plan for ${r.name} ends on ${fmt(r.plan_expires_at)}. Renew here: ${link}`,
-        html: card("Your plan is ending soon", `<p>Hi ${r.owner || "there"},</p><p>Your <b>${plans[r.plan].name}</b> plan for <b>${r.name}</b> (vishnuit.co.in/catalog/@${r.handle}) ends on <b>${fmt(r.plan_expires_at)}</b>.</p><p>Renew now to keep your product limit and online payments without a break.</p>`),
+        html: card("Your plan is ending soon", `<p>Hi ${esc(r.owner || "there")},</p><p>Your <b>${plans[r.plan].name}</b> plan for <b>${esc(r.name)}</b> (vishnuit.co.in/catalog/@${r.handle}) ends on <b>${fmt(r.plan_expires_at)}</b>.</p><p>Renew now to keep your product limit and online payments without a break.</p>`),
       });
       if (ok.ok) sent++;
     }
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
         to: r.email,
         subject: `Your plan for ${r.name} has ended — renew within ${GRACE_DAYS} days`,
         text: `Your ${plans[r.plan].name} plan ended. Your store keeps working until ${fmt(until)}, then moves to the Free plan (${plans.free.limit} products). Renew: ${link}`,
-        html: card("Your plan has ended", `<p>Hi ${r.owner || "there"},</p><p>Your <b>${plans[r.plan].name}</b> plan for <b>${r.name}</b> ended on ${fmt(r.plan_expires_at)}.</p><p>Your store keeps its current limits until <b>${fmt(until)}</b>. After that it moves to the Free plan (${plans.free.limit} products) and online payments switch off.</p>`),
+        html: card("Your plan has ended", `<p>Hi ${esc(r.owner || "there")},</p><p>Your <b>${plans[r.plan].name}</b> plan for <b>${esc(r.name)}</b> ended on ${fmt(r.plan_expires_at)}.</p><p>Your store keeps its current limits until <b>${fmt(until)}</b>. After that it moves to the Free plan (${plans.free.limit} products) and online payments switch off.</p>`),
       });
       if (ok.ok) sent++;
     }
