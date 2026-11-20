@@ -10,7 +10,7 @@ export const requireSeller = cache(async () => {
   const user = await requireUser("/seller");
   const [store, cfg] = await Promise.all([getStoreForUser(user.id), getCatalogConfig()]);
   if (!cfg.features.enabled) redirect("/account");
-  if (!store) redirect("/account/store");
+  if (!store) redirect("/account"); // the account dashboard offers "Create your online store"
   return { user, store, cfg };
 });
 

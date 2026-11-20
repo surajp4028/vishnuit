@@ -2,9 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Receipt, ShoppingBag, UserRound, UserCog } from "lucide-react";
+import { LayoutDashboard, LogOut, Receipt, ShoppingBag, Store, UserCog, UserRound } from "lucide-react";
 
-type Me = { uid: string; name: string; email: string | null; avatar: string | null; storeLink?: boolean } | null;
+type Me = { uid: string; name: string; email: string | null; avatar: string | null; storeLink?: boolean; hasStore?: boolean } | null;
 
 /** Header profile icon: login link when signed out; photo + hover menu when signed in. */
 export function UserMenu() {
@@ -50,7 +50,7 @@ export function UserMenu() {
               <p className="truncate text-sm font-semibold">{me.name || "My account"}</p>
               <p className="truncate text-xs text-muted">{me.email ?? me.uid}</p>
             </div>
-            {[["/seller", "Dashboard", LayoutDashboard], ["/account", "My account", UserRound], ["/account?tab=orders", "My orders", ShoppingBag], ["/account?tab=payments", "Payments & invoices", Receipt], ["/account?tab=profile", "Profile & password", UserCog]].map(([href, label, Icon]) => {
+            {[["/account", "Dashboard", LayoutDashboard], ...(me.hasStore ? [["/seller", "Seller dashboard", Store]] : me.storeLink ? [["/account/store", "Create online store", Store]] : []), ["/account?tab=orders", "My orders", ShoppingBag], ["/account?tab=payments", "Payments & invoices", Receipt], ["/account?tab=profile", "Profile & password", UserCog]].map(([href, label, Icon]) => {
               const I = Icon as typeof LayoutDashboard;
               return (
                 <Link key={href as string} href={href as string} className="mt-1 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-foreground/5">
