@@ -61,9 +61,11 @@ export async function proxy(req: NextRequest) {
   if (pathname === old || pathname.startsWith(`${old}/`)) {
     return NextResponse.redirect(new URL((pathname.slice(old.length) || "/") + req.nextUrl.search, `${req.nextUrl.protocol}//${req.headers.get("host")}`), 308);
   }
-  // The main site's admin and seller panel aren't part of the store's domain.
+  // The seller panel also works here for the store's owner (checked in requireSeller); it isn't a store page, so no rewrite.
+  if (pathname === "/seller" || pathname.startsWith("/seller/")) return NextResponse.next();
+  // The main site's admin isn't part of the store's domain.
   // (/login, /account, /cart… are the store's own pages and stay here.)
-  if (/^\/(admin|seller|catalog)(\/|$)/.test(pathname)) {
+  if (/^\/(admin|catalog)(\/|$)/.test(pathname)) {
     return NextResponse.redirect(new URL(pathname + req.nextUrl.search, process.env.NEXT_PUBLIC_SITE_URL || "https://www.vishnuit.co.in"));
   }
   const url = req.nextUrl.clone();

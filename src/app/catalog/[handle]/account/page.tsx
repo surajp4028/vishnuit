@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FileText, Package, Truck } from "lucide-react";
+import { FileText, LayoutDashboard, Package, Truck } from "lucide-react";
 import { query } from "@/lib/server/db";
-import { getStoreByHandle, storeBase } from "@/lib/server/catalog";
+import { getStoreByHandle, getStoreForUser, storeBase } from "@/lib/server/catalog";
 import { getUser } from "@/lib/server/users";
 import { orderInvoicePath } from "@/lib/server/invoice";
 import { ORDER_COLOR, ORDER_FLOW, ORDER_LABEL, PAY_COLOR, PAY_LABEL } from "@/lib/order-status";
@@ -32,6 +32,10 @@ export default async function StoreAccount({ params }: { params: Promise<{ handl
     log: parse<{ s: string; at: string }[]>(o.status_log, []), tracking: parse<{ courier: string; number: string; url: string } | null>(o.tracking, null),
   }));
   const first = (u.name || "there").split(" ")[0];
+  // Store owners get a shortcut to their seller panel. On this store's own domain it opens right here (/seller);
+  // someone who owns a different store is sent to vishnuit.co.in.
+  const owned = await getStoreForUser(u.id);
+  const sellerHref = owned ? (owned.id === s.id || base ? "/seller" : "https://www.vishnuit.co.in/seller") : null;
 
   return (
     <section className="mx-auto max-w-4xl px-3 pt-6 sm:px-6 sm:pt-10">
@@ -40,7 +44,7 @@ export default async function StoreAccount({ params }: { params: Promise<{ handl
           <span className="grid size-14 place-items-center rounded-full bg-white text-lg font-extrabold text-black">{(u.name || "U").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
           <div><p className="text-xs text-white/55">Hello,</p><p className="font-display text-2xl font-extrabold">{first}</p><p className="text-xs text-white/55">{u.phone || u.email}</p></div>
         </div>
-        <div className="flex gap-2"><Link href={`${base}/shop`} className="rounded-pill bg-white px-4 py-2 text-xs font-bold text-black">Continue shopping</Link><span className="[&_button]:border-white/20 [&_button]:text-white"><StoreLogout base={base} /></span></div>
+        <div className="flex flex-wrap gap-2">{sellerHref && <a href={sellerHref} className="inline-flex items-center gap-1.5 rounded-pill bg-[#d4a017] px-4 py-2 text-xs font-bold text-black"><LayoutDashboard className="size-3.5" />Seller dashboard{owned && owned.id !== s.id ? ` · ${owned.name}` : ""}</a>}<Link href={`${base}/shop`} className="rounded-pill bg-white px-4 py-2 text-xs font-bold text-black">Continue shopping</Link><span className="[&_button]:border-white/20 [&_button]:text-white"><StoreLogout base={base} /></span></div>
       </div>
 
       <h1 className="mt-8 font-display text-2xl font-extrabold tracking-tight">My orders <span className="text-base font-semibold text-muted">· {orders.length}</span></h1>

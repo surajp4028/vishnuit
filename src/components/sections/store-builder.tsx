@@ -6,6 +6,24 @@ import { Reveal } from "@/components/reveal";
 
 /** A real seller store shown as the live demo (opens in a new tab). Change with NEXT_PUBLIC_DEMO_STORE. */
 export const DEMO_STORE_URL = `/catalog/@${process.env.NEXT_PUBLIC_DEMO_STORE || "pandeyfashion"}`;
+/** The same demo store on its own connected domain. Change with NEXT_PUBLIC_DEMO_DOMAIN. */
+export const DEMO_DOMAIN = process.env.NEXT_PUBLIC_DEMO_DOMAIN || "vishnuitcatalog.store";
+
+/** "Live demos" — the demo store on its own domain and on its free vishnuit.co.in link. */
+export function DemoLinks({ dark, className }: { dark?: boolean; className?: string }) {
+  const pill = dark ? "border-white/25 bg-white/10 text-white hover:bg-white/20" : "border-border bg-card hover:border-accent";
+  return (
+    <div className={`flex flex-wrap items-center gap-2 text-[13px] ${className ?? ""}`}>
+      <span className={`mr-1 text-xs font-semibold ${dark ? "text-white/70" : "text-muted"}`}>Live demo:</span>
+      <a href={`https://${DEMO_DOMAIN}`} target="_blank" rel="noopener" className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 font-semibold transition ${pill}`}>
+        <Lock className={`size-3.5 shrink-0 ${dark ? "text-emerald-300" : "text-emerald-600"}`} /><span className="truncate">{DEMO_DOMAIN}</span><span className={`rounded-full px-1.5 text-[10px] font-bold ${dark ? "bg-white/15" : "bg-accent/10 text-accent"}`}>own domain</span>
+      </a>
+      <a href={DEMO_STORE_URL} target="_blank" rel="noopener" className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 font-semibold transition ${pill}`}>
+        <Link2 className="size-3.5 shrink-0" /><span className="truncate">vishnuit.co.in{DEMO_STORE_URL}</span><span className={`rounded-full px-1.5 text-[10px] font-bold ${dark ? "bg-white/15" : "bg-foreground/5 text-muted"}`}>free link</span>
+      </a>
+    </div>
+  );
+}
 
 export type StorePlan = { key: string; name: string; limit: number | null; price: number; razorpay: boolean; storageMb?: number };
 
@@ -125,8 +143,8 @@ export function StoreTeaser() {
             <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
               <Link href="/online-store" className="group inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
               <Link href="/account/store" className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:border-accent">Create free store</Link>
-              <a href={DEMO_STORE_URL} target="_blank" rel="noopener" className="inline-flex items-center justify-center gap-1.5 px-2 py-3.5 text-sm font-semibold text-accent hover:underline">See live demo ↗</a>
             </div>
+            <DemoLinks className="mt-4" />
           </div>
           <StoreMockup size="md" />
         </div>

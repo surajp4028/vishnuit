@@ -1,6 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { isMainHost, mainSiteUrl } from "./domains";
 import { query } from "./db";
 import { requireUser } from "./users";
 import { getCatalogConfig, getStoreForUser } from "./catalog";
@@ -11,6 +13,9 @@ export const requireSeller = cache(async () => {
   const [store, cfg] = await Promise.all([getStoreForUser(user.id), getCatalogConfig()]);
   if (!cfg.features.enabled) redirect("/account");
   if (!store) redirect("/account"); // the account dashboard offers "Create your online store"
+  // On a store's own domain (pandey.com/seller) only that store's owner gets the panel; anyone else uses vishnuit.co.in.
+  const host = ((await headers()).get("host") ?? "").toLowerCase().split(":")[0];
+  if (host && !isMainHost(host) && host.replace(/^www\./, "") !== (store.domain ?? "").replace(/^www\./, "")) redirect(`${mainSiteUrl()}/seller`);
   return { user, store, cfg };
 });
 

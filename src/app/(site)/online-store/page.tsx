@@ -4,7 +4,7 @@ import { ArrowRight, Check, Globe, Lock, Palette, ShieldCheck, Sparkles, Truck, 
 import { Reveal } from "@/components/reveal";
 import { FlipWords } from "@/components/ui/flip-words";
 import { FaqAccordion } from "@/components/sections/interactive";
-import { LaptopFrame, PhoneFrame, STORE_FEATURES, STORE_STEPS, StoreMockup, StorePlans, DEMO_STORE_URL } from "@/components/sections/store-builder";
+import { LaptopFrame, PhoneFrame, STORE_FEATURES, STORE_STEPS, StoreMockup, StorePlans, DEMO_STORE_URL, DEMO_DOMAIN, DemoLinks } from "@/components/sections/store-builder";
 import { getCatalogConfig, PLAN_KEYS } from "@/lib/server/catalog";
 
 export const metadata: Metadata = {
@@ -45,9 +45,10 @@ export default async function OnlineStorePage() {
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">A premium catalogue with your logo and link. Take COD & UPI orders, send GST invoices and track every delivery — all from your phone. No coding, no commission.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={cta} className="group inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-4 text-sm font-bold text-background shadow-[0_20px_50px_-20px_rgba(15,23,42,.6)]">Create my store — free <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
-              <a href={DEMO_STORE_URL} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-7 py-4 text-sm font-semibold hover:border-accent">See live demo ↗</a>
+              <a href={`https://${DEMO_DOMAIN}`} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-7 py-4 text-sm font-semibold hover:border-accent">See live demo ↗</a>
               <a href="#pricing" className="inline-flex items-center gap-2 px-3 py-4 text-sm font-semibold text-muted hover:text-foreground">See pricing</a>
             </div>
+            <DemoLinks className="mt-5" />
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/70">
               {["Free forever plan", "0% commission", "Live in 5 minutes"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
             </div>
@@ -117,16 +118,16 @@ export default async function OnlineStorePage() {
             {/* browser bar mock: free link → own domain */}
             <div className="min-w-0 space-y-4">
               {[
-                { url: "vishnuit.co.in/catalog/@yourbrand", tag: "Free link", dim: true },
-                { url: "yourbrand.com", tag: "Your domain", dim: false },
+                { url: "vishnuit.co.in/catalog/@yourbrand", tag: "Free link", dim: true, href: DEMO_STORE_URL },
+                { url: "yourbrand.com", tag: "Your domain", dim: false, href: `https://${DEMO_DOMAIN}` },
               ].map((b) => (
-                <div key={b.url} className={`rounded-2xl border p-3 shadow-sm ${b.dim ? "border-border bg-background opacity-70" : "border-accent/40 bg-background shadow-[0_24px_60px_-30px_rgba(37,99,235,.5)]"}`}>
+                <a key={b.url} href={b.href} target="_blank" rel="noopener" title="Open the live demo" className={`block rounded-2xl border p-3 shadow-sm transition hover:-translate-y-0.5 ${b.dim ? "border-border bg-background opacity-70 hover:opacity-100" : "border-accent/40 bg-background shadow-[0_24px_60px_-30px_rgba(37,99,235,.5)]"}`}>
                   <div className="flex items-center gap-1.5 pb-2.5"><span className="size-2.5 rounded-full bg-red-400" /><span className="size-2.5 rounded-full bg-amber-400" /><span className="size-2.5 rounded-full bg-emerald-400" /><span className="ml-auto rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-bold text-muted">{b.tag}</span></div>
                   <div className="flex items-center gap-2 rounded-xl bg-foreground/[.04] px-3.5 py-2.5 text-sm">
                     {b.dim ? <Globe className="size-4 text-muted" /> : <Lock className="size-4 text-emerald-600" />}
                     <span className={`truncate font-mono ${b.dim ? "text-muted" : "font-semibold"}`}>https://{b.url}</span>
                   </div>
-                </div>
+                </a>
               ))}
               <div className="flex items-center justify-center gap-2 text-xs font-semibold text-muted"><ArrowRight className="size-3.5 rotate-90" /> same store, same products, same orders</div>
             </div>
@@ -194,8 +195,9 @@ export default async function OnlineStorePage() {
           <p className="mx-auto mt-4 max-w-xl text-white/80">Create it free, add a few products and share the link on Instagram tonight.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href={cta} className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-[#1e3a8a]">Create my store — free <ArrowRight className="size-4" /></Link>
-            <a href={DEMO_STORE_URL} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-4 text-sm font-semibold text-white hover:bg-white/10">See live demo ↗</a>
+            <a href={`https://${DEMO_DOMAIN}`} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-4 text-sm font-semibold text-white hover:bg-white/10">See live demo ↗</a>
           </div>
+          <DemoLinks dark className="mt-6 justify-center" />
         </div>
       </section>
     </>
