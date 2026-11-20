@@ -9,7 +9,7 @@ import { PrintButton } from "@/components/site/print-button";
 export const metadata: Metadata = { title: "Invoice", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-type Item = { name: string; variant: string | null; price: number; qty: number };
+type Item = { name: string; variant: string | null; price: number; qty: number; gst_rate?: number | null; hsn?: string | null };
 const money = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(n);
 
 /** Tax invoice for a shop order — issued by the merchant (their GSTIN), not by Vishnu IT. */
@@ -29,10 +29,13 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
   const q: OrderQuote | null = o.tax ? (typeof o.tax === "string" ? JSON.parse(o.tax) : (o.tax as OrderQuote)) : null;
   const legacy = orderTax(subtotal, { ...s.tax, inclusive: true });
   const tx = q ? { rate: q.rate, taxable: q.taxable, gst: q.gst, total: subtotal, shipping: q.shipping, igst: q.igst } : { ...legacy, total: subtotal, shipping: 0, igst: false };
+  // Tax per rate (products can have different GST slabs). Old orders: one line at the store rate.
+  const rates = (q?.rates ?? (legacy.rate ? [{ rate: legacy.rate, taxable: legacy.taxable, gst: legacy.gst }] : [])).filter((g) => g.rate > 0);
+  const showHsn = Boolean(s.tax.hsn) || items.some((i) => i.hsn);
+  const showRate = rates.length > 0;
   const paid = o.pay_status === "paid" || o.pay_status === "verified";
   const date = new Date(String(o.created_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   const logo = imgUrl(s.logo_key);
-  const half = tx.rate / 2;
 
   return (
     <main className="min-h-dvh bg-[#f3f5f9] px-3 py-6 text-[#0a0f1f] sm:px-4 sm:py-8 print:bg-white print:p-0">
@@ -48,7 +51,7 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
             {s.tax.gstin && <p className="mt-1 text-sm font-semibold">GSTIN: {s.tax.gstin}</p>}
           </div>
           <div className="text-right">
-            <p className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{tx.rate ? "TAX INVOICE" : "INVOICE"}</p>
+            <p className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{rates.length ? "TAX INVOICE" : "INVOICE"}</p>
             <p className="mt-2 text-sm text-[#5b6475]">No. <b className="text-[#0a0f1f]">{s.tax.invoicePrefix}-{orderNo}</b></p>
             <p className="text-sm text-[#5b6475]">Date <b className="text-[#0a0f1f]">{date}</b></p>
             <span className={`mt-3 inline-block rounded-full border-2 px-4 py-1 text-xs font-extrabold tracking-[3px] ${paid ? "border-emerald-600 text-emerald-600" : "border-amber-500 text-amber-600"}`}>{paid ? "PAID" : o.pay_method === "cod" ? "CASH ON DELIVERY" : "PAYMENT PENDING"}</span>
@@ -60,22 +63,24 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
         </section>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] border-collapse text-sm">
-            <thead><tr className="bg-[#f5f7fb] text-left text-[11px] tracking-[1.5px] text-[#5b6475]"><th className="rounded-l-xl px-3 py-3">ITEM</th>{s.tax.hsn && <th className="px-3 py-3">HSN</th>}<th className="px-3 py-3 text-center">QTY</th><th className="px-3 py-3 text-right">RATE</th><th className="rounded-r-xl px-3 py-3 text-right">AMOUNT</th></tr></thead>
+            <thead><tr className="bg-[#f5f7fb] text-left text-[11px] tracking-[1.5px] text-[#5b6475]"><th className="rounded-l-xl px-3 py-3">ITEM</th>{showHsn && <th className="px-3 py-3">HSN</th>}{showRate && <th className="px-3 py-3 text-center">GST</th>}<th className="px-3 py-3 text-center">QTY</th><th className="px-3 py-3 text-right">RATE</th><th className="rounded-r-xl px-3 py-3 text-right">AMOUNT</th></tr></thead>
             <tbody>{items.map((i, k) => (
-              <tr key={k} className="border-b border-[#e6e9f0]"><td className="px-3 py-3.5 font-medium">{i.name}{i.variant ? <span className="text-[#5b6475]"> · {i.variant}</span> : null}</td>{s.tax.hsn && <td className="px-3 py-3.5">{s.tax.hsn}</td>}<td className="px-3 py-3.5 text-center">{i.qty}</td><td className="px-3 py-3.5 text-right">{money(i.price)}</td><td className="px-3 py-3.5 text-right font-semibold">{money(i.price * i.qty)}</td></tr>
+              <tr key={k} className="border-b border-[#e6e9f0]"><td className="px-3 py-3.5 font-medium">{i.name}{i.variant ? <span className="text-[#5b6475]"> · {i.variant}</span> : null}</td>{showHsn && <td className="px-3 py-3.5">{i.hsn || s.tax.hsn || "—"}</td>}{showRate && <td className="px-3 py-3.5 text-center">{i.gst_rate ?? s.tax.rate}%</td>}<td className="px-3 py-3.5 text-center">{i.qty}</td><td className="px-3 py-3.5 text-right">{money(i.price)}</td><td className="px-3 py-3.5 text-right font-semibold">{money(i.price * i.qty)}</td></tr>
             ))}</tbody>
           </table>
         </div>
         <div className="mt-5 flex justify-end">
           <div className="w-full max-w-xs space-y-1.5 text-sm">
-            {tx.rate ? (<>
+            {rates.length ? (<>
               <div className="flex justify-between text-[#5b6475]"><span>Taxable value</span><span>{money(tx.taxable)}</span></div>
-              {tx.igst ? (
-                <div className="flex justify-between text-[#5b6475]"><span>IGST @ {tx.rate}%</span><span>{money(tx.gst)}</span></div>
-              ) : (<>
-                <div className="flex justify-between text-[#5b6475]"><span>CGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
-                <div className="flex justify-between text-[#5b6475]"><span>SGST @ {half}%</span><span>{money(tx.gst / 2)}</span></div>
-              </>)}
+              {rates.map((g) => tx.igst ? (
+                <div key={g.rate} className="flex justify-between text-[#5b6475]"><span>IGST @ {g.rate}%</span><span>{money(g.gst)}</span></div>
+              ) : (
+                <div key={g.rate} className="space-y-1.5">
+                  <div className="flex justify-between text-[#5b6475]"><span>CGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
+                  <div className="flex justify-between text-[#5b6475]"><span>SGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
+                </div>
+              ))}
             </>) : <div className="flex justify-between text-[#5b6475]"><span>Items</span><span>{money(q ? q.items : subtotal)}</span></div>}
             {tx.shipping > 0 && <div className="flex justify-between text-[#5b6475]"><span>Shipping</span><span>{money(tx.shipping)}</span></div>}
             <div className="mt-2 flex justify-between rounded-xl bg-[#0a0f1f] px-4 py-3 text-base font-bold text-white"><span>{paid ? "Total paid" : "Total"}</span><span>{money(tx.total)}</span></div>

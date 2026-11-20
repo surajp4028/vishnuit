@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-export type CartLine = { id: number; slug: string; name: string; image: string | null; variant: string | null; price: number; qty: number };
+export type CartLine = { id: number; slug: string; name: string; image: string | null; variant: string | null; price: number; qty: number; gst?: number | null };
 type Ctx = { lines: CartLine[]; count: number; total: number; add: (l: CartLine) => void; setQty: (i: number, q: number) => void; remove: (i: number) => void; clear: () => void; ready: boolean };
 const CartCtx = createContext<Ctx | null>(null);
 

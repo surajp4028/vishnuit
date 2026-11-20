@@ -12,7 +12,7 @@ const box = "rounded-2xl border border-border bg-card p-4 sm:p-5";
 const step = (n: number, t: string) => <p className="flex items-center gap-2.5 font-display text-[15px] font-bold"><span className="grid size-6 place-items-center rounded-full bg-foreground text-[11px] text-background">{n}</span>{t}</p>;
 
 /** Cart + checkout on one page (built for phones). */
-type Rules = { flat: number; freeAbove: number; minOrder: number; closed: string; gstRate: number; inclusive: boolean };
+type Rules = { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number; closed: string; gstRate: number; gstOn: boolean; inclusive: boolean };
 export function Checkout({ handle, base, storeName, pay, rules }: { handle: string; base: string; storeName: string; pay: { cod: boolean; upi: boolean; vpa: string; qr: string | null; razorpay: boolean }; rules: Rules }) {
   const { lines, total, setQty, remove, clear, ready } = useCart();
   const [method, setMethod] = useState<"cod" | "upi" | "razorpay">(pay.razorpay ? "razorpay" : pay.cod ? "cod" : "upi");
@@ -73,12 +73,15 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
     );
 
   const count = lines.reduce((n, l) => n + l.qty, 0);
-  const shipping = rules.flat > 0 && !(rules.freeAbove > 0 && total >= rules.freeAbove) ? rules.flat : 0;
-  const gstExtra = rules.gstRate && !rules.inclusive ? Math.round(total * rules.gstRate) / 100 : 0;
+  const rateFor = (m: "cod" | "upi" | "razorpay") => (rules.freeAbove > 0 && total >= rules.freeAbove ? 0 : rules[m] || 0);
+  const shipping = rateFor(method);
+  // GST is per product (falls back to the store rate). It only changes the total when prices exclude GST.
+  const gstExtra = rules.gstOn && !rules.inclusive ? Math.round(lines.reduce((n, l) => n + l.price * l.qty * (l.gst ?? rules.gstRate), 0)) / 100 : 0;
+  const anyDelivery = rules.cod > 0 || rules.upi > 0 || rules.razorpay > 0;
   const grand = Math.round((total + gstExtra + shipping) * 100) / 100;
   const short = rules.minOrder > 0 && total < rules.minOrder ? rules.minOrder - total : 0;
   const upiLink = pay.vpa ? `upi://pay?pa=${encodeURIComponent(pay.vpa)}&pn=${encodeURIComponent(storeName)}&am=${grand.toFixed(2)}&cu=INR` : null;
-  const toFree = rules.flat > 0 && rules.freeAbove > 0 && total < rules.freeAbove ? rules.freeAbove - total : 0;
+  const toFree = anyDelivery && rules.freeAbove > 0 && total < rules.freeAbove ? rules.freeAbove - total : 0;
   const methods = [
     pay.razorpay && { k: "razorpay" as const, icon: CreditCard, t: "Pay online", d: "UPI, cards, net banking" },
     pay.upi && { k: "upi" as const, icon: Smartphone, t: "UPI transfer", d: pay.vpa || "Scan QR & share UTR" },
@@ -142,7 +145,8 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
                 <label key={m.k} className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition", method === m.k ? "border-foreground bg-foreground/[.03] ring-1 ring-foreground" : "border-border")}>
                   <input type="radio" checked={method === m.k} onChange={() => setMethod(m.k)} className="accent-black" />
                   <m.icon className="size-5 shrink-0 text-foreground/70" />
-                  <span className="min-w-0"><span className="block text-sm font-bold">{m.t}</span><span className="block truncate text-xs text-muted">{m.d}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{m.t}</span><span className="block truncate text-xs text-muted">{m.d}</span></span>
+                  {anyDelivery && <span className={cn("shrink-0 text-[11px] font-bold", rateFor(m.k) ? "text-muted" : "text-emerald-600")}>{rateFor(m.k) ? `+${rupee(rateFor(m.k))} delivery` : "FREE delivery"}</span>}
                 </label>
               ))}
             </div>
@@ -161,10 +165,10 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
             <p className="text-[11px] font-bold tracking-[2.5px] text-muted">PRICE DETAILS</p>
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted">Items ({count})</span><span>{rupee(total)}</span></div>
-              {gstExtra > 0 && <div className="flex justify-between"><span className="text-muted">GST @ {rules.gstRate}%</span><span>{rupee(gstExtra)}</span></div>}
+              {gstExtra > 0 && <div className="flex justify-between"><span className="text-muted">GST</span><span>{rupee(gstExtra)}</span></div>}
               <div className="flex justify-between"><span className="text-muted">Shipping</span><span className={shipping ? "" : "font-semibold text-emerald-600"}>{shipping ? rupee(shipping) : "FREE"}</span></div>
               <div className="flex justify-between border-t border-dashed border-border pt-2.5 font-display text-lg font-extrabold"><span>Total</span><span>{rupee(grand)}</span></div>
-              {rules.gstRate > 0 && rules.inclusive && <p className="text-[11px] text-muted">Prices include GST.</p>}
+              {rules.gstOn && rules.inclusive && <p className="text-[11px] text-muted">Prices include GST.</p>}
             </div>
             {toFree > 0 && <p className="mt-3 rounded-xl bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-700">Add {rupee(toFree)} more for FREE delivery</p>}
             {short > 0 && <p className="mt-3 rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-xs font-semibold text-amber-700">Minimum order is {rupee(rules.minOrder)}.</p>}

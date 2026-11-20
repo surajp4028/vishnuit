@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSettings } from "@/lib/server/content";
 import "./globals.css";
+import { Suspense } from "react";
+import { NavProgress } from "@/components/nav-progress";
 import { siteUrl } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jakarta.variable} ${serif.variable}`}>
       <body className="min-h-dvh font-sans">
+        <Suspense fallback={null}><NavProgress /></Suspense>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

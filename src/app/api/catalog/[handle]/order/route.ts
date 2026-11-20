@@ -56,7 +56,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   const ids = [...new Set(lines.map((l) => Number(l.id)))];
   const rows = (await query<Record<string, unknown>>(`SELECT * FROM store_products WHERE store_id=? AND status='active' AND id IN (${ids.map(() => "?").join(",")})`, [store.id, ...ids])).map(hydrateProduct);
 
-  const items: { id: number; name: string; variant: string | null; price: number; qty: number }[] = [];
+  const items: { id: number; name: string; variant: string | null; price: number; qty: number; gst_rate: number | null; hsn: string | null }[] = [];
   for (const l of lines) {
     const p = rows.find((r) => r.id === Number(l.id));
     if (!p) return Response.json({ error: "Some items are no longer available. Please refresh your cart." }, { status: 409 });
@@ -72,13 +72,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
     } else if (p.stock != null && p.stock < qty) {
       return Response.json({ error: `Only ${p.stock} left of ${p.name}.` }, { status: 409 });
     }
-    items.push({ id: p.id, name: p.name, variant, price, qty });
+    items.push({ id: p.id, name: p.name, variant, price, qty, gst_rate: p.gst_rate, hsn: p.hsn });
   }
   const itemsTotal = Math.round(items.reduce((n, i) => n + i.price * i.qty, 0) * 100) / 100;
   const minOrder = store.storefront.shipping.minOrder;
   if (minOrder > 0 && itemsTotal < minOrder) return Response.json({ error: `Minimum order is ₹${minOrder.toLocaleString("en-IN")}. Add a little more to your bag.` }, { status: 422 });
   if (!(itemsTotal > 0)) return Response.json({ error: "Your cart is empty." }, { status: 422 });
-  const quote = quoteOrder(itemsTotal, store, state);
+  const quote = quoteOrder(items, store, state, method);
   if (method === "upi" && (await query("SELECT id FROM store_orders WHERE store_id=? AND utr=? LIMIT 1", [store.id, utr])).length) return Response.json({ error: "This UTR was already used for another order. Please check the transaction ID." }, { status: 409 });
   // `subtotal` is what the shopper actually pays (items + GST if extra + shipping).
   const subtotal = quote.total;

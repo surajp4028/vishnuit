@@ -21,8 +21,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if ("error" in p) return Response.json({ error: p.error }, { status: 422 });
     const d = p.data;
     await exec(
-      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, sku=?, stock=?, images=?, options=?, variants=?, status=?, featured=? WHERE id=? AND store_id=?",
-      [d.category_id, d.name, d.description, d.price, d.compare_price, d.sku, d.stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), d.status, d.featured, id, store.id],
+      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, images=?, options=?, variants=?, status=?, featured=? WHERE id=? AND store_id=?",
+      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), d.status, d.featured, id, store.id],
     );
   }
   revalidatePath(`/catalog/@${store.handle}`, "layout");

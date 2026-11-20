@@ -16,7 +16,7 @@ export default async function CartPage({ params }: { params: Promise<{ handle: s
       base={`/catalog/@${s.handle}`}
       storeName={s.name}
       pay={{ cod: s.payments.cod, upi: s.payments.upi.on, vpa: s.payments.upi.vpa, qr: imgUrl(s.payments.upi.qr_key), razorpay: rzp }}
-      rules={{ ...s.storefront.shipping, closed: s.storefront.closed.on ? s.storefront.closed.message || "This store isn't taking orders right now." : "", gstRate: s.tax.gstin && s.tax.rate > 0 ? s.tax.rate : 0, inclusive: s.tax.inclusive }}
+      rules={{ ...s.storefront.shipping, closed: s.storefront.closed.on ? s.storefront.closed.message || "This store isn't taking orders right now." : "", gstRate: s.tax.gstin ? s.tax.rate : 0, gstOn: Boolean(s.tax.gstin), inclusive: s.tax.inclusive }}
     />
   );
 }

@@ -56,6 +56,8 @@ for (const sql of [
   "ALTER TABLE store_orders ADD COLUMN shipping DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER items_total",
   "ALTER TABLE store_orders ADD COLUMN tax JSON NULL AFTER shipping",
   "ALTER TABLE store_orders ADD COLUMN state VARCHAR(4) NULL AFTER address",
+  "ALTER TABLE store_products ADD COLUMN gst_rate DECIMAL(4,2) NULL AFTER compare_price",
+  "ALTER TABLE store_products ADD COLUMN hsn VARCHAR(12) NULL AFTER gst_rate",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }

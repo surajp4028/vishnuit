@@ -61,14 +61,14 @@ export type StoreFront = {
   map: { on: boolean; query: string; zoom: number };
   about: { images: string[]; heading: string };
   look: "sharp" | "minimal" | "soft";
-  shipping: { flat: number; freeAbove: number; minOrder: number };
+  shipping: { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
   closed: { on: boolean; message: string };
   pixels: { meta: string; ga: string };
   favicon: string | null;
 };
 export const emptyFront = (): StoreFront => ({
   banners: [], interval: 5,
-  bar: { on: false, items: [] },
+  bar: { on: true, items: ["Free delivery on orders above ₹1,500"] },
   highlights: [
     { icon: "truck", title: "Cash on delivery", sub: "Pay when it arrives", on: true },
     { icon: "shield", title: "Secure checkout", sub: "100% safe payments", on: true },
@@ -78,7 +78,7 @@ export const emptyFront = (): StoreFront => ({
   map: { on: true, query: "", zoom: 15 },
   about: { images: [], heading: "" },
   look: "sharp",
-  shipping: { flat: 0, freeAbove: 0, minOrder: 0 },
+  shipping: { cod: 79, upi: 49, razorpay: 49, freeAbove: 1500, minOrder: 0 },
   closed: { on: false, message: "" },
   pixels: { meta: "", ga: "" },
   favicon: null,
@@ -95,6 +95,7 @@ export type Product = {
   price: number; compare_price: number | null; sku: string | null; stock: number | null; images: string[];
   options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
   status: "active" | "draft"; featured: boolean; created_at: string;
+  gst_rate: number | null; hsn: string | null;
 };
 export type Category = { id: number; store_id: number; parent_id: number | null; name: string; slug: string; sort: number };
 
@@ -120,7 +121,14 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     highlights: Array.isArray(f.highlights) && f.highlights.length ? f.highlights : d.highlights,
     map: { ...d.map, ...(f.map ?? {}) },
     look: f.look === "minimal" || f.look === "soft" ? f.look : "sharp",
-    shipping: { flat: Number(f.shipping?.flat) || 0, freeAbove: Number(f.shipping?.freeAbove) || 0, minOrder: Number(f.shipping?.minOrder) || 0 },
+    shipping: (() => {
+      // Older stores saved one `flat` charge for every method.
+      const x = (f.shipping ?? {}) as Partial<StoreFront["shipping"]> & { flat?: number };
+      if (!f.shipping) return d.shipping;
+      const flat = Number(x.flat) || 0;
+      const m = (v: unknown) => (v == null ? flat : Number(v) || 0);
+      return { cod: m(x.cod), upi: m(x.upi), razorpay: m(x.razorpay), freeAbove: Number(x.freeAbove) || 0, minOrder: Number(x.minOrder) || 0 };
+    })(),
     closed: { on: Boolean(f.closed?.on), message: f.closed?.message ?? "" },
     pixels: { meta: f.pixels?.meta ?? "", ga: f.pixels?.ga ?? "" },
     favicon: typeof f.favicon === "string" ? f.favicon : null,
@@ -209,6 +217,7 @@ export function hydrateProduct(r: Record<string, unknown>): Product {
     stock: r.stock == null ? null : Number(r.stock),
     images: json<string[]>(r.images, []), options: json(r.options, []), variants: json(r.variants, []),
     featured: Boolean(Number(r.featured)), created_at: String(r.created_at),
+    gst_rate: r.gst_rate == null ? null : Number(r.gst_rate), hsn: r.hsn == null ? null : String(r.hsn),
   };
 }
 
@@ -299,17 +308,46 @@ export function storeForOwner(s: Store, plans: Record<PlanKey, PlanDef>) {
 }
 export type OwnerStore = ReturnType<typeof storeForOwner>;
 
-export type OrderQuote = { items: number; shipping: number; rate: number; inclusive: boolean; taxable: number; gst: number; igst: boolean; total: number };
+export type PayMethod = "cod" | "upi" | "razorpay";
+export type TaxLine = { rate: number; taxable: number; gst: number };
+export type OrderQuote = {
+  items: number; shipping: number; rate: number; inclusive: boolean; taxable: number; gst: number; igst: boolean; total: number;
+  rates?: TaxLine[]; method?: PayMethod;
+};
+export const GST_RATES = [0, 3, 5, 12, 18, 28] as const;
+
+/** Delivery charge for a payment method (free above the threshold). */
+export function shippingFor(items: number, sh: StoreFront["shipping"], method: PayMethod) {
+  if (sh.freeAbove > 0 && items >= sh.freeAbove) return 0;
+  return Math.max(0, sh[method] || 0);
+}
+
 /**
- * What the shopper pays: items (+ GST when prices exclude it) + shipping.
- * GST is on the items; interstate (buyer state ≠ GSTIN state) → IGST, else CGST + SGST.
+ * What the shopper pays: items (+ GST when prices exclude it) + delivery for the chosen payment method.
+ * GST is per item (product rate, else the store's rate); interstate (buyer state ≠ GSTIN state) → IGST, else CGST + SGST.
  */
-export function quoteOrder(items: number, s: Pick<Store, "tax" | "storefront">, buyerState?: string | null): OrderQuote {
-  const tx = orderTax(items, s.tax);
-  const sh = s.storefront.shipping;
-  const shipping = sh.flat > 0 && !(sh.freeAbove > 0 && items >= sh.freeAbove) ? sh.flat : 0;
-  const igst = Boolean(tx.rate && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
-  return { items, shipping, rate: tx.rate, inclusive: s.tax.inclusive, taxable: tx.taxable, gst: tx.gst, igst, total: Math.round((tx.total + shipping) * 100) / 100 };
+export function quoteOrder(lines: { price: number; qty: number; gst_rate?: number | null }[], s: Pick<Store, "tax" | "storefront">, buyerState: string | null | undefined, method: PayMethod): OrderQuote {
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const items = r2(lines.reduce((n, l) => n + l.price * l.qty, 0));
+  const taxOn = Boolean(s.tax.gstin);
+  const groups = new Map<number, TaxLine>();
+  for (const l of lines) {
+    const rate = taxOn ? (l.gst_rate ?? s.tax.rate) : 0;
+    const amt = l.price * l.qty;
+    const taxable = rate ? (s.tax.inclusive ? amt / (1 + rate / 100) : amt) : amt;
+    const g = groups.get(rate) ?? { rate, taxable: 0, gst: 0 };
+    g.taxable += taxable;
+    g.gst += rate ? (s.tax.inclusive ? amt - taxable : (amt * rate) / 100) : 0;
+    groups.set(rate, g);
+  }
+  const rates = [...groups.values()].map((g) => ({ rate: g.rate, taxable: r2(g.taxable), gst: r2(g.gst) })).sort((a, b) => a.rate - b.rate);
+  const gst = r2(rates.reduce((n, g) => n + g.gst, 0));
+  const taxable = r2(rates.reduce((n, g) => n + g.taxable, 0));
+  const taxed = rates.filter((g) => g.rate > 0);
+  const shipping = shippingFor(items, s.storefront.shipping, method);
+  const igst = Boolean(taxed.length && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
+  const total = r2((s.tax.inclusive ? items : items + gst) + shipping);
+  return { items, shipping, rate: taxed.length === 1 ? taxed[0].rate : 0, inclusive: s.tax.inclusive, taxable, gst, igst, total, rates, method };
 }
 
 /** GST split for an order total under the store's tax settings. */

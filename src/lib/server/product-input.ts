@@ -24,6 +24,10 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
     .filter((v) => v.key)
     .slice(0, 200);
   const cat = b.category_id ? Number(b.category_id) : null;
+  // GST slab for this product (empty = use the store's default rate).
+  const gstIn = b.gst_rate === "" || b.gst_rate == null ? null : Number(b.gst_rate);
+  if (gstIn != null && ![0, 3, 5, 12, 18, 28].includes(gstIn)) return { error: "Choose a GST rate: 0, 3, 5, 12, 18 or 28%." } as const;
+  const hsn = str(b.hsn, 12).replace(/\D/g, "") || null;
   return {
     data: {
       name, price, compare_price: compare && compare > price ? compare : null,
@@ -33,6 +37,7 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
       images, options, variants,
       status: b.status === "draft" ? "draft" : "active",
       featured: b.featured ? 1 : 0,
+      gst_rate: gstIn, hsn,
     },
   } as const;
 }

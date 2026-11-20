@@ -9,6 +9,7 @@ export type P = {
   id: number; category_id: number | null; name: string; slug: string; description: string | null; price: number; compare_price: number | null;
   sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[] }[];
   variants: { key: string; price: number | null; stock: number | null }[]; status: "active" | "draft"; featured: boolean;
+  gst_rate?: number | null; hsn?: string | null;
 };
 export type C = { id: number; name: string; slug: string; parent_id?: number | null; sort?: number };
 
@@ -97,7 +98,7 @@ export function ProductsPanel({ products, setProducts, categories, setCategories
 function ProductEditor({ initial, categories, setCategories, onClose, onSaved, onDeleted }: { initial: P | null; categories: C[]; setCategories: (c: C[]) => void; onClose: () => void; onSaved: (p: P) => void; onDeleted: (id: number) => void }) {
   const [f, setF] = useState(() => ({
     name: initial?.name ?? "", price: initial ? String(initial.price) : "", compare_price: initial?.compare_price ? String(initial.compare_price) : "",
-    description: initial?.description ?? "", sku: initial?.sku ?? "", stock: initial?.stock == null ? "" : String(initial.stock),
+    description: initial?.description ?? "", sku: initial?.sku ?? "", gst_rate: initial?.gst_rate == null ? "" : String(Number(initial.gst_rate)), hsn: initial?.hsn ?? "", stock: initial?.stock == null ? "" : String(initial.stock),
     category_id: initial?.category_id ?? null as number | null, images: initial?.images ?? [], status: initial?.status ?? "active", featured: initial?.featured ?? false,
     options: initial?.options.length ? initial.options.map((o) => ({ name: o.name, values: o.values.join(", ") })) : [] as { name: string; values: string }[],
     variants: initial?.variants ?? [],
@@ -153,6 +154,14 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
               {flattenTree(categories.map((c) => ({ ...c, parent_id: c.parent_id ?? null, sort: Number(c.sort ?? 0) }))).map((c) => <button type="button" key={c.id} onClick={() => set("category_id", c.id)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold whitespace-nowrap", f.category_id === c.id ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>{c.label}</button>)}
             </div>
             <div className="mt-2 flex gap-2"><input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="New category" className={cn(input, "py-2.5")} /><button type="button" onClick={addCategory} className={btnLight}>Add</button></div>
+          </Field>
+          <Field label="GST on this product" hint="Pick the slab for this item — e.g. 28% for some accessories. “Store default” uses Settings → GST.">
+            <div className="flex flex-wrap gap-2">
+              {[["", "Store default"], ["0", "0%"], ["3", "3%"], ["5", "5%"], ["12", "12%"], ["18", "18%"], ["28", "28%"]].map(([v, l]) => (
+                <button type="button" key={l} onClick={() => set("gst_rate", v)} className={cn("rounded-full border px-3.5 py-2 text-[13px] font-semibold", f.gst_rate === v ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>{l}</button>
+              ))}
+            </div>
+            <input value={f.hsn} onChange={(e) => set("hsn", e.target.value.replace(/\D/g, "").slice(0, 8))} inputMode="numeric" placeholder="HSN code (optional), e.g. 6204" className={cn(input, "mt-2.5 py-2.5")} />
           </Field>
           <Field label="Description"><textarea value={f.description} onChange={(e) => set("description", e.target.value)} rows={5} placeholder="Fabric, fit, care, what's included…" className={cn(input, "resize-y")} /></Field>
 

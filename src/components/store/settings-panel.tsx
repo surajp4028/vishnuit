@@ -14,17 +14,21 @@ export type S = {
   tax: { gstin: string; legalName: string; rate: number; inclusive: boolean; hsn: string; invoicePrefix: string };
   testimonials: { on: boolean; items: Testi[] };
   pageDefaults?: Record<PageKey, string>;
+  storefront?: { shipping: Ship };
 };
+type Ship = { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
 type Testi = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
 const TITLES: Record<PageKey, string> = { privacy: "Privacy Policy", terms: "Terms & Conditions", refund: "Refund & Exchange Policy", shipping: "Shipping Policy" };
 
-export function SettingsPanel({ store, setStore, section }: { store: S; setStore: (s: S) => void; section: "profile" | "payments" | "pages" | "tax" | "reviews" }) {
+export function SettingsPanel({ store, setStore, section }: { store: S; setStore: (s: S) => void; section: "profile" | "payments" | "pages" | "tax" | "reviews" | "delivery" }) {
   const [s, setS] = useState(store);
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   const c = (k: keyof S["contact"], v: string) => setS({ ...s, contact: { ...s.contact, [k]: v } });
   const tm = s.testimonials ?? { on: false, items: [] };
+  const [ship, setShip] = useState<Ship>(store.storefront?.shipping ?? { cod: 0, upi: 0, razorpay: 0, freeAbove: 0, minOrder: 0 });
+  const money = (k: keyof Ship) => <label className="flex items-center rounded-2xl border border-border bg-background px-4 focus-within:border-foreground/40"><span className="text-muted">₹</span><input inputMode="numeric" value={ship[k] || ""} onChange={(e) => setShip({ ...ship, [k]: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} placeholder="0" className="w-full bg-transparent px-2 py-3 text-[15px] outline-none" /></label>;
   const setTm = (x: Partial<S["testimonials"]>) => setS({ ...s, testimonials: { ...tm, ...x } });
   const setItem = (id: string, x: Partial<Testi>) => setTm({ items: tm.items.map((t) => (t.id === id ? { ...t, ...x } : t)) });
 
@@ -34,6 +38,7 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
       section === "profile" ? { name: s.name, tagline: s.tagline, about: s.about, logo_key: s.logo_key, banner_key: s.banner_key, contact: s.contact }
       : section === "tax" ? { tax: s.tax }
       : section === "reviews" ? { testimonials: s.testimonials }
+      : section === "delivery" ? { shipping: ship }
       : section === "payments" ? { payments: { cod: s.payments.cod, upi: s.payments.upi, razorpay: { on: s.payments.razorpay.on, key_id: s.payments.razorpay.key_id, key_secret: secret } } }
       : { pages: s.pages };
     const r = await api<{ store: S }>("/api/store/settings", "PATCH", body);
@@ -150,6 +155,27 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
           {tm.items.length < 30 && (
             <button type="button" onClick={() => setTm({ items: [...tm.items, { id: `t${Date.now().toString(36)}`, name: "", place: "", text: "", rating: 5, on: true }] })} className="flex w-full items-center justify-center gap-2 rounded-[1.6rem] border-2 border-dashed border-border py-4 text-sm font-semibold text-muted transition hover:border-foreground/30 hover:text-foreground"><Plus className="size-4" /> Add a testimonial</button>
           )}
+        </div>
+      )}
+
+      {section === "delivery" && (
+        <div className="space-y-4">
+          <div className={cn(card, "space-y-4 p-5")}>
+            <div><p className="font-display text-lg font-bold">Delivery charge by payment method</p><p className="text-sm text-muted">Charge more for Cash on Delivery (higher courier cost & returns) and less for prepaid. 0 = free.</p></div>
+            {([["cod", "Cash on delivery", "Most couriers charge extra for COD"], ["upi", "UPI transfer", "Shopper pays to your UPI / QR"], ["razorpay", "Online (Razorpay)", "Cards, UPI, net banking"]] as [keyof Ship, string, string][]).map(([k, l, d]) => (
+              <div key={k} className="grid grid-cols-[1fr_8.5rem] items-center gap-3 sm:grid-cols-[1fr_11rem]">
+                <span><span className="block text-[15px] font-semibold">{l}</span><span className="block text-xs text-muted">{d}</span></span>
+                {money(k)}
+              </div>
+            ))}
+          </div>
+          <div className={cn(card, "grid gap-4 p-5 sm:grid-cols-2")}>
+            <Field label="Free delivery above" hint="Applies to every payment method. 0 = never free.">{money("freeAbove")}</Field>
+            <Field label="Minimum order value" hint="Orders below this can't be placed. 0 = no minimum.">{money("minOrder")}</Field>
+          </div>
+          <p className="rounded-2xl bg-foreground/[.03] px-4 py-3 text-sm text-muted">
+            Shoppers will see: {(["cod", "upi", "razorpay"] as const).map((k) => `${k === "cod" ? "COD" : k === "upi" ? "UPI" : "Online"} ${ship[k] ? `₹${ship[k]}` : "free"}`).join(" · ")}{ship.freeAbove ? ` — FREE delivery above ₹${ship.freeAbove.toLocaleString("en-IN")}` : ""}{ship.minOrder ? ` · minimum order ₹${ship.minOrder.toLocaleString("en-IN")}` : ""}. Update your announcement bar in Storefront to match.
+          </p>
         </div>
       )}
 

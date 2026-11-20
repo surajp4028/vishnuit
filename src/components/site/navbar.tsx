@@ -6,12 +6,16 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Menu, Store, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Icon } from "@/components/icon";
 
 type NavService = { slug: string; title: string; category: string; icon: string; short: string };
+/** Our own products (SaaS). Add future ones here — they appear under "Our products" in the Services menu. */
+const PRODUCTS = [
+  { href: "/#online-store", title: "Online Store", desc: "Your own catalogue, COD & UPI orders, GST invoices", icon: Store, badge: "NEW" },
+];
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -107,10 +111,10 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
               transition={{ duration: 0.18 }}
-              className="absolute top-[calc(100%+10px)] bg-background left-1/2 hidden w-[min(1000px,94vw)] -translate-x-1/2 rounded-3xl border border-border p-6 shadow-2xl lg:block"
+              className="absolute top-[calc(100%+10px)] bg-background left-1/2 hidden w-[min(1200px,96vw)] -translate-x-1/2 rounded-3xl border border-border p-6 shadow-2xl lg:block"
             >
-              <div className="grid grid-cols-4 gap-6">
-                {cats.map((c) => (
+              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.15fr)] gap-6">
+                {cats.slice(0, 4).map((c) => (
                   <div key={c}>
                     <p className="mb-3 text-xs font-semibold tracking-widest text-accent uppercase">{c}</p>
                     <ul className="space-y-1">
@@ -130,6 +134,23 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
                     </ul>
                   </div>
                 ))}
+                <div className="rounded-2xl bg-gradient-to-b from-foreground/[.04] to-transparent p-3 ring-1 ring-border">
+                  <p className="mb-3 px-1 text-xs font-semibold tracking-widest text-accent uppercase">Our products</p>
+                  <ul className="space-y-1.5">
+                    {PRODUCTS.map((p) => (
+                      <li key={p.href}>
+                        <Link href={p.href} onClick={() => setMega(false)} className="group flex items-start gap-3 rounded-xl p-2 transition hover:bg-foreground/5">
+                          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-white shadow-md"><p.icon className="size-4" /></span>
+                          <span className="min-w-0">
+                            <span className="flex items-center gap-1.5 text-sm font-semibold">{p.title}{p.badge && <span className="rounded-full bg-amber-400/20 px-1.5 py-px text-[9px] font-extrabold tracking-wider text-amber-600">{p.badge}</span>}</span>
+                            <span className="mt-0.5 block text-xs leading-snug text-muted">{p.desc}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 px-2 text-[11px] text-muted">More tools coming soon.</p>
+                </div>
               </div>
               <div className="mt-6 flex items-center justify-between rounded-2xl bg-gradient-to-r from-accent/10 via-accent-2/10 to-transparent dark:from-accent/15 px-5 py-4">
                 <p className="text-sm text-muted">
@@ -169,6 +190,13 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
                 </motion.li>
               ))}
             </ul>
+            <p className="mt-6 mb-2 px-4 text-xs font-semibold tracking-widest text-accent uppercase">Our products</p>
+            {PRODUCTS.map((p) => (
+              <Link key={p.href} href={p.href} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-white"><p.icon className="size-4" /></span>
+                <span className="min-w-0"><span className="flex items-center gap-1.5 text-sm font-semibold">{p.title}{p.badge && <span className="rounded-full bg-amber-400/20 px-1.5 py-px text-[9px] font-extrabold text-amber-600">{p.badge}</span>}</span><span className="block truncate text-xs text-muted">{p.desc}</span></span>
+              </Link>
+            ))}
             <p className="mt-6 mb-2 px-4 text-xs font-semibold tracking-widest text-accent uppercase">Popular services</p>
             <div className="grid grid-cols-2 gap-2">
               {services.slice(0, 8).map((s) => (

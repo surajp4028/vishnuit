@@ -9,6 +9,7 @@ import { rupee, useCart } from "./cart";
 type P = {
   id: number; slug: string; name: string; price: number; compare_price: number | null; stock: number | null;
   options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
+  gst_rate?: number | null;
 };
 
 /** Phones: full-bleed swipe with counter. Desktop: 2-up photo grid (Myntra-style) with hover zoom on each photo. */
@@ -80,7 +81,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
       return null;
     }
     setErr("");
-    return { id: p.id, slug: p.slug, name: p.name, image, variant: key, price, qty };
+    return { id: p.id, slug: p.slug, name: p.name, image, variant: key, price, qty, gst: p.gst_rate ?? null };
   }
   const addToBag = () => { const l = line(); if (l) { add(l); setAdded(true); setTimeout(() => setAdded(false), 1800); } };
   const buyNow = () => { const l = line(); if (l) { add(l); router.push(`${base}/cart`); } };

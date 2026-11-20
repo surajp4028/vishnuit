@@ -9,6 +9,8 @@ import { FaqAccordion } from "@/components/sections/interactive";
 import { CapabilitiesBand, ServicesShowcase } from "@/components/sections/premium";
 import { ContactForm } from "@/components/site/contact-form";
 import { getBrands, getFaqs, getPlans, getPosts, getProjects, getServices, getSettings, getTestimonials } from "@/lib/server/content";
+import { getCatalogConfig, PLAN_KEYS } from "@/lib/server/catalog";
+import { StoreBuilderShowcase } from "@/components/sections/store-builder";
 
 export const revalidate = 300;
 
@@ -22,9 +24,10 @@ const WHY = [
 ];
 
 export default async function HomePage() {
-  const [settings, services, projects, testimonials, plans, faqs, posts, brands] = await Promise.all([
-    getSettings(), getServices(), getProjects(), getTestimonials(), getPlans(), getFaqs(), getPosts(), getBrands(),
+  const [settings, services, projects, testimonials, plans, faqs, posts, brands, catalog] = await Promise.all([
+    getSettings(), getServices(), getProjects(), getTestimonials(), getPlans(), getFaqs(), getPosts(), getBrands(), getCatalogConfig(),
   ]);
+  const storePlans = PLAN_KEYS.map((k) => ({ key: k, name: catalog.plans[k].name, limit: catalog.plans[k].limit, price: k === "free" ? 0 : catalog.plans[k].price }));
   const featured = projects.filter((p) => p.cover).slice(0, 6);
   const shotSlugs = ["skyo-travel", "imoneypay-merchant-onboarding", "astro-kundli-milan"];
   const shots = shotSlugs
@@ -56,6 +59,8 @@ export default async function HomePage() {
       </section>
 
       <CapabilitiesBand />
+
+      {catalog.features.newStores && <StoreBuilderShowcase plans={storePlans} cta="/account/store" />}
 
       {/* Featured work */}
       <section className="container-x py-20 md:py-28">
