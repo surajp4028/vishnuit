@@ -14,7 +14,7 @@ import { Icon } from "@/components/icon";
 type NavService = { slug: string; title: string; category: string; icon: string; short: string };
 /** Our own products (SaaS). Add future ones here — they appear under "Our products" in the Services menu. */
 const PRODUCTS = [
-  { href: "/#online-store", title: "Online Store", desc: "Your own catalogue, COD & UPI orders, GST invoices", icon: Store, badge: "NEW" },
+  { href: "/online-store", title: "Online Store", desc: "Your own catalogue, COD & UPI orders, GST invoices", icon: Store, badge: "NEW" },
 ];
 
 const LINKS = [

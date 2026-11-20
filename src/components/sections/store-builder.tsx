@@ -1,154 +1,122 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Banknote, Check, FileText, Link2, Package, Share2, ShoppingBag, Smartphone, Sparkles, Store, Truck, Zap } from "lucide-react";
-import { BackgroundBeams } from "@/components/ui/background-beams";
+import { ArrowRight, BadgeCheck, Banknote, Check, FileText, Link2, Package, Share2, ShoppingBag, Smartphone, Sparkles, Store, Truck } from "lucide-react";
 import { FlipWords } from "@/components/ui/flip-words";
-import { Spotlight } from "@/components/ui/spotlight-new";
 import { Reveal } from "@/components/reveal";
 
-type Plan = { key: string; name: string; limit: number | null; price: number };
+export type StorePlan = { key: string; name: string; limit: number | null; price: number; razorpay: boolean };
 
-const FEATURES = [
-  { icon: Link2, t: "Your own store link", d: "vishnuit.co.in/catalog/@yourbrand" },
-  { icon: Banknote, t: "COD, UPI & cards", d: "Get paid straight to your account" },
-  { icon: Truck, t: "Orders & tracking", d: "Confirm, ship, deliver — customers get updates" },
-  { icon: FileText, t: "GST invoices", d: "CGST/SGST or IGST, auto-generated" },
-  { icon: Share2, t: "WhatsApp-ready", d: "Beautiful link previews with your logo" },
-  { icon: Smartphone, t: "Run it from your phone", d: "Add products, reply, ship — anywhere" },
+export const STORE_FEATURES = [
+  { icon: Link2, t: "Your own store link", d: "vishnuit.co.in/catalog/@yourbrand — put it in your Instagram bio." },
+  { icon: Banknote, t: "COD, UPI & cards", d: "Money goes straight to your bank or UPI. No middleman, no commission." },
+  { icon: Truck, t: "Orders & tracking", d: "Confirm → pack → ship → deliver. Customers get every update." },
+  { icon: FileText, t: "GST invoices", d: "CGST/SGST or IGST, per-product GST slabs, generated automatically." },
+  { icon: Share2, t: "WhatsApp-ready links", d: "Every product shares with its photo, price and % OFF." },
+  { icon: Smartphone, t: "Run it from your phone", d: "Add products, accept orders, ship — your whole shop in your pocket." },
 ];
-const STEPS = [
-  { icon: Store, t: "Create your store", d: "Name, logo, link — 2 minutes" },
-  { icon: Package, t: "Add products", d: "Photos, sizes, prices, stock" },
-  { icon: Share2, t: "Share your link", d: "Instagram, WhatsApp, anywhere" },
+export const STORE_STEPS = [
+  { icon: Store, t: "Create your store", d: "Name, logo and link — 2 minutes" },
+  { icon: Package, t: "Add products", d: "Photos, sizes, prices and stock" },
+  { icon: Share2, t: "Share your link", d: "Instagram bio, WhatsApp, anywhere" },
   { icon: ShoppingBag, t: "Get orders", d: "COD or online, tracked end-to-end" },
 ];
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/** Home-page band that sells the catalog store builder. */
-export function StoreBuilderShowcase({ plans, cta }: { plans: Plan[]; cta: string }) {
+/** Real screenshot inside a laptop frame. */
+export function LaptopFrame({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
   return (
-    <section id="online-store" className="relative isolate scroll-mt-20 overflow-hidden bg-[#05070d] py-24 text-white md:py-32">
-      <div className="pointer-events-none absolute inset-0 -z-10"><Spotlight /></div>
-      <BackgroundBeams className="-z-10 opacity-60" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/2 -z-10 h-96 w-[70rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.16),transparent)]" />
+    <div className={className}>
+      <div className="rounded-t-[1.1rem] border border-black/10 bg-[#0f1115] p-[1.6%] pb-[1.2%] shadow-[0_30px_80px_-30px_rgba(15,23,42,.45)]">
+        <div className="mx-auto mb-[1%] size-1.5 rounded-full bg-white/20" />
+        <div className="relative aspect-[16/10] overflow-hidden rounded-[.35rem] bg-white">
+          <Image src={src} alt={alt} fill sizes="(min-width:1024px) 640px, 90vw" className="object-cover object-top" />
+        </div>
+      </div>
+      <div className="relative mx-[-6%] h-3 rounded-b-[1.2rem] bg-gradient-to-b from-[#d9dce3] to-[#a9aeb8] shadow-[0_18px_30px_-12px_rgba(15,23,42,.5)]"><div className="absolute top-0 left-1/2 h-1.5 w-[18%] -translate-x-1/2 rounded-b-lg bg-[#8d929c]" /></div>
+    </div>
+  );
+}
 
-      <div className="container-x">
-        <div className="grid items-center gap-16 xl:grid-cols-[1.05fr_1fr] xl:gap-12">
-          {/* copy */}
-          <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-3.5 py-1.5 text-[11px] font-bold tracking-[3px] text-amber-300"><Sparkles className="size-3.5" /> NEW · VISHNU STORES</span>
-            <h2 className="mt-6 font-display text-[2.5rem] leading-[1.04] font-extrabold tracking-tight sm:text-[3.4rem] 2xl:text-6xl">
-              Your own online store for
-              <span className="block"><FlipWords words={["fashion", "jewellery", "home décor", "plants", "bakery", "your brand"]} className="!px-0 bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 bg-clip-text text-transparent" /></span>
+/** Real screenshot inside a phone frame. */
+export function PhoneFrame({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+  return (
+    <div className={`rounded-[2.4rem] border border-black/10 bg-[#0f1115] p-[3.5%] shadow-[0_30px_70px_-20px_rgba(15,23,42,.55)] ${className}`}>
+      <div className="relative aspect-[9/19.5] overflow-hidden rounded-[2rem] bg-white">
+        <Image src={src} alt={alt} fill sizes="240px" className="object-cover object-top" />
+        <div className="absolute top-2 left-1/2 h-[3.2%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
+      </div>
+    </div>
+  );
+}
+
+/** Laptop + phone composition with two floating cards. */
+export function StoreMockup({ size = "lg" }: { size?: "md" | "lg" }) {
+  return (
+    <div className={`relative mx-auto w-full ${size === "lg" ? "max-w-[640px] pb-14" : "max-w-[520px] pb-10"}`}>
+      <LaptopFrame src="/stores/desktop-home.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[88%]" />
+      <PhoneFrame src="/stores/phone-product.webp" alt="Product page on a phone" className={`absolute bottom-0 left-0 ${size === "lg" ? "w-[30%]" : "w-[29%]"}`} />
+      <div className="absolute -top-4 left-[14%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
+        <span className="grid size-8 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><ShoppingBag className="size-4" /></span>
+        <span><span className="block text-[12px] font-bold text-slate-900">New order · ₹2,499</span><span className="block text-[11px] text-slate-500">Cash on delivery</span></span>
+      </div>
+      <div className="absolute right-[-2%] bottom-6 flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
+        <span className="grid size-8 place-items-center rounded-full bg-amber-400/15 text-amber-600"><BadgeCheck className="size-4" /></span>
+        <span><span className="block text-[12px] font-bold text-slate-900">UPI payment received</span><span className="block text-[11px] text-slate-500">GST invoice sent</span></span>
+      </div>
+    </div>
+  );
+}
+
+/** Short, light home-page teaser. The full story and pricing live on /online-store. */
+export function StoreTeaser() {
+  return (
+    <section id="online-store" className="container-x scroll-mt-24 py-14 md:py-20">
+      <Reveal>
+        <div className="relative isolate grid items-center gap-10 overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-[#f6f8ff] via-white to-[#fff8e8] p-7 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:p-12 dark:from-card dark:via-card dark:to-card">
+          <div className="pointer-events-none absolute -top-24 -left-24 -z-10 size-80 rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.14),transparent)]" />
+          <div className="pointer-events-none absolute -right-24 -bottom-32 -z-10 size-96 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.18),transparent)]" />
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[10.5px] font-bold tracking-[3px] text-accent"><Sparkles className="size-3.5" /> NEW · VISHNU STORES</span>
+            <h2 className="mt-5 font-display text-3xl leading-[1.08] font-extrabold tracking-tight sm:text-[2.5rem]">
+              Launch your online store for <FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" />
             </h2>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/65">Create a premium catalogue, take COD & UPI orders, print GST invoices and track every delivery — all from your phone. No coding, no commission on your sales.</p>
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link href={cta} className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-7 py-4 text-sm font-bold text-black shadow-[0_0_40px_-8px_rgba(245,197,66,.6)] transition hover:shadow-[0_0_60px_-6px_rgba(245,197,66,.8)]">
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-200/60 to-transparent transition duration-700 group-hover:translate-x-full" />
-                <Zap className="relative size-4" /><span className="relative">Create my store — free</span><ArrowRight className="relative size-4 transition group-hover:translate-x-1" />
-              </Link>
-              <a href="#store-plans" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-4 text-sm font-semibold text-white/85 transition hover:border-white/40 hover:text-white">See plans</a>
+            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted">Your own catalogue link, COD & UPI orders, GST invoices and delivery tracking — set up from your phone in 5 minutes.</p>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-foreground/70">
+              {["Free plan", "0% commission", "No coding"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
             </div>
-            <p className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-white/50">
-              <span className="flex items-center gap-1.5"><Check className="size-4 text-emerald-400" /> Free forever plan</span>
-              <span className="flex items-center gap-1.5"><Check className="size-4 text-emerald-400" /> 0% commission</span>
-              <span className="flex items-center gap-1.5"><Check className="size-4 text-emerald-400" /> Live in 5 minutes</span>
-            </p>
-          </Reveal>
-
-          {/* device mockups */}
-          <Reveal delay={0.15}>
-            <div className="relative mx-auto h-[460px] w-full max-w-[560px] [perspective:1600px] sm:h-[520px]">
-              {/* laptop */}
-              <div className="absolute top-6 right-0 w-[88%] rounded-2xl border border-white/10 bg-[#0d1018] p-2 shadow-[0_40px_120px_-30px_rgba(0,0,0,.9)] [transform-style:preserve-3d] max-sm:hidden" style={{ transform: "rotateY(-12deg) rotateX(4deg)" }}>
-                <div className="flex items-center gap-1.5 px-2 pb-2"><span className="size-2 rounded-full bg-red-400/70" /><span className="size-2 rounded-full bg-amber-400/70" /><span className="size-2 rounded-full bg-emerald-400/70" /><span className="ml-3 truncate rounded-md bg-white/5 px-3 py-1 text-[10px] text-white/40">vishnuit.co.in/catalog/@yourbrand</span></div>
-                <div className="overflow-hidden rounded-xl bg-white text-black">
-                  <div className="bg-black py-1 text-center text-[8px] font-bold tracking-[2px] text-white">FREE DELIVERY ON ORDERS ABOVE ₹1,500</div>
-                  <div className="flex items-center justify-between px-4 py-2.5 text-[10px] font-extrabold"><span>YOUR BRAND</span><span className="h-4 w-28 rounded-full bg-black/5" /><ShoppingBag className="size-3.5" /></div>
-                  <div className="relative mx-3 h-28 overflow-hidden bg-gradient-to-br from-[#2b1d14] via-[#6b3f2a] to-[#c58b5a]"><div className="absolute bottom-3 left-4"><div className="text-[15px] leading-tight font-extrabold text-white">Festive Edit &apos;26</div><div className="mt-1.5 inline-block bg-white px-2 py-0.5 text-[7px] font-bold">SHOP NOW</div></div></div>
-                  <div className="grid grid-cols-4 gap-2 p-3">
-                    {["from-rose-200 to-rose-400", "from-emerald-200 to-emerald-500", "from-amber-100 to-amber-400", "from-indigo-200 to-indigo-500"].map((g, i) => (
-                      <div key={g}><div className={`aspect-[3/4] bg-gradient-to-br ${g}`} /><div className="mt-1 h-1.5 w-4/5 rounded-full bg-black/10" /><div className="mt-1 text-[8px] font-bold">₹{[1299, 2499, 899, 3999][i].toLocaleString("en-IN")} <span className="text-[#ff905a]">({[28, 30, 31, 22][i]}% OFF)</span></div></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* phone */}
-              <div className="absolute bottom-0 left-2 w-[210px] rounded-[2.2rem] border border-white/15 bg-[#0d1018] p-2 shadow-[0_40px_100px_-20px_rgba(0,0,0,.95)] sm:left-0" style={{ transform: "rotate(-4deg)" }}>
-                <div className="overflow-hidden rounded-[1.8rem] bg-white text-black">
-                  <div className="mx-auto mt-1.5 h-4 w-16 rounded-full bg-black" />
-                  <div className="aspect-[4/5] bg-gradient-to-br from-emerald-700 to-emerald-950" />
-                  <div className="space-y-1.5 p-3">
-                    <div className="text-[8px] font-bold tracking-[2px] text-black/40">SAREES</div>
-                    <div className="text-[13px] leading-tight font-extrabold">Banarasi Silk Saree</div>
-                    <div className="text-[11px] font-extrabold">₹6,999 <span className="font-medium text-black/40 line-through">₹9,999</span> <span className="text-[#ff905a]">30% OFF</span></div>
-                    <div className="flex gap-1">{["S", "M", "L"].map((x) => <span key={x} className="grid size-5 place-items-center rounded-full border text-[8px] font-bold">{x}</span>)}</div>
-                    <div className="grid grid-cols-2 gap-1.5 pt-1"><span className="border border-black py-1.5 text-center text-[8px] font-extrabold">ADD TO BAG</span><span className="bg-black py-1.5 text-center text-[8px] font-extrabold text-white">BUY NOW</span></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* floating notifications (illustrative) */}
-              <div className="absolute top-0 left-6 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.07] px-4 py-3 shadow-2xl backdrop-blur-xl motion-safe:animate-[float_6s_ease-in-out_infinite] sm:left-10">
-                <span className="grid size-9 place-items-center rounded-full bg-emerald-500/20 text-emerald-300"><ShoppingBag className="size-4" /></span>
-                <span><span className="block text-[12px] font-bold">New order · ₹2,499</span><span className="block text-[11px] text-white/50">Cash on delivery · Delhi</span></span>
-              </div>
-              <div className="absolute right-2 bottom-24 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.07] px-4 py-3 shadow-2xl backdrop-blur-xl motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
-                <span className="grid size-9 place-items-center rounded-full bg-amber-400/20 text-amber-300"><BadgeCheck className="size-4" /></span>
-                <span><span className="block text-[12px] font-bold">UPI payment received</span><span className="block text-[11px] text-white/50">GST invoice sent</span></span>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* features */}
-        <div className="mt-20 grid gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.t} delay={i * 0.05} className="h-full">
-              <div className="group h-full bg-[#070a12] p-6 transition hover:bg-[#0b0f1a] sm:p-7">
-                <f.icon className="size-6 text-amber-300 transition group-hover:scale-110" />
-                <p className="mt-4 font-display text-lg font-bold">{f.t}</p>
-                <p className="mt-1 text-sm text-white/55">{f.d}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        {/* steps */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.t} delay={i * 0.08}>
-              <div className="relative">
-                <span className="font-display text-5xl font-extrabold text-white/[.07]">0{i + 1}</span>
-                <div className="-mt-5 flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-white text-black"><s.icon className="size-5" /></span><p className="font-display text-lg font-bold">{s.t}</p></div>
-                <p className="mt-2 pl-[52px] text-sm text-white/55">{s.d}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        {/* plans */}
-        {plans.length > 0 && (
-          <div id="store-plans" className="mt-20 scroll-mt-28">
-            <p className="text-center text-[11px] font-bold tracking-[4px] text-white/45">SIMPLE YEARLY PLANS · + GST</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {plans.map((p) => {
-                const hot = p.key === "growth";
-                return (
-                  <div key={p.key} className={`relative rounded-3xl border p-6 ${hot ? "border-amber-300/60 bg-gradient-to-b from-amber-300/[.12] to-transparent" : "border-white/10 bg-white/[.03]"}`}>
-                    {hot && <span className="absolute -top-3 left-6 rounded-full bg-amber-300 px-3 py-1 text-[10px] font-extrabold tracking-wider text-black">MOST POPULAR</span>}
-                    <p className="font-display text-lg font-bold">{p.name}</p>
-                    <p className="mt-3 font-display text-4xl font-extrabold">{p.price ? inr(p.price) : "Free"}<span className="text-sm font-medium text-white/45">{p.price ? " /year" : ""}</span></p>
-                    <p className="mt-2 text-sm text-white/60">{p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`}</p>
-                    <Link href={cta} className={`mt-6 flex items-center justify-center gap-2 rounded-full py-3 text-sm font-bold transition ${hot ? "bg-amber-300 text-black hover:bg-amber-200" : "border border-white/15 hover:border-white/40"}`}>{p.price ? "Get started" : "Create free store"} <ArrowRight className="size-4" /></Link>
-                  </div>
-                );
-              })}
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/online-store" className="group inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
+              <Link href="/account/store" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:border-accent">Create free store</Link>
             </div>
           </div>
-        )}
-      </div>
+          <StoreMockup size="md" />
+        </div>
+      </Reveal>
     </section>
+  );
+}
+
+/** Pricing cards for /online-store. */
+export function StorePlans({ plans, gstRate }: { plans: StorePlan[]; gstRate: number }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {plans.map((p) => {
+        const hot = p.key === "growth";
+        return (
+          <div key={p.key} className={`relative flex flex-col rounded-[1.75rem] border bg-card p-7 transition hover:-translate-y-1 hover:shadow-xl ${hot ? "border-accent shadow-[0_30px_80px_-35px_rgba(37,99,235,.55)] ring-1 ring-accent" : "border-border"}`}>
+            {hot && <span className="absolute -top-3 left-7 rounded-full bg-accent px-3 py-1 text-[10px] font-extrabold tracking-wider text-white">MOST POPULAR</span>}
+            <p className="font-display text-lg font-bold">{p.name}</p>
+            <p className="mt-4 font-display text-[2.6rem] leading-none font-extrabold tracking-tight">{p.price ? inr(p.price) : "₹0"}<span className="ml-1 text-sm font-medium text-muted">/year</span></p>
+            <p className="mt-1 text-xs text-muted">{p.price ? `+ ${gstRate}% GST · pay for 1–4 years at once` : "Free forever"}</p>
+            <ul className="mt-6 flex-1 space-y-2.5 text-sm text-foreground/80">
+              {[p.limit == null ? "Unlimited products" : `Up to ${p.limit} products`, "Own store link & design styles", "COD & UPI orders", p.razorpay ? "Razorpay online payments" : null, "GST invoices & order tracking", "WhatsApp share cards"].filter(Boolean).map((f) => (
+                <li key={f} className="flex items-start gap-2"><Check className={`mt-0.5 size-4 shrink-0 ${hot ? "text-accent" : "text-emerald-500"}`} />{f}</li>
+              ))}
+            </ul>
+            <Link href="/account/store" className={`mt-7 flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold transition ${hot ? "bg-accent text-white hover:opacity-90" : "bg-foreground text-background hover:opacity-90"}`}>{p.price ? "Start free, upgrade anytime" : "Create free store"} <ArrowRight className="size-4" /></Link>
+          </div>
+        );
+      })}
+    </div>
   );
 }

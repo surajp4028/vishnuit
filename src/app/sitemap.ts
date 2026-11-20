@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Live catalog stores (each also has its own /catalog/@handle/sitemap.xml with every product).
   const stores = (await getCatalogConfig()).features.storefronts ? await query<{ handle: string }>("SELECT handle FROM stores WHERE status='active'").catch(() => []) : [];
   return [
-    ...["", "/about", "/services", "/portfolio", "/pricing", "/blog", "/contact"].map((p) => ({ url: `${SITE}${p}`, lastModified: now, priority: p ? 0.8 : 1 })),
+    ...["", "/about", "/services", "/portfolio", "/pricing", "/blog", "/contact", "/online-store"].map((p) => ({ url: `${SITE}${p}`, lastModified: now, priority: p ? 0.8 : 1 })),
     ...LANDING_PAGES.map((l) => ({ url: `${SITE}/${l.slug}`, lastModified: now, priority: 0.9 })),
     ...services.map((s) => ({ url: `${SITE}/services/${s.slug}`, lastModified: now, priority: 0.7 })),
     ...projects.map((p) => ({ url: `${SITE}/portfolio/${p.slug}`, lastModified: now, priority: 0.6 })),
