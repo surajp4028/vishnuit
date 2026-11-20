@@ -14,10 +14,13 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
   const stockRaw = b.stock === "" || b.stock == null ? null : Math.max(0, Math.floor(Number(b.stock)));
   const images = (Array.isArray(b.images) ? b.images : []).filter((k): k is string => isCatalogKey(k, storeCode, "product")).slice(0, 10);
   const options = (Array.isArray(b.options) ? b.options : [])
-    .map((o: { name?: unknown; values?: unknown }) => ({
-      name: str(o?.name, 30),
-      values: (Array.isArray(o?.values) ? o.values : String(o?.values ?? "").split(",")).map((v: unknown) => str(v, 40)).filter(Boolean).slice(0, 30),
-    }))
+    .map((o: { name?: unknown; values?: unknown; swatches?: unknown }) => {
+      const values = (Array.isArray(o?.values) ? o.values : String(o?.values ?? "").split(",")).map((v: unknown) => str(v, 40)).filter(Boolean).slice(0, 30);
+      // Colour swatches: only for listed values, only #rrggbb.
+      const sw = o?.swatches && typeof o.swatches === "object" ? (o.swatches as Record<string, unknown>) : {};
+      const swatches = Object.fromEntries(values.filter((v) => typeof sw[v] === "string" && /^#[0-9a-f]{6}$/i.test(sw[v] as string)).map((v) => [v, String(sw[v]).toLowerCase()]));
+      return { name: str(o?.name, 30), values, ...(Object.keys(swatches).length ? { swatches } : {}) };
+    })
     .filter((o) => o.name && o.values.length)
     .slice(0, 3);
   const variants = (Array.isArray(b.variants) ? b.variants : [])

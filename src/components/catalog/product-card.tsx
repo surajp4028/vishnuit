@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { imgUrl, type Product } from "@/lib/server/catalog";
+import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 const rupee = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 
@@ -24,6 +25,16 @@ export function ProductCard({ p, base, store }: { p: Product; base: string; stor
       <div className="mt-2.5 px-0.5">
         {store && <p className="truncate text-[11px] font-bold tracking-wide text-foreground/90 uppercase">{store}</p>}
         <p className="truncate text-[13.5px] text-muted">{p.name}</p>
+        {(() => {
+          const c = p.options.find((o) => isColourOption(o.name));
+          if (!c || c.values.length < 2) return null;
+          return (
+            <p className="mt-1.5 flex items-center gap-1">
+              {c.values.slice(0, 5).map((v) => { const hex = hexFor(v, c.swatches) ?? "#ccc"; return <span key={v} title={v} className={`size-3 rounded-full ${isLight(hex) ? "ring-1 ring-black/20" : ""}`} style={{ background: hex }} />; })}
+              {c.values.length > 5 && <span className="text-[11px] text-muted">+{c.values.length - 5}</span>}
+            </p>
+          );
+        })()}
         <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-[13.5px]">
           <b className="text-foreground">{rupee(p.price)}</b>
           {p.compare_price ? <><span className="text-xs text-muted line-through">{rupee(p.compare_price)}</span><span className="text-xs font-semibold text-[#ff905a]">({off}% OFF)</span></> : null}

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export type Facets = {
   categories: { slug: string; name: string; count: number; depth?: number }[];
-  options: { name: string; values: { v: string; count: number }[] }[];
+  options: { name: string; values: { v: string; count: number; hex?: string }[] }[];
   price: { min: number; max: number };
 };
 export type Applied = { c: string; f: string[]; min: string; max: string; stock: boolean; sort: string; q: string };
@@ -95,9 +95,9 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
                 <section key={o.name}>
                   <p className="mb-3 text-[11px] font-bold tracking-[3px] text-muted">{o.name.toUpperCase()}</p>
                   <div className="flex flex-wrap gap-2">
-                    {o.values.map(({ v, count: n }) => {
+                    {o.values.map(({ v, count: n, hex: own }) => {
                       const on = a.f.includes(`${o.name}:${v}`);
-                      const hex = COLOR_HEX[v.toLowerCase()];
+                      const hex = own ?? COLOR_HEX[v.toLowerCase()];
                       return (
                         <button key={v} disabled={!n && !on} onClick={() => toggleF(o.name, v)} className={cn("inline-flex items-center gap-2 rounded-pill border px-3.5 py-2 text-[13px] font-semibold transition", on ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/40", !n && !on && "cursor-not-allowed text-muted line-through opacity-50")}>
                           {isColor && hex && <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: hex }} />}

@@ -1,5 +1,5 @@
 import "server-only";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 let client: S3Client | null = null;
@@ -50,6 +50,16 @@ export const CATALOG_DIR = dir(process.env.S3_CATALOG_DIR, "catalog");
 export const PAYEE_DIR = dir(process.env.S3_PAYEE_DIR, "vishnu/payee");
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const CATALOG_DIRS = [...new Set([CATALOG_DIR, "catalog"])].map(esc).join("|");
+
+/** Delete one object. Returns false (instead of throwing) e.g. when the IAM user lacks s3:DeleteObject. */
+export async function deleteObject(key: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await s3().send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as { name?: string }).name || (e as Error).message };
+  }
+}
 
 /** Every payer/user gets one folder: <S3_PAYEE_DIR>/<UID>/ */
 export const payeePath = (uid: string, file: string) => `${PAYEE_DIR}/${uid}/${file}`;

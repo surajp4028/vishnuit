@@ -5,10 +5,11 @@ import { Check, Minus, Plus, Share2, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
+import { hexFor, isColourOption, isLight } from "@/lib/colors";
 
 type P = {
   id: number; slug: string; name: string; price: number; compare_price: number | null; stock: number | null;
-  options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
+  options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null }[];
   gst_rate?: number | null;
 };
 
@@ -96,7 +97,25 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
 
       {needs.map((o) => (
         <div key={o.name} className="mt-7">
-          <div className="flex items-center justify-between"><p className="text-[13px] font-bold tracking-[1.5px] uppercase">Select {o.name}</p>{sel[o.name] && <p className="text-xs text-muted">Selected: <b className="text-foreground">{sel[o.name]}</b></p>}</div>
+          <div className="flex items-center justify-between"><p className="text-[13px] font-bold tracking-[1.5px] uppercase">{isColourOption(o.name) ? "Colour" : `Select ${o.name}`}</p>{sel[o.name] && <p className="text-xs text-muted">Selected: <b className="text-foreground">{sel[o.name]}</b></p>}</div>
+          {isColourOption(o.name) ? (
+            <div className="mt-3 flex flex-wrap gap-3">
+              {o.values.map((v) => {
+                const hex = hexFor(v, o.swatches) ?? "#cccccc";
+                const out = needs.length === 1 && p.variants.find((x) => x.key === v)?.stock === 0;
+                const on = sel[o.name] === v;
+                return (
+                  <button key={v} type="button" disabled={out} title={v} aria-label={v} onClick={() => { setSel((s) => ({ ...s, [o.name]: v })); setErr(""); }}
+                    className={cn("group flex flex-col items-center gap-1.5", out && "cursor-not-allowed opacity-40")}>
+                    <span className={cn("relative size-11 rounded-full ring-offset-2 ring-offset-background transition", on ? "ring-2 ring-foreground" : "ring-1 ring-transparent group-hover:ring-foreground/30", isLight(hex) && !on && "shadow-[inset_0_0_0_1px_rgba(0,0,0,.15)]")} style={{ background: hex }}>
+                      {out && <span className="absolute inset-x-1 top-1/2 h-px -rotate-45 bg-foreground/60" />}
+                    </span>
+                    <span className={cn("max-w-16 truncate text-[11px] font-semibold", on ? "text-foreground" : "text-muted")}>{v}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
           <div className="mt-3 flex flex-wrap gap-2.5">
             {o.values.map((v) => {
               // With one option we know exactly which variant a value maps to, so sold-out sizes can be greyed out.
@@ -108,6 +127,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
               );
             })}
           </div>
+          )}
         </div>
       ))}
       {err && <p className="mt-3 text-sm font-semibold text-[#ff3f6c]">{err}</p>}

@@ -1,3 +1,4 @@
+import { deleteObject, isCatalogKey } from "@/lib/server/s3";
 import { revalidatePath } from "next/cache";
 import { exec, query, queryOne } from "@/lib/server/db";
 import { hydrateProduct } from "@/lib/server/catalog";
@@ -30,10 +31,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return Response.json({ ok: true, product: hydrateProduct(row!) });
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+/** Delete a product. With ?images=1 its photos are also removed from S3 (unless another product still uses them). */
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const a = await requireStoreApi();
   if (a instanceof Response) return a;
-  await exec("DELETE FROM store_products WHERE id=? AND store_id=?", [Number((await params).id), a.store.id]);
+  const id = Number((await params).id);
+  const row = await queryOne<{ images: unknown }>("SELECT images FROM store_products WHERE id=? AND store_id=?", [id, a.store.id]);
+  if (!row) return Response.json({ error: "Product not found." }, { status: 404 });
+  await exec("DELETE FROM store_products WHERE id=? AND store_id=?", [id, a.store.id]);
   revalidatePath(`/catalog/@${a.store.handle}`, "layout");
-  return Response.json({ ok: true });
+  if (new URL(req.url).searchParams.get("images") !== "1") return Response.json({ ok: true });
+
+  const keys = (typeof row.images === "string" ? JSON.parse(row.images) : (row.images as string[] | null)) ?? [];
+  let removed = 0, failed = 0, err = "";
+  for (const k of keys) {
+    if (!isCatalogKey(k, a.store.code)) continue;
+    const used = await queryOne("SELECT id FROM store_products WHERE store_id=? AND JSON_CONTAINS(images, JSON_QUOTE(?))", [a.store.id, k]);
+    if (used) continue;
+    const r = await deleteObject(k);
+    if (r.ok) removed++; else { failed++; err = r.error ?? ""; }
+  }
+  return Response.json({
+    ok: true, removed, failed,
+    ...(failed ? { warning: `Product deleted, but ${failed} photo${failed > 1 ? "s" : ""} couldn't be removed from storage${err === "AccessDenied" ? " (the S3 user needs delete permission — ask your admin)" : ""}.` } : {}),
+  });
 }

@@ -36,17 +36,18 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
 
   // Facets come from everything matching the search, so shoppers always see what's available.
   const optMap = new Map<string, Map<string, number>>();
+  const hexMap = new Map<string, string>();
   for (const p of all) for (const o of p.options) {
     const key = o.name.trim();
     if (!key) continue;
     const m = optMap.get(key) ?? new Map<string, number>();
-    for (const v of o.values) m.set(v, (m.get(v) ?? 0) + (hasValue(p, key, v) ? 1 : 0));
+    for (const v of o.values) { m.set(v, (m.get(v) ?? 0) + (hasValue(p, key, v) ? 1 : 0)); if (o.swatches?.[v] && !hexMap.has(v)) hexMap.set(v, o.swatches[v]); }
     optMap.set(key, m);
   }
   const prices = all.map((p) => p.price);
   const facets: Facets = {
     categories: flattenTree(cats).map((c) => { const ids = withChildren(cats, c.id); return { slug: c.slug, name: c.name, depth: c.depth, count: all.filter((p) => p.category_id != null && ids.includes(p.category_id)).length }; }).filter((c) => c.count > 0),
-    options: [...optMap].map(([name, m]) => ({ name, values: [...m].map(([v, count]) => ({ v, count })) })),
+    options: [...optMap].map(([name, m]) => ({ name, values: [...m].map(([v, count]) => ({ v, count, hex: hexMap.get(v) })) })),
     price: { min: prices.length ? Math.floor(Math.min(...prices)) : 0, max: prices.length ? Math.ceil(Math.max(...prices)) : 0 },
   };
 

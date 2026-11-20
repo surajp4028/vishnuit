@@ -94,7 +94,7 @@ export type Store = {
 export type Product = {
   id: number; store_id: number; category_id: number | null; name: string; slug: string; description: string | null;
   price: number; compare_price: number | null; sku: string | null; stock: number | null; images: string[];
-  options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
+  options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null }[];
   status: "active" | "draft"; featured: boolean; created_at: string;
   gst_rate: number | null; hsn: string | null;
 };

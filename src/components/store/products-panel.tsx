@@ -3,11 +3,12 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, Loader2, PackagePlus, Plus, Search, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flattenTree } from "@/lib/category-tree";
+import { guessHex, isColourOption, isLight } from "@/lib/colors";
 import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, Toggle } from "./ui";
 
 export type P = {
   id: number; category_id: number | null; name: string; slug: string; description: string | null; price: number; compare_price: number | null;
-  sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[] }[];
+  sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[]; swatches?: Record<string, string> }[];
   variants: { key: string; price: number | null; stock: number | null }[]; status: "active" | "draft"; featured: boolean;
   gst_rate?: number | null; hsn?: string | null;
 };
@@ -100,22 +101,30 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
     name: initial?.name ?? "", price: initial ? String(initial.price) : "", compare_price: initial?.compare_price ? String(initial.compare_price) : "",
     description: initial?.description ?? "", sku: initial?.sku ?? "", gst_rate: initial?.gst_rate == null ? "" : String(Number(initial.gst_rate)), hsn: initial?.hsn ?? "", stock: initial?.stock == null ? "" : String(initial.stock),
     category_id: initial?.category_id ?? null as number | null, images: initial?.images ?? [], status: initial?.status ?? "active", featured: initial?.featured ?? false,
-    options: initial?.options.length ? initial.options.map((o) => ({ name: o.name, values: o.values.join(", ") })) : [] as { name: string; values: string }[],
+    options: initial?.options.length ? initial.options.map((o) => ({ name: o.name, values: o.values.join(", "), swatches: o.swatches ?? {} })) : [] as { name: string; values: string; swatches: Record<string, string> }[],
     variants: initial?.variants ?? [],
   }));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [newCat, setNewCat] = useState("");
+  const [newParent, setNewParent] = useState<number | "">("");
+  const [askDelete, setAskDelete] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((s) => ({ ...s, [k]: v }));
 
-  const opts = f.options.map((o) => ({ name: o.name.trim(), values: o.values.split(",").map((v) => v.trim()).filter(Boolean) })).filter((o) => o.name && o.values.length);
+  const opts = f.options.map((o) => {
+    const values = o.values.split(",").map((v) => v.trim()).filter(Boolean);
+    const swatches = isColourOption(o.name) ? Object.fromEntries(values.map((v) => [v, o.swatches?.[v] ?? guessHex(v) ?? "#cccccc"])) : undefined;
+    return { name: o.name.trim(), values, ...(swatches ? { swatches } : {}) };
+  }).filter((o) => o.name && o.values.length);
+  const tree = flattenTree(categories.map((c) => ({ ...c, parent_id: c.parent_id ?? null, sort: Number(c.sort ?? 0) })));
+  const tops = tree.filter((c) => c.depth === 0);
   const keys = cartesian(opts);
   const variants = keys.map((k) => f.variants.find((v) => v.key === k) ?? { key: k, price: null, stock: null });
 
   async function addCategory() {
     if (newCat.trim().length < 2) return;
-    const r = await api<{ categories: C[] }>("/api/store/categories", "POST", { name: newCat });
-    if (r.ok) { setCategories(r.data.categories); const c = r.data.categories.find((x) => x.name === newCat.trim()); if (c) set("category_id", c.id); setNewCat(""); }
+    const r = await api<{ categories: C[] }>("/api/store/categories", "POST", { name: newCat, parent_id: newParent || null });
+    if (r.ok) { setCategories(r.data.categories); const c = r.data.categories.find((x) => x.name === newCat.trim() && (x.parent_id ?? null) === (newParent || null)); if (c) set("category_id", c.id); setNewCat(""); }
     else setErr(r.data.error || "Could not add category");
   }
   async function save() {
@@ -125,12 +134,12 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
     setBusy(false);
     if (r.ok) onSaved(r.data.product); else setErr(r.data.error || "Could not save");
   }
-  async function remove() {
-    if (!initial || !confirm(`Delete “${initial.name}”? This can't be undone.`)) return;
-    setBusy(true);
-    const r = await api(`/api/store/products/${initial.id}`, "DELETE");
+  async function remove(withImages: boolean) {
+    if (!initial) return;
+    setBusy(true); setAskDelete(false);
+    const r = await api<{ warning?: string }>(`/api/store/products/${initial.id}${withImages ? "?images=1" : ""}`, "DELETE");
     setBusy(false);
-    if (r.ok) onDeleted(initial.id); else setErr(r.data.error || "Could not delete");
+    if (r.ok) { if (r.data.warning) alert(r.data.warning); onDeleted(initial.id); } else setErr(r.data.error || "Could not delete");
   }
 
   return (
@@ -139,8 +148,21 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
         <header className="flex items-center gap-3 border-b border-border px-4 py-3">
           <button onClick={onClose} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className="size-5 sm:hidden" /><X className="hidden size-5 sm:block" /></button>
           <h2 className="flex-1 font-display text-lg font-bold">{initial ? "Edit product" : "New product"}</h2>
-          {initial && <button onClick={remove} disabled={busy} aria-label="Delete" className="grid size-10 place-items-center rounded-full text-red-500 hover:bg-red-500/10"><Trash2 className="size-4.5" /></button>}
+          {initial && <button onClick={() => setAskDelete(true)} disabled={busy} aria-label="Delete" className="grid size-10 place-items-center rounded-full text-red-500 hover:bg-red-500/10"><Trash2 className="size-4.5" /></button>}
         </header>
+        {askDelete && initial && (
+          <div className="fixed inset-0 z-[90] grid place-items-center bg-black/50 p-4" onClick={() => setAskDelete(false)}>
+            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-background p-6 shadow-2xl">
+              <p className="font-display text-lg font-bold">Delete “{initial.name}”?</p>
+              <p className="mt-1 text-sm text-muted">This can&apos;t be undone. Past orders keep their details.</p>
+              <div className="mt-5 grid gap-2">
+                <button onClick={() => remove(false)} className="rounded-2xl border border-border px-4 py-3 text-left text-sm hover:border-foreground/40"><b className="block">Delete product only</b><span className="text-xs text-muted">Photos stay in storage (you can reuse them later).</span></button>
+                <button onClick={() => remove(true)} className="rounded-2xl border border-red-500/40 bg-red-500/[.04] px-4 py-3 text-left text-sm text-red-600 hover:bg-red-500/10"><b className="block">Delete product + its photos</b><span className="text-xs opacity-80">Also removes {initial.images.length} photo{initial.images.length === 1 ? "" : "s"} from storage.</span></button>
+                <button onClick={() => setAskDelete(false)} className="py-2 text-sm font-semibold text-muted">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-6">
           <Gallery value={f.images} onChange={(v) => set("images", v)} />
           <Field label="Product name"><input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Cotton Kurta Set" className={input} /></Field>
@@ -149,11 +171,30 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
             <Field label="MRP (₹)" hint="Shown struck-through"><input value={f.compare_price} onChange={(e) => set("compare_price", e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" placeholder="1499" className={input} /></Field>
           </div>
           <Field label="Category">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              <button type="button" onClick={() => set("category_id", null)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold", f.category_id == null ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>None</button>
-              {flattenTree(categories.map((c) => ({ ...c, parent_id: c.parent_id ?? null, sort: Number(c.sort ?? 0) }))).map((c) => <button type="button" key={c.id} onClick={() => set("category_id", c.id)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold whitespace-nowrap", f.category_id === c.id ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>{c.label}</button>)}
+            <div className="space-y-2">
+              <button type="button" onClick={() => set("category_id", null)} className={cn("rounded-full border px-4 py-2 text-[13px] font-semibold", f.category_id == null ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>No category</button>
+              {tops.map((t) => {
+                const kids = tree.filter((c) => c.parent_id === t.id);
+                return (
+                  <div key={t.id} className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border p-1.5">
+                    <button type="button" onClick={() => set("category_id", t.id)} className={cn("rounded-full px-3.5 py-1.5 text-[13px] font-bold", f.category_id === t.id ? "bg-foreground text-background" : "hover:bg-foreground/5")}>{t.name}</button>
+                    {kids.length > 0 && <span className="text-muted">›</span>}
+                    {kids.map((k) => <button type="button" key={k.id} onClick={() => set("category_id", k.id)} className={cn("rounded-full border px-3 py-1.5 text-[12.5px] font-semibold", f.category_id === k.id ? "border-foreground bg-foreground text-background" : "border-border text-muted hover:text-foreground")}>{k.name}</button>)}
+                  </div>
+                );
+              })}
             </div>
-            <div className="mt-2 flex gap-2"><input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="New category" className={cn(input, "py-2.5")} /><button type="button" onClick={addCategory} className={btnLight}>Add</button></div>
+            <div className="mt-3 rounded-2xl bg-foreground/[.03] p-2.5">
+              <p className="mb-2 px-1 text-xs font-semibold text-muted">New category</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder={newParent ? "e.g. Top wear" : "e.g. Mens"} className={cn(input, "py-2.5")} />
+                <select value={newParent} onChange={(e) => setNewParent(e.target.value ? Number(e.target.value) : "")} className={cn(input, "py-2.5 sm:w-48")}>
+                  <option value="">Main category</option>
+                  {tops.map((t) => <option key={t.id} value={t.id}>Inside “{t.name}”</option>)}
+                </select>
+                <button type="button" onClick={addCategory} disabled={newCat.trim().length < 2} className={cn(btnLight, "py-2.5 disabled:opacity-40")}><Plus className="size-4" /> Add</button>
+              </div>
+            </div>
           </Field>
           <Field label="GST on this product" hint="Pick the slab for this item — e.g. 28% for some accessories. “Store default” uses Settings → GST.">
             <div className="flex flex-wrap gap-2">
@@ -167,16 +208,34 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
 
           <div>
             <p className="text-[13px] font-semibold">Options (size, colour…)</p>
-            <p className="text-xs text-muted">Add values separated by commas. Each combination becomes a variant with its own price and stock.</p>
+            <p className="text-xs text-muted">Add values separated by commas. Each combination becomes a variant with its own price and stock. Name an option “Colour” to pick swatches.</p>
             <div className="mt-3 space-y-2.5">
               {f.options.map((o, i) => (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="space-y-2">
+                  <div className="flex gap-2">
                   <input value={o.name} onChange={(e) => set("options", f.options.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder="Size" className={cn(input, "w-28 py-2.5")} />
                   <input value={o.values} onChange={(e) => set("options", f.options.map((x, j) => (j === i ? { ...x, values: e.target.value } : x)))} placeholder="S, M, L, XL" className={cn(input, "py-2.5")} />
                   <button type="button" onClick={() => set("options", f.options.filter((_, j) => j !== i))} aria-label="Remove option" className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-foreground/5"><X className="size-4" /></button>
+                  </div>
+                  {isColourOption(o.name) && o.values.trim() && (
+                    <div className="flex flex-wrap gap-2 rounded-2xl bg-foreground/[.03] p-2.5">
+                      {o.values.split(",").map((v) => v.trim()).filter(Boolean).map((v) => {
+                        const hex = o.swatches?.[v] ?? guessHex(v) ?? "#cccccc";
+                        return (
+                          <label key={v} className="flex cursor-pointer items-center gap-2 rounded-full border border-border bg-background py-1 pr-3 pl-1 text-[13px] font-semibold" title="Tap to pick the exact colour">
+                            <span className={cn("relative size-7 overflow-hidden rounded-full", isLight(hex) && "ring-1 ring-black/15")} style={{ background: hex }}>
+                              <input type="color" value={hex} onChange={(e) => set("options", f.options.map((x, j) => (j === i ? { ...x, swatches: { ...x.swatches, [v]: e.target.value } } : x)))} className="absolute inset-0 size-full cursor-pointer opacity-0" />
+                            </span>
+                            {v}
+                          </label>
+                        );
+                      })}
+                      <p className="w-full px-1 text-[11px] text-muted">Tap a circle to pick the exact shade — shoppers see these colours on your store.</p>
+                    </div>
+                  )}
                 </div>
               ))}
-              {f.options.length < 3 && <button type="button" onClick={() => set("options", [...f.options, { name: "", values: "" }])} className={cn(btnLight, "py-2.5")}><Plus className="size-4" /> Add option</button>}
+              {f.options.length < 3 && <button type="button" onClick={() => set("options", [...f.options, { name: "", values: "", swatches: {} }])} className={cn(btnLight, "py-2.5")}><Plus className="size-4" /> Add option</button>}
             </div>
             {variants.length > 0 && (
               <div className="mt-4 overflow-hidden rounded-2xl border border-border">
