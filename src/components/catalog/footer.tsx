@@ -4,6 +4,9 @@ import { ArrowUpRight, Banknote, CreditCard, Mail, MapPin, Phone, ShieldCheck, S
 import { FaFacebookF, FaInstagram, FaPinterestP, FaWhatsapp, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { PAGE_KEYS, PAGE_TITLES, type Store } from "@/lib/server/catalog";
 
+/** Only real web links (older stores may have "#" or a bare handle saved). */
+const okUrl = (v?: string | null): v is string => !!v && /^https?:\/\/[^\s/]+\.[^\s]+/i.test(v);
+
 const colHead = "text-[10.5px] font-semibold tracking-[3.5px] text-white/35";
 const linkCls = "group inline-flex items-center gap-1 text-[14px] text-white/65 transition hover:text-white";
 
@@ -20,11 +23,11 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
   ].filter(Boolean) as { icon: typeof Banknote; t: string }[];
   const socials = [
     c.whatsapp && { href: `https://wa.me/${c.whatsapp}`, icon: FaWhatsapp, label: "WhatsApp" },
-    c.instagram && { href: c.instagram, icon: FaInstagram, label: "Instagram" },
-    c.facebook && { href: c.facebook, icon: FaFacebookF, label: "Facebook" },
-    c.youtube && { href: c.youtube, icon: FaYoutube, label: "YouTube" },
-    c.pinterest && { href: c.pinterest, icon: FaPinterestP, label: "Pinterest" },
-    c.x && { href: c.x, icon: FaXTwitter, label: "X" },
+    okUrl(c.instagram) && { href: c.instagram, icon: FaInstagram, label: "Instagram" },
+    okUrl(c.facebook) && { href: c.facebook, icon: FaFacebookF, label: "Facebook" },
+    okUrl(c.youtube) && { href: c.youtube, icon: FaYoutube, label: "YouTube" },
+    okUrl(c.pinterest) && { href: c.pinterest, icon: FaPinterestP, label: "Pinterest" },
+    okUrl(c.x) && { href: c.x, icon: FaXTwitter, label: "X" },
   ].filter(Boolean) as { href: string; icon: typeof FaWhatsapp; label: string }[];
 
   return (

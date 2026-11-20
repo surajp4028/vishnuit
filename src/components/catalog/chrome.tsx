@@ -8,7 +8,8 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
 
-type Cat = { name: string; slug: string; children?: { name: string; slug: string }[] };
+export type MenuPick = { name: string; slug: string; price: number; compare: number | null; image: string | null };
+type Cat = { name: string; slug: string; children?: { name: string; slug: string }[]; picks?: MenuPick[] };
 
 type Hit = { name: string; slug: string; price: number; compare: number | null; image: string | null };
 
@@ -67,6 +68,75 @@ function SearchBox({ base, handle, autoFocus, onDone }: { base: string; handle: 
         </div>
       )}
     </form>
+  );
+}
+
+/**
+ * Category strip under the header. On desktop, hovering a category opens a blurred mega panel:
+ * its sub-categories on the left and 2 trending products on the right ("All" shows every category + one pick).
+ */
+function CategoryBar({ base, path, activeCat, categories, allPick }: { base: string; path: string | null; activeCat: string | null; categories: Cat[]; allPick: MenuPick | null }) {
+  const [hover, setHover] = useState<string | null>(null); // "" = All
+  const timer = useRef<number>(0);
+  const openSoon = (k: string) => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setHover(k), 120); };
+  const closeSoon = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setHover(null), 180); };
+  useEffect(() => { setHover(null); }, [path]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const cat = hover ? categories.find((c) => c.slug === hover) : null;
+  const pill = (on: boolean) => cn("relative shrink-0 rounded-pill px-3.5 py-1.5 text-[12.5px] font-semibold transition", on ? "bg-foreground text-background" : "text-muted hover:text-foreground");
+  return (
+    <div className="relative border-t border-border/70" onMouseLeave={closeSoon}>
+      <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] sm:px-6">
+        <Link href={`${base}/shop`} onMouseEnter={() => openSoon("")} className={pill((path === `${base}/shop` && !activeCat) || hover === "")}>All</Link>
+        {categories.map((c) => <Link key={c.slug} href={`${base}/shop?c=${c.slug}`} onMouseEnter={() => openSoon(c.slug)} className={pill(activeCat === c.slug || hover === c.slug)}>{c.name}</Link>)}
+      </div>
+      {hover != null && <div aria-hidden onMouseEnter={closeSoon} className="absolute inset-x-0 top-full z-20 hidden h-screen animate-[fadeIn_.2s_ease] bg-black/25 backdrop-blur-[3px] md:block" />}
+      {hover != null && (
+        <div onMouseEnter={() => clearTimeout(timer.current)} className="absolute inset-x-0 top-full z-30 hidden animate-[fadeIn_.18s_ease] border-b border-border/70 bg-background/[.97] shadow-[0_30px_60px_-30px_rgba(0,0,0,.45)] backdrop-blur-2xl md:block">
+          <div className="mx-auto grid h-[330px] max-w-7xl grid-cols-[minmax(0,1fr)_auto] gap-10 px-6 py-7">
+            {cat ? (
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold tracking-[4px] text-muted">SHOP</p>
+                <Link href={`${base}/shop?c=${cat.slug}`} className="group mt-1 inline-flex items-center gap-3 font-display text-4xl font-extrabold tracking-tight">{cat.name}<span className="grid size-9 place-items-center rounded-full border border-border transition group-hover:translate-x-1 group-hover:border-foreground"><svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span></Link>
+                {cat.children?.length ? (
+                  <div className="mt-6 grid max-w-xl grid-cols-2 gap-x-8 gap-y-1">
+                    <Link href={`${base}/shop?c=${cat.slug}`} className="rounded-lg py-1.5 text-[15px] font-semibold hover:text-foreground">All {cat.name}</Link>
+                    {cat.children.map((k) => <Link key={k.slug} href={`${base}/shop?c=${k.slug}`} className="rounded-lg py-1.5 text-[15px] text-muted transition hover:translate-x-0.5 hover:text-foreground">{k.name}</Link>)}
+                  </div>
+                ) : <p className="mt-4 max-w-sm text-sm text-muted">Explore everything in {cat.name} — new arrivals, bestsellers and more.</p>}
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold tracking-[4px] text-muted">BROWSE</p>
+                <Link href={`${base}/shop`} className="mt-1 inline-block font-display text-4xl font-extrabold tracking-tight">Everything</Link>
+                <div className="mt-6 grid max-h-[190px] grid-cols-3 gap-x-8 gap-y-5 overflow-y-auto pr-2 lg:grid-cols-4">
+                  {categories.map((c) => (
+                    <div key={c.slug} className="min-w-0">
+                      <Link href={`${base}/shop?c=${c.slug}`} className="block truncate text-[14px] font-bold hover:underline">{c.name}</Link>
+                      {c.children?.slice(0, 4).map((k) => <Link key={k.slug} href={`${base}/shop?c=${k.slug}`} className="mt-1 block truncate text-[13px] text-muted hover:text-foreground">{k.name}</Link>)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-4">
+              {(cat ? cat.picks ?? [] : allPick ? [allPick] : []).map((p, i) => (
+                <Link key={p.slug} href={`${base}/p/${p.slug}`} className="group relative block h-full w-[205px] overflow-hidden rounded-2xl bg-foreground/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {p.image && <img src={p.image} alt="" className="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-105" />}
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/0 to-black/0" />
+                  <span className="absolute top-3 left-3 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-extrabold tracking-wider text-black">{cat ? (i === 0 ? "TRENDING" : "HOT NOW") : "EDITOR'S PICK"}</span>
+                  <span className="absolute inset-x-0 bottom-0 p-3.5 text-white">
+                    <span className="line-clamp-2 text-[13.5px] leading-snug font-semibold">{p.name}</span>
+                    <span className="mt-1 flex items-baseline gap-1.5 text-[13px]"><b>{rupee(p.price)}</b>{p.compare && p.compare > p.price && <span className="text-[11.5px] text-white/60 line-through">{rupee(p.compare)}</span>}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -140,7 +210,7 @@ function CartDrawer({ base, onClose }: { base: string; onClose: () => void }) {
 }
 
 /** Compact store header: logo · search · account · cart, with a category strip underneath. */
-export function StoreHeader({ base, handle, name, logo, categories }: { base: string; handle: string; name: string; logo: string | null; categories: Cat[] }) {
+export function StoreHeader({ base, handle, name, logo, categories, allPick }: { base: string; handle: string; name: string; logo: string | null; categories: Cat[]; allPick?: MenuPick | null }) {
   const { count, ready, open: bagOpen, setOpen: setBag } = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -178,14 +248,7 @@ export function StoreHeader({ base, handle, name, logo, categories }: { base: st
         </div>
       </div>
       {search && <div className="border-t border-border/70 px-3 py-2.5 md:hidden"><SearchBox base={base} handle={handle} autoFocus onDone={() => setSearch(false)} /></div>}
-      {categories.length > 0 && (
-        <div className="border-t border-border/70">
-          <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] sm:px-6">
-            <Link href={`${base}/shop`} className={cn("shrink-0 rounded-pill px-3.5 py-1.5 text-[12.5px] font-semibold transition", path === `${base}/shop` && !activeCat ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>All</Link>
-            {categories.map((c) => <Link key={c.slug} href={`${base}/shop?c=${c.slug}`} className={cn("shrink-0 rounded-pill px-3.5 py-1.5 text-[12.5px] font-semibold transition", activeCat === c.slug ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>{c.name}</Link>)}
-          </div>
-        </div>
-      )}
+      {categories.length > 0 && <CategoryBar base={base} path={path} activeCat={activeCat} categories={categories} allPick={allPick ?? null} />}
 
       {bagOpen && mounted && createPortal(<CartDrawer base={base} onClose={() => setBag(false)} />, document.body)}
       {/* Rendered into <body>: the header's backdrop-blur would otherwise clip a fixed drawer to the header's height. */}

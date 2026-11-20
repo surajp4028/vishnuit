@@ -79,7 +79,7 @@ export async function PATCH(req: Request) {
   if (b.storefront) {
     const f = b.storefront as Record<string, unknown>;
     const linkOk = (l: string) => !l || (l.startsWith("/") && !l.startsWith("//") && !l.includes("\\")) || /^https?:\/\/[^\s]+$/.test(l);
-    const banners = (Array.isArray(f.banners) ? (f.banners as Record<string, unknown>[]) : []).slice(0, 6).filter((x) => ownKey(x.key) && x.key).map((x, i) => ({
+    const banners = (Array.isArray(f.banners) ? (f.banners as Record<string, unknown>[]) : []).slice(0, 10).filter((x) => ownKey(x.key) && x.key).map((x, i) => ({
       id: str(x.id, 24) || `b${Date.now().toString(36)}${i}`, key: String(x.key), title: str(x.title, 80), subtitle: str(x.subtitle, 160), cta: str(x.cta, 30), link: str(x.link, 300),
     }));
     const px = (f.pixels ?? {}) as Record<string, unknown>;
