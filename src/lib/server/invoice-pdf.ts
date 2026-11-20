@@ -8,6 +8,9 @@ export type InvoiceData = {
   seller: { name: string; address: string; phone: string; email: string; web: string };
   buyer: { name: string; company?: string | null; email?: string | null; phone?: string | null };
   item: string; amount: number;
+  sellerGstin?: string | null;
+  /** GST breakdown (catalog plans). Without it the amount is shown as a single total. */
+  tax?: { qty: number; unit: number; base: number; discount: number; coupon: string | null; taxable: number; rate: number; gst: number } | null;
   payment: { method?: string | null; paymentId?: string | null; orderId: string };
 };
 
@@ -43,6 +46,7 @@ export async function renderInvoicePdf(d: InvoiceData) {
   text(d.seller.address, L, 734, { color: C.mute, size: 9 });
   text(`${d.seller.phone}  |  ${d.seller.email}`, L, 721, { color: C.mute, size: 9 });
   text(d.seller.web, L, 708, { color: C.mute, size: 9 });
+  if (d.sellerGstin) text(`GSTIN: ${d.sellerGstin}`, L, 695, { color: C.mute, size: 9, font: bold });
 
   text("INVOICE", R, 786, { font: bold, size: 24, right: true });
   text(`No. ${d.number}`, R, 766, { right: true, size: 10 });
@@ -71,16 +75,28 @@ export async function renderInvoicePdf(d: InvoiceData) {
   text("DESCRIPTION", L + 12, 569, { font: bold, size: 8, color: C.mute });
   text("QTY", 400, 569, { font: bold, size: 8, color: C.mute });
   text("AMOUNT", R - 12, 569, { font: bold, size: 8, color: C.mute, right: true });
+  const t = d.tax;
+  const money = (n: number) => "INR " + new Intl.NumberFormat("en-IN", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(n);
   text(d.item.slice(0, 70), L + 12, 536, { font: bold, size: 10.5 });
-  text("1", 404, 536, { size: 10.5 });
-  text(inr(d.amount), R - 12, 536, { font: bold, size: 10.5, right: true });
-  page.drawLine({ start: { x: L, y: 518 }, end: { x: R, y: 518 }, thickness: 0.8, color: C.line });
+  if (t) text(`${money(t.unit)} x ${t.qty} year${t.qty > 1 ? "s" : ""}  |  SAC 998315`, L + 12, 522, { size: 8.5, color: C.mute });
+  text(String(t?.qty ?? 1), 404, 536, { size: 10.5 });
+  text(money(t ? t.base : d.amount), R - 12, 536, { font: bold, size: 10.5, right: true });
+  page.drawLine({ start: { x: L, y: 508 }, end: { x: R, y: 508 }, thickness: 0.8, color: C.line });
 
-  text("Subtotal", R - 150, 494, { color: C.mute, size: 10 });
-  text(inr(d.amount), R, 494, { right: true, size: 10, color: C.mute });
-  page.drawRectangle({ x: R - 190, y: 448, width: 190, height: 32, color: d.paid ? C.green : C.ink });
-  text(d.paid ? "Total paid" : "Total due", R - 176, 459, { font: bold, size: 11.5, color: rgb(1, 1, 1) });
-  text(inr(d.amount), R - 14, 459, { font: bold, size: 11.5, color: rgb(1, 1, 1), right: true });
+  let ty = 486;
+  const row = (label: string, val: string) => { text(label, R - 190, ty, { color: C.mute, size: 10 }); text(val, R, ty, { right: true, size: 10, color: C.mute }); ty -= 17; };
+  if (t) {
+    row("Subtotal", money(t.base));
+    if (t.discount > 0) row(`Discount${t.coupon ? ` (${t.coupon})` : ""}`, `- ${money(t.discount)}`);
+    row("Taxable value", money(t.taxable));
+    row(`GST @ ${t.rate}%`, money(t.gst));
+  } else {
+    row("Subtotal", money(d.amount));
+  }
+  const boxY = ty - 26;
+  page.drawRectangle({ x: R - 190, y: boxY, width: 190, height: 32, color: d.paid ? C.green : C.ink });
+  text(d.paid ? "Total paid" : "Total due", R - 176, boxY + 11, { font: bold, size: 11.5, color: rgb(1, 1, 1) });
+  text(money(d.amount), R - 14, boxY + 11, { font: bold, size: 11.5, color: rgb(1, 1, 1), right: true });
 
   page.drawLine({ start: { x: L, y: 92 }, end: { x: R, y: 92 }, thickness: 0.8, color: C.line });
   text("Thank you for your business! This is a computer-generated invoice and does not require a signature.", L, 74, { size: 8.5, color: C.mute });

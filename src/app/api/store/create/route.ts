@@ -1,12 +1,13 @@
 import { exec, queryOne } from "@/lib/server/db";
 import { getUser } from "@/lib/server/users";
-import { handleProblem } from "@/lib/server/catalog";
+import { getCatalogConfig, handleProblem } from "@/lib/server/catalog";
 import { str } from "@/lib/server/store-auth";
 
 /** Enroll: create the signed-in user's store on the Free plan. Store code = the user's VISHNU ID. */
 export async function POST(req: Request) {
   const u = await getUser();
   if (!u) return Response.json({ error: "Please log in." }, { status: 401 });
+  if (!(await getCatalogConfig()).features.newStores) return Response.json({ error: "New stores are not open right now." }, { status: 403 });
   if (await queryOne("SELECT id FROM stores WHERE user_id=?", [u.id])) return Response.json({ error: "You already have a store." }, { status: 409 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = str(b.name, 120);

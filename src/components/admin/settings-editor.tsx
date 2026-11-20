@@ -15,7 +15,7 @@ const TABS: { key: string; label: string; desc: string }[] = [
   { key: "social", label: "Social links", desc: "Leave empty to hide an icon." },
   { key: "seo", label: "SEO", desc: "Default meta title, description and share image." },
   { key: "founder", label: "Founder", desc: "Founder card on home & about." },
-  { key: "conversion", label: "Conversion", desc: "WhatsApp button, header Pay Now button (show on desktop / mobile), the Launch-your-store card on user accounts, lead email alerts and announcement bar." },
+  { key: "conversion", label: "Conversion", desc: "WhatsApp button, header Pay Now button (show on desktop / mobile), lead email alerts and announcement bar." },
   { key: "integrations", label: "Integrations", desc: "Meta Pixel & Conversions API, and Google Sheet sync for the website and landing-page forms." },
   { key: "security", label: "Password", desc: "Change your admin password." },
 ];

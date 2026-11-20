@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { after } from "next/server";
 import { exec, query } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
-import { getStoreByHandle, hydrateProduct } from "@/lib/server/catalog";
+import { decryptSecret, effectivePlan, getCatalogConfig, getStoreByHandle, hydrateProduct } from "@/lib/server/catalog";
+import { createOrder } from "@/lib/server/razorpay";
 import { findOrCreateUser, normEmail, normPhone } from "@/lib/server/users";
 import { sendMail } from "@/lib/server/mail";
 import { siteUrl } from "@/lib/site";
@@ -24,13 +25,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   const phone = normPhone(b.phone);
   const email = b.email ? normEmail(b.email) : null;
   const address = str(b.address, 600);
-  const method = b.pay_method === "upi" ? "upi" : b.pay_method === "cod" ? "cod" : null;
+  const method = b.pay_method === "upi" ? "upi" : b.pay_method === "cod" ? "cod" : b.pay_method === "razorpay" ? "razorpay" : null;
+  const rzpSecret = decryptSecret(store.payments.razorpay.secret_enc);
+  const rzpOn = store.payments.razorpay.on && !!store.payments.razorpay.key_id && !!rzpSecret && (await getCatalogConfig()).plans[effectivePlan(store)].razorpay;
   const utr = str(b.utr, 40).replace(/\s/g, "");
   if (name.length < 2) return Response.json({ error: "Enter your name." }, { status: 422 });
   if (!phone) return Response.json({ error: "Enter a valid 10-digit mobile number." }, { status: 422 });
   if (b.email && !email) return Response.json({ error: "Enter a valid email or leave it empty." }, { status: 422 });
   if (address.length < 10) return Response.json({ error: "Enter your full delivery address." }, { status: 422 });
-  if (!method || (method === "cod" && !store.payments.cod) || (method === "upi" && !store.payments.upi.on)) return Response.json({ error: "Choose an available payment method." }, { status: 422 });
+  if (!method || (method === "cod" && !store.payments.cod) || (method === "upi" && !store.payments.upi.on) || (method === "razorpay" && !rzpOn)) return Response.json({ error: "Choose an available payment method." }, { status: 422 });
   if (method === "upi" && !/^[A-Za-z0-9]{8,30}$/.test(utr)) return Response.json({ error: "Enter the UTR / transaction ID from your UPI app (12 digits usually)." }, { status: 422 });
 
   const lines = (Array.isArray(b.items) ? (b.items as Line[]) : []).filter((l) => Number.isInteger(Number(l?.id)) && Number(l?.qty) > 0).slice(0, 50);
@@ -61,9 +64,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   // Customers get a silent account so they can later log in and see their orders (and open their own store).
   const customer = await findOrCreateUser({ name, phone, email, source: "store" });
   const orderNo = `${store.code.slice(-4)}${Date.now().toString(36).toUpperCase().slice(-5)}${randomInt(10, 99)}`;
+  // Online payment goes straight to the merchant's own Razorpay account.
+  let rzp: { id: string; amount: number; currency: string } | null = null;
+  if (method === "razorpay") {
+    try {
+      rzp = await createOrder(Math.round(subtotal * 100), orderNo, { store: store.handle, order: orderNo }, { keyId: store.payments.razorpay.key_id, secret: rzpSecret! });
+    } catch (e) {
+      console.error("[store-order] razorpay:", (e as Error).message);
+      return Response.json({ error: "Online payment is unavailable right now. Please choose another payment method." }, { status: 502 });
+    }
+  }
   await exec(
-    "INSERT INTO store_orders (store_id, order_no, customer_id, name, phone, email, address, items, subtotal, pay_method, utr, pay_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-    [store.id, orderNo, customer.id, name, phone, email, address, JSON.stringify(items), subtotal, method, method === "upi" ? utr : null, "pending"],
+    "INSERT INTO store_orders (store_id, order_no, customer_id, name, phone, email, address, items, subtotal, pay_method, utr, rzp_order_id, pay_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    [store.id, orderNo, customer.id, name, phone, email, address, JSON.stringify(items), subtotal, method, method === "upi" ? utr : null, rzp?.id ?? null, "pending"],
   );
   // Stock goes down when the order is placed.
   for (const i of items) {
@@ -83,10 +96,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
     await sendMail({
       to,
       subject: `🛍️ New order ${orderNo} — ₹${subtotal.toLocaleString("en-IN")} (${method.toUpperCase()})`,
-      text: `New order ${orderNo} from ${name} (${phone}). Total ₹${subtotal}. Payment: ${method}${utr ? ` UTR ${utr}` : ""}. Open your dashboard: ${siteUrl()}/account/store?tab=orders`,
-      html: `<div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:24px auto;border:1px solid #e6e8ef;border-radius:16px;overflow:hidden"><div style="background:#0a0f1f;color:#fff;padding:20px 24px"><div style="font-size:12px;letter-spacing:2px;color:#f5c542">${esc(store.name)}</div><div style="font-size:20px;font-weight:700;margin-top:4px">New order ${orderNo}</div></div><div style="padding:20px 24px;font-size:14px;color:#222"><p><b>${esc(name)}</b> · ${esc(phone)}${email ? ` · ${esc(email)}` : ""}<br>${esc(address)}</p><table style="width:100%;border-collapse:collapse">${list}<tr><td style="padding-top:10px;font-weight:700">Total</td><td style="text-align:right;padding-top:10px;font-weight:700">₹${subtotal.toLocaleString("en-IN")}</td></tr></table><p>Payment: <b>${method === "cod" ? "Cash on delivery" : `UPI — UTR ${esc(utr)} (please verify)`}</b></p><p><a href="${siteUrl()}/account/store?tab=orders" style="background:#0a0f1f;color:#fff;text-decoration:none;padding:10px 18px;border-radius:999px">Open orders</a></p></div></div>`,
+      text: `New order ${orderNo} from ${name} (${phone}). Total ₹${subtotal}. Payment: ${method}${utr ? ` UTR ${utr}` : ""}. Open your dashboard: ${siteUrl()}/seller/orders`,
+      html: `<div style="font-family:Inter,Arial,sans-serif;max-width:540px;margin:24px auto;border:1px solid #e6e8ef;border-radius:16px;overflow:hidden"><div style="background:#0a0f1f;color:#fff;padding:20px 24px"><div style="font-size:12px;letter-spacing:2px;color:#f5c542">${esc(store.name)}</div><div style="font-size:20px;font-weight:700;margin-top:4px">New order ${orderNo}</div></div><div style="padding:20px 24px;font-size:14px;color:#222"><p><b>${esc(name)}</b> · ${esc(phone)}${email ? ` · ${esc(email)}` : ""}<br>${esc(address)}</p><table style="width:100%;border-collapse:collapse">${list}<tr><td style="padding-top:10px;font-weight:700">Total</td><td style="text-align:right;padding-top:10px;font-weight:700">₹${subtotal.toLocaleString("en-IN")}</td></tr></table><p>Payment: <b>${method === "cod" ? "Cash on delivery" : method === "razorpay" ? "Online (Razorpay) — check status in your dashboard" : `UPI — UTR ${esc(utr)} (please verify)`}</b></p><p><a href="${siteUrl()}/seller/orders" style="background:#0a0f1f;color:#fff;text-decoration:none;padding:10px 18px;border-radius:999px">Open orders</a></p></div></div>`,
     }).catch(() => {});
   });
 
-  return Response.json({ ok: true, orderNo, subtotal });
+  return Response.json({ ok: true, orderNo, subtotal, ...(rzp ? { rzp: { keyId: store.payments.razorpay.key_id, orderId: rzp.id, amount: rzp.amount, currency: rzp.currency } } : {}) });
 }

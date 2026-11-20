@@ -4,25 +4,35 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  BadgeIndianRupee, Briefcase, ExternalLink, FileText, HelpCircle, Inbox, LayoutDashboard, LogOut, Megaphone, Menu, Store, MessageSquareQuote, Settings, Sparkles, Star, Wallet, X,
+  BadgeIndianRupee, Briefcase, ExternalLink, FileText, HelpCircle, Inbox, LayoutDashboard, LogOut, Megaphone, Menu, SlidersHorizontal, Store, TicketPercent, MessageSquareQuote, Settings, Sparkles, Star, Users, Wallet, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/leads", label: "Leads & Conversions", icon: Inbox, badge: true },
-  { href: "/admin/landing-pages", label: "Landing Pages", icon: Megaphone },
-  { href: "/admin/payments", label: "Payments & Clients", icon: Wallet },
-  { href: "/admin/stores", label: "Catalog Stores", icon: Store },
-  { href: "/admin/c/services", label: "Services", icon: Sparkles },
-  { href: "/admin/c/projects", label: "Portfolio", icon: Briefcase },
-  { href: "/admin/c/testimonials", label: "Testimonials", icon: MessageSquareQuote },
-  { href: "/admin/c/posts", label: "Blog & News", icon: FileText },
-  { href: "/admin/c/plans", label: "Pricing Plans", icon: BadgeIndianRupee },
-  { href: "/admin/c/faqs", label: "FAQs", icon: HelpCircle },
-  { href: "/admin/c/brands", label: "Brands & Partners", icon: Star },
-  { href: "/admin/settings", label: "Settings & Branding", icon: Settings },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: boolean };
+const GROUPS: { title: string; items: NavItem[] }[] = [
+  { title: "Main", items: [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/leads", label: "Leads & Conversions", icon: Inbox, badge: true },
+    { href: "/admin/landing-pages", label: "Landing Pages", icon: Megaphone },
+    { href: "/admin/payments", label: "Payments & Clients", icon: Wallet },
+  ] },
+  { title: "Catalog", items: [
+    { href: "/admin/stores", label: "Stores", icon: Store },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/coupons", label: "Coupons", icon: TicketPercent },
+    { href: "/admin/catalog-settings", label: "Catalog Settings", icon: SlidersHorizontal },
+  ] },
+  { title: "Website content", items: [
+    { href: "/admin/c/services", label: "Services", icon: Sparkles },
+    { href: "/admin/c/projects", label: "Portfolio", icon: Briefcase },
+    { href: "/admin/c/testimonials", label: "Testimonials", icon: MessageSquareQuote },
+    { href: "/admin/c/posts", label: "Blog & News", icon: FileText },
+    { href: "/admin/c/plans", label: "Pricing Plans", icon: BadgeIndianRupee },
+    { href: "/admin/c/faqs", label: "FAQs", icon: HelpCircle },
+    { href: "/admin/c/brands", label: "Brands & Partners", icon: Star },
+  ] },
+  { title: "System", items: [{ href: "/admin/settings", label: "Settings & Branding", icon: Settings }] },
 ];
 
 export function AdminShell({ admin, newLeads, children }: { admin: { name: string; email: string }; newLeads: number; children: React.ReactNode }) {
@@ -46,12 +56,17 @@ export function AdminShell({ admin, newLeads, children }: { admin: { name: strin
         <button className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X className="size-5" /></button>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
-        {NAV.map((n) => (
-          <Link key={n.href} href={n.href} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition", active(n.href) ? "bg-accent text-white shadow-md shadow-accent/25" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
-            <n.icon className="size-4" />
-            <span className="flex-1">{n.label}</span>
-            {n.badge && newLeads > 0 && <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", active(n.href) ? "bg-white text-accent" : "bg-red-500 text-white")}>{newLeads}</span>}
-          </Link>
+        {GROUPS.map((g) => (
+          <div key={g.title} className="mb-3">
+            <p className="px-3 pt-2 pb-1.5 text-[10px] font-bold tracking-[2px] text-muted/70 uppercase">{g.title}</p>
+            {g.items.map((n) => (
+              <Link key={n.href} href={n.href} className={cn("flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition", active(n.href) ? "bg-accent text-white shadow-md shadow-accent/25" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
+                <n.icon className="size-4" />
+                <span className="flex-1">{n.label}</span>
+                {n.badge && newLeads > 0 && <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", active(n.href) ? "bg-white text-accent" : "bg-red-500 text-white")}>{newLeads}</span>}
+              </Link>
+            ))}
+          </div>
         ))}
       </nav>
       <div className="border-t border-border p-3">

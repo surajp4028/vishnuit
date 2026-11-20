@@ -196,6 +196,8 @@ CREATE TABLE IF NOT EXISTS stores (
   contact JSON NULL,
   pages JSON NULL,
   payments JSON NULL,
+  tax JSON NULL,
+  testimonials JSON NULL,
   plan VARCHAR(20) NOT NULL DEFAULT 'free',
   plan_expires_at DATETIME NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'active',
@@ -252,4 +254,19 @@ CREATE TABLE IF NOT EXISTS store_orders (
   note TEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX (store_id, created_at), INDEX (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS coupons (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(40) NOT NULL UNIQUE,
+  kind VARCHAR(10) NOT NULL DEFAULT 'percent',
+  value DECIMAL(10,2) NOT NULL,
+  user_id INT NULL,
+  plan VARCHAR(20) NULL,
+  max_uses INT NULL,
+  used INT NOT NULL DEFAULT 0,
+  valid_till DATE NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  note VARCHAR(200) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

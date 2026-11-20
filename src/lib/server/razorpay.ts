@@ -7,14 +7,16 @@ export function rzpConfigured() {
   return Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
 }
 
-function auth() {
-  return "Basic " + Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString("base64");
+type Creds = { keyId: string; secret: string };
+function auth(c?: Creds) {
+  return "Basic " + Buffer.from(`${c?.keyId ?? process.env.RAZORPAY_KEY_ID}:${c?.secret ?? process.env.RAZORPAY_KEY_SECRET}`).toString("base64");
 }
 
-export async function createOrder(amountPaise: number, receipt: string, notes: Record<string, string>) {
+/** Creates a Razorpay order — on Vishnu IT's account, or on a merchant's own account when `creds` is given. */
+export async function createOrder(amountPaise: number, receipt: string, notes: Record<string, string>, creds?: Creds) {
   const res = await fetch(`${BASE}/orders`, {
     method: "POST",
-    headers: { Authorization: auth(), "Content-Type": "application/json" },
+    headers: { Authorization: auth(creds), "Content-Type": "application/json" },
     body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt, notes, payment_capture: 1 }),
     signal: AbortSignal.timeout(15000),
   });
@@ -35,8 +37,8 @@ function safeEq(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-export function verifyCheckoutSignature(orderId: string, paymentId: string, signature: string) {
-  const expected = createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!).update(`${orderId}|${paymentId}`).digest("hex");
+export function verifyCheckoutSignature(orderId: string, paymentId: string, signature: string, secret?: string) {
+  const expected = createHmac("sha256", secret ?? process.env.RAZORPAY_KEY_SECRET!).update(`${orderId}|${paymentId}`).digest("hex");
   return safeEq(expected, signature);
 }
 

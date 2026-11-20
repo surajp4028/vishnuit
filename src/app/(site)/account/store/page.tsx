@@ -1,42 +1,25 @@
 import type { Metadata } from "next";
-import { query } from "@/lib/server/db";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/server/users";
-import { getStoreForUser, getStoreCategories, getStoreProducts, storeForOwner } from "@/lib/server/catalog";
-import { siteUrl } from "@/lib/site";
+import { getCatalogConfig, getStoreForUser } from "@/lib/server/catalog";
 import { CreateStore } from "@/components/store/create-store";
-import { StoreDashboard } from "@/components/store/store-dashboard";
-import type { O } from "@/components/store/orders-panel";
 
-export const metadata: Metadata = { title: "My store", robots: { index: false } };
+export const metadata: Metadata = { title: "Create your store", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-export default async function MyStorePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+/** Enroll page. Merchants who already have a store are sent to the seller panel. */
+export default async function CreateStorePage() {
   const u = await requireUser("/account/store");
-  const store = await getStoreForUser(u.id);
-  if (!store) {
-    const base = (u.name || u.email?.split("@")[0] || "store").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 20);
-    return <CreateStore suggested={base.length >= 3 ? base : `store${u.uid.slice(-4)}`} />;
-  }
-  const { tab } = await searchParams;
-  const [products, categories, orders] = await Promise.all([
-    getStoreProducts(store.id),
-    getStoreCategories(store.id),
-    query<Record<string, unknown>>("SELECT * FROM store_orders WHERE store_id=? ORDER BY id DESC LIMIT 300", [store.id]),
-  ]);
-  const o: O[] = orders.map((r) => ({
-    ...(r as unknown as O),
-    items: typeof r.items === "string" ? JSON.parse(r.items) : (r.items as O["items"]),
-    subtotal: Number(r.subtotal),
-    created_at: String(r.created_at),
-  }));
-  return (
-    <StoreDashboard
-      initialStore={JSON.parse(JSON.stringify(storeForOwner(store)))}
-      initialProducts={JSON.parse(JSON.stringify(products))}
-      initialCategories={JSON.parse(JSON.stringify(categories))}
-      initialOrders={JSON.parse(JSON.stringify(o))}
-      initialTab={tab === "products" || tab === "orders" || tab === "settings" ? tab : "home"}
-      origin={siteUrl()}
-    />
+  const [store, conf] = await Promise.all([getStoreForUser(u.id), getCatalogConfig()]);
+  const paused = (t: string, d: string) => (
+    <section className="px-4 pt-32 pb-24 text-center md:pt-40">
+      <h1 className="font-display text-3xl font-extrabold tracking-tight">{t}</h1>
+      <p className="mx-auto mt-3 max-w-md text-muted">{d}</p>
+    </section>
   );
+  if (!conf.features.enabled) return paused("Online stores are paused", "We're making improvements. Your store and products are safe — please check back soon.");
+  if (store) redirect("/seller");
+  if (!conf.features.newStores) return paused("New stores are opening soon", "We're not accepting new stores right now. Please check back soon.");
+  const base = (u.name || u.email?.split("@")[0] || "store").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 20);
+  return <CreateStore suggested={base.length >= 3 ? base : `store${u.uid.slice(-4)}`} />;
 }

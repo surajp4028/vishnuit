@@ -3,25 +3,59 @@ import { cache } from "react";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { query, queryOne } from "./db";
 
-/* ---------------- plans ---------------- */
-export const PLANS = {
+/* ---------------- plans (admin can edit prices/limits in Admin → Catalog Stores) ---------------- */
+export type PlanKey = "free" | "starter" | "growth" | "premium";
+export type PlanDef = { name: string; limit: number | null; price: number; razorpay: boolean };
+export const PLAN_KEYS: PlanKey[] = ["free", "starter", "growth", "premium"];
+export const DEFAULT_PLANS: Record<PlanKey, PlanDef> = {
   free: { name: "Free", limit: 15, price: 0, razorpay: false },
   starter: { name: "Starter", limit: 50, price: 499, razorpay: true },
   growth: { name: "Growth", limit: 100, price: 899, razorpay: true },
-  premium: { name: "Premium", limit: Infinity, price: 9999, razorpay: true },
-} as const;
-export type PlanKey = keyof typeof PLANS;
+  premium: { name: "Premium", limit: null, price: 9999, razorpay: true },
+};
+/** Back-compat alias used for plan names. */
+export const PLANS = DEFAULT_PLANS;
 export const GRACE_DAYS = 15;
+
+export type CatalogFeatures = {
+  enabled: boolean;      // master switch for the whole catalog feature
+  newStores: boolean;    // users may create new stores
+  storefronts: boolean;  // merchant stores are visible to shoppers
+  accountCard: boolean;  // "Launch your own online store" card on /account
+  accountTab: boolean;   // "My Store / Create Store" tab on /account
+  menuLink: boolean;     // "My store" in the header profile menu
+};
+export const DEFAULT_FEATURES: CatalogFeatures = { enabled: true, newStores: true, storefronts: true, accountCard: true, accountTab: true, menuLink: true };
+export type CatalogConfig = { plans: Record<PlanKey, PlanDef>; gstRate: number; sellerGstin: string; sellerLegalName: string; features: CatalogFeatures };
+export const getCatalogConfig = cache(async (): Promise<CatalogConfig> => {
+  let db: Partial<CatalogConfig> = {};
+  try {
+    const row = await queryOne<{ v: unknown }>("SELECT v FROM settings WHERE k='catalog'");
+    if (row) db = (typeof row.v === "string" ? JSON.parse(row.v) : row.v) as Partial<CatalogConfig>;
+  } catch {}
+  const plans = { ...DEFAULT_PLANS };
+  for (const k of PLAN_KEYS) if (db.plans?.[k]) plans[k] = { ...DEFAULT_PLANS[k], ...db.plans[k] };
+  plans.free.price = 0;
+  plans.free.razorpay = false;
+  const features = { ...DEFAULT_FEATURES, ...(db.features ?? {}) };
+  if (!features.enabled) Object.assign(features, { newStores: false, accountCard: false, accountTab: false, menuLink: false });
+  return { plans, gstRate: Number.isFinite(Number(db.gstRate)) ? Number(db.gstRate) : 18, sellerGstin: db.sellerGstin ?? "", sellerLegalName: db.sellerLegalName ?? "", features, rawFeatures: { ...DEFAULT_FEATURES, ...(db.features ?? {}) } } as CatalogConfig & { rawFeatures: CatalogFeatures };
+});
 
 /* ---------------- types ---------------- */
 export type StoreContact = { phone?: string; whatsapp?: string; email?: string; address?: string; instagram?: string; facebook?: string };
 export type StorePage = { on: boolean; content: string };
 export type StorePages = { privacy: StorePage; terms: StorePage; refund: StorePage; shipping: StorePage };
+export type StoreTax = { gstin: string; legalName: string; rate: number; inclusive: boolean; hsn: string; invoicePrefix: string };
+export const emptyTax = (): StoreTax => ({ gstin: "", legalName: "", rate: 0, inclusive: true, hsn: "", invoicePrefix: "INV" });
+export type Testimonial = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
+export type StoreTestimonials = { on: boolean; items: Testimonial[] };
+export const emptyTestimonials = (): StoreTestimonials => ({ on: false, items: [] });
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
   id: number; user_id: number; code: string; handle: string; name: string; tagline: string | null;
   logo_key: string | null; banner_key: string | null; about: string | null;
-  contact: StoreContact; pages: StorePages; payments: StorePayments;
+  contact: StoreContact; pages: StorePages; payments: StorePayments; tax: StoreTax; testimonials: StoreTestimonials;
   plan: PlanKey; plan_expires_at: string | null; status: string; created_at: string;
 };
 export type Product = {
@@ -51,6 +85,8 @@ export function hydrateStore(r: Record<string, unknown>): Store {
   return {
     ...(r as unknown as Store),
     contact: json<StoreContact>(r.contact, {}),
+    tax: { ...emptyTax(), ...json<Partial<StoreTax>>(r.tax, {}) },
+    testimonials: { ...emptyTestimonials(), ...json<Partial<StoreTestimonials>>(r.testimonials, {}) },
     pages,
     payments: { ...emptyPayments(), ...pay, upi: { ...emptyPayments().upi, ...(pay.upi ?? {}) }, razorpay: { ...emptyPayments().razorpay, ...(pay.razorpay ?? {}) } },
     created_at: String(r.created_at),
@@ -73,7 +109,8 @@ export function effectivePlan(s: Pick<Store, "plan" | "plan_expires_at">): PlanK
   const end = new Date(s.plan_expires_at).getTime() + GRACE_DAYS * 86400000;
   return Date.now() <= end ? s.plan : "free";
 }
-export const productLimit = (s: Pick<Store, "plan" | "plan_expires_at">) => PLANS[effectivePlan(s)].limit;
+/** Max products for the plan in force (Infinity = unlimited). */
+export const productLimit = (s: Pick<Store, "plan" | "plan_expires_at">, plans: Record<PlanKey, PlanDef>) => plans[effectivePlan(s)].limit ?? Infinity;
 
 /* ---------------- lookups ---------------- */
 export async function getStoreForUser(userId: number) {
@@ -83,17 +120,20 @@ export async function getStoreForUser(userId: number) {
 export const getStoreByHandle = cache(async (raw: string) => {
   const handle = decodeURIComponent(raw).replace(/^@/, "").toLowerCase();
   if (!HANDLE_RE.test(handle)) return null;
+  const cfg = await getCatalogConfig();
+  if (!cfg.features.enabled || !cfg.features.storefronts) return null;
   const r = await queryOne<Record<string, unknown>>("SELECT * FROM stores WHERE handle=? AND status='active'", [handle]);
   return r ? hydrateStore(r) : null;
 });
 export const getStoreCategories = cache(async (storeId: number) =>
   query<Category>("SELECT * FROM store_categories WHERE store_id=? ORDER BY sort, name", [storeId]));
-export async function getStoreProducts(storeId: number, opts: { activeOnly?: boolean; categoryId?: number; featured?: boolean; limit?: number } = {}) {
+export async function getStoreProducts(storeId: number, opts: { activeOnly?: boolean; categoryId?: number; featured?: boolean; limit?: number; q?: string } = {}) {
   const where = ["store_id=?"];
   const p: unknown[] = [storeId];
   if (opts.activeOnly) where.push("status='active'");
   if (opts.categoryId) { where.push("category_id=?"); p.push(opts.categoryId); }
   if (opts.featured) where.push("featured=1");
+  if (opts.q?.trim()) { where.push("(name LIKE ? OR description LIKE ?)"); p.push(`%${opts.q.trim().slice(0, 60)}%`, `%${opts.q.trim().slice(0, 60)}%`); }
   const rows = await query<Record<string, unknown>>(`SELECT * FROM store_products WHERE ${where.join(" AND ")} ORDER BY featured DESC, id DESC LIMIT ${Math.min(opts.limit ?? 500, 1000)}`, p);
   return rows.map(hydrateProduct);
 }
@@ -134,15 +174,25 @@ export function decryptSecret(enc: string | null) {
 }
 
 /** Store shape that is safe to send to the merchant's browser (no secrets). */
-export function storeForOwner(s: Store) {
+export function storeForOwner(s: Store, plans: Record<PlanKey, PlanDef>) {
   const plan = effectivePlan(s);
   return {
     id: s.id, code: s.code, handle: s.handle, name: s.name, tagline: s.tagline ?? "", about: s.about ?? "",
     logo: imgUrl(s.logo_key), logo_key: s.logo_key, banner: imgUrl(s.banner_key), banner_key: s.banner_key,
-    contact: s.contact, pages: s.pages,
+    contact: s.contact, pages: s.pages, tax: s.tax, testimonials: s.testimonials,
     payments: { cod: s.payments.cod, upi: { ...s.payments.upi, qr: imgUrl(s.payments.upi.qr_key) }, razorpay: { on: s.payments.razorpay.on, key_id: s.payments.razorpay.key_id, hasSecret: Boolean(s.payments.razorpay.secret_enc) } },
-    plan: s.plan, effectivePlan: plan, planName: PLANS[plan].name, limit: Number.isFinite(PLANS[plan].limit) ? PLANS[plan].limit : null,
-    plan_expires_at: s.plan_expires_at, razorpayAllowed: PLANS[plan].razorpay,
+    plan: s.plan, effectivePlan: plan, planName: plans[plan].name, limit: plans[plan].limit,
+    plan_expires_at: s.plan_expires_at, razorpayAllowed: plans[plan].razorpay,
+    inGrace: s.plan !== "free" && plan !== "free" && !!s.plan_expires_at && new Date(s.plan_expires_at).getTime() < Date.now(),
   };
 }
 export type OwnerStore = ReturnType<typeof storeForOwner>;
+
+/** GST split for an order total under the store's tax settings. */
+export function orderTax(total: number, tax: StoreTax) {
+  const rate = tax.gstin && tax.rate > 0 ? tax.rate : 0;
+  if (!rate) return { rate: 0, taxable: total, gst: 0, total };
+  const taxable = tax.inclusive ? Math.round((total / (1 + rate / 100)) * 100) / 100 : total;
+  const gst = tax.inclusive ? Math.round((total - taxable) * 100) / 100 : Math.round(((total * rate) / 100) * 100) / 100;
+  return { rate, taxable, gst, total: tax.inclusive ? total : Math.round((total + gst) * 100) / 100 };
+}

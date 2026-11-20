@@ -1,7 +1,8 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, CheckCircle2, Clock, FileText, LayoutDashboard, Loader2, LogOut, Receipt, Store, UserCog, XCircle } from "lucide-react";
+import { ArrowRight, ShoppingBag, Camera, CheckCircle2, Clock, FileText, LayoutDashboard, Loader2, LogOut, Receipt, Store, UserCog, XCircle } from "lucide-react";
+import Link from "next/link";
 import { cn, formatINR } from "@/lib/utils";
 import { field } from "./auth-forms";
 
@@ -10,16 +11,17 @@ export type AccountPayment = {
   rzp_order_id: string; rzp_payment_id: string | null; created_at: string; paid_at: string | null;
 };
 type U = { uid: string; name: string; email: string | null; phone: string | null; company: string | null; avatar: string | null; hasPassword: boolean };
-type Tab = "overview" | "payments" | "profile";
+type Tab = "overview" | "orders" | "payments" | "profile";
+export type MyOrder = { order_no: string; store: string; handle: string; subtotal: number; status: string; pay_method: string; pay_status: string; created_at: string; items: { name: string; variant: string | null; qty: number }[]; invoice: string };
 
 const d = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-export function AccountDashboard({ user: initial, memberSince, payments, initialTab, showStoreCard, store }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab; showStoreCard: boolean; store: { name: string; handle: string } | null }) {
+export function AccountDashboard({ user: initial, memberSince, payments, initialTab, showStoreCard, showStoreTab, store, orders }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab; showStoreCard: boolean; showStoreTab: boolean; store: { name: string; handle: string } | null; orders: MyOrder[] }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [user, setUser] = useState(initial);
   const paid = payments.filter((p) => p.status === "paid");
   const total = paid.reduce((n, p) => n + p.amount, 0);
-  const tabs: [Tab, string, typeof LayoutDashboard][] = [["overview", "Overview", LayoutDashboard], ["payments", "Payments", Receipt], ["profile", "Profile", UserCog]];
+  const tabs: [Tab, string, typeof LayoutDashboard][] = [["overview", "Overview", LayoutDashboard], ...(orders.length ? [["orders", `My Orders (${orders.length})`, ShoppingBag] as [Tab, string, typeof LayoutDashboard]] : []), ["payments", "Payments", Receipt], ["profile", "Profile", UserCog]];
 
   async function logout() {
     await fetch("/api/account/logout", { method: "POST" });
@@ -46,6 +48,9 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
               <Icon className="size-4" /> {label}
             </button>
           ))}
+          {showStoreTab && <Link href={store ? "/seller" : "/account/store"} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d4a017]/50 bg-[#d4a017]/10 px-4 py-2.5 text-sm font-semibold text-[#8a6a0c] dark:text-[#f5c542]">
+            <Store className="size-4" /> {store ? "My Store" : "Create Store"} <ArrowRight className="size-3.5" />
+          </Link>}
         </div>
 
         <div className="mt-6">
@@ -54,7 +59,7 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
               <Stat label="Total paid" value={formatINR(total)} />
               <Stat label="Payments" value={String(paid.length)} />
               <Stat label="Invoices" value={String(paid.length)} />
-              {(store || showStoreCard) && <div className="relative overflow-hidden rounded-3xl bg-[#0a0f1f] p-6 text-white md:col-span-3 md:p-8">
+              {showStoreCard && <div className="relative overflow-hidden rounded-3xl bg-[#0a0f1f] p-6 text-white md:col-span-3 md:p-8">
                 <div className="pointer-events-none absolute -top-20 -right-20 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,.45),transparent)]" />
                 <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -62,7 +67,7 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
                     <h2 className="mt-3 font-display text-2xl font-extrabold">{store ? store.name : "Launch your own online store"}</h2>
                     <p className="mt-1.5 max-w-lg text-sm text-white/70">{store ? `vishnuit.co.in/catalog/@${store.handle}` : "List your products, get your own store link at vishnuit.co.in/catalog/@yourname and take orders on WhatsApp, UPI or COD — free for up to 15 products."}</p>
                   </div>
-                  <a href="/account/store" className="shrink-0 rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-black">{store ? "Manage store" : "Create my store"}</a>
+                  <a href={store ? "/seller" : "/account/store"} className="shrink-0 rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-black">{store ? "Manage store" : "Create my store"}</a>
                 </div>
               </div>}
               {paid[0] && (
@@ -71,6 +76,27 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
                   <PaymentRow p={paid[0]} />
                 </div>
               )}
+            </div>
+          )}
+
+          {tab === "orders" && (
+            <div className="space-y-3">
+              {orders.map((o) => (
+                <div key={o.order_no} className="rounded-3xl border border-border bg-card p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0"><a href={`/catalog/@${o.handle}`} className="truncate font-semibold hover:underline">{o.store}</a><p className="text-xs text-muted">#{o.order_no} · {d(o.created_at)}</p></div>
+                    <p className="shrink-0 font-display font-bold">{formatINR(o.subtotal)}</p>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm text-muted">{o.items.map((i) => `${i.name}${i.variant ? ` (${i.variant})` : ""} × ${i.qty}`).join(", ")}</p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-semibold capitalize">{o.status === "new" ? "Order placed" : o.status}</span>
+                      <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", o.pay_status === "paid" || o.pay_status === "verified" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600")}>{o.pay_method === "cod" ? "Cash on delivery" : o.pay_status === "paid" || o.pay_status === "verified" ? "Paid" : "Payment pending"}</span>
+                    </div>
+                    <a href={o.invoice} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-semibold text-background"><FileText className="size-3.5" /> Invoice</a>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

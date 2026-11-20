@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { exec, query, queryOne } from "@/lib/server/db";
-import { PLANS, effectivePlan, hydrateProduct, productLimit, slugify } from "@/lib/server/catalog";
+import { effectivePlan, getCatalogConfig, hydrateProduct, productLimit, slugify } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
 import { parseProduct } from "@/lib/server/product-input";
 
@@ -9,9 +9,10 @@ export async function POST(req: Request) {
   if (a instanceof Response) return a;
   const { store } = a;
   const count = await queryOne<{ n: number }>("SELECT COUNT(*) n FROM store_products WHERE store_id=?", [store.id]);
-  const limit = productLimit(store);
+  const { plans } = await getCatalogConfig();
+  const limit = productLimit(store, plans);
   if (Number(count?.n) >= limit)
-    return Response.json({ error: `Your ${PLANS[effectivePlan(store)].name} plan allows ${limit} products. Upgrade to add more.`, code: "limit" }, { status: 403 });
+    return Response.json({ error: `Your ${plans[effectivePlan(store)].name} plan allows ${limit} products. Upgrade to add more.`, code: "limit" }, { status: 403 });
   const cats = (await query<{ id: number }>("SELECT id FROM store_categories WHERE store_id=?", [store.id])).map((c) => c.id);
   const p = parseProduct((await req.json().catch(() => ({}))) as Record<string, unknown>, store.code, cats);
   if ("error" in p) return Response.json({ error: p.error }, { status: 422 });

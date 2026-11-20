@@ -23,7 +23,7 @@ export function CreateStore({ suggested }: { suggested: string }) {
     e.preventDefault(); setErr(""); setBusy(true);
     const r = await api("/api/store/create", "POST", { name, handle });
     setBusy(false);
-    if (r.ok) router.refresh(); else setErr(r.data.error || "Could not create store.");
+    if (r.ok) window.location.href = "/seller"; else setErr(r.data.error || "Could not create store.");
   }
 
   return (

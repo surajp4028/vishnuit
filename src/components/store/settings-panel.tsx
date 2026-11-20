@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2, Plus, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, input, Toggle } from "./ui";
 
@@ -11,20 +11,28 @@ export type S = {
   pages: Record<PageKey, { on: boolean; content: string }>;
   payments: { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; hasSecret: boolean } };
   planName: string; limit: number | null; plan_expires_at: string | null; razorpayAllowed: boolean;
+  tax: { gstin: string; legalName: string; rate: number; inclusive: boolean; hsn: string; invoicePrefix: string };
+  testimonials: { on: boolean; items: Testi[] };
 };
+type Testi = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
 const TITLES: Record<PageKey, string> = { privacy: "Privacy Policy", terms: "Terms & Conditions", refund: "Refund & Exchange Policy", shipping: "Shipping Policy" };
 
-export function SettingsPanel({ store, setStore, section }: { store: S; setStore: (s: S) => void; section: "profile" | "payments" | "pages" }) {
+export function SettingsPanel({ store, setStore, section }: { store: S; setStore: (s: S) => void; section: "profile" | "payments" | "pages" | "tax" | "reviews" }) {
   const [s, setS] = useState(store);
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   const c = (k: keyof S["contact"], v: string) => setS({ ...s, contact: { ...s.contact, [k]: v } });
+  const tm = s.testimonials ?? { on: false, items: [] };
+  const setTm = (x: Partial<S["testimonials"]>) => setS({ ...s, testimonials: { ...tm, ...x } });
+  const setItem = (id: string, x: Partial<Testi>) => setTm({ items: tm.items.map((t) => (t.id === id ? { ...t, ...x } : t)) });
 
   async function save() {
     setBusy(true); setMsg(null);
     const body =
       section === "profile" ? { name: s.name, tagline: s.tagline, about: s.about, logo_key: s.logo_key, banner_key: s.banner_key, contact: s.contact }
+      : section === "tax" ? { tax: s.tax }
+      : section === "reviews" ? { testimonials: s.testimonials }
       : section === "payments" ? { payments: { cod: s.payments.cod, upi: s.payments.upi, razorpay: { on: s.payments.razorpay.on, key_id: s.payments.razorpay.key_id, key_secret: secret } } }
       : { pages: s.pages };
     const r = await api<{ store: S }>("/api/store/settings", "PATCH", body);
@@ -85,6 +93,25 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
         </>
       )}
 
+      {section === "tax" && (
+        <div className={cn(card, "space-y-5 p-5")}>
+          <p className="text-sm text-muted">Shown on the invoices your customers get. Add a GSTIN to issue GST tax invoices (CGST + SGST split).</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="GSTIN (optional)"><input value={s.tax.gstin} onChange={(e) => setS({ ...s, tax: { ...s.tax, gstin: e.target.value.toUpperCase().slice(0, 15) } })} placeholder="07ABCDE1234F1Z5" className={cn(input, "uppercase")} /></Field>
+            <Field label="Legal business name" hint="As on your GST certificate"><input value={s.tax.legalName} onChange={(e) => setS({ ...s, tax: { ...s.tax, legalName: e.target.value } })} placeholder={s.name} className={input} /></Field>
+            <Field label="GST rate on your products">
+              <div className="grid grid-cols-6 gap-1.5">
+                {[0, 3, 5, 12, 18, 28].map((r) => <button type="button" key={r} onClick={() => setS({ ...s, tax: { ...s.tax, rate: r } })} className={cn("rounded-xl border py-2.5 text-sm font-semibold", s.tax.rate === r ? "border-foreground bg-foreground text-background" : "border-border")}>{r}%</button>)}
+              </div>
+            </Field>
+            <Field label="HSN code (optional)" hint="e.g. 6204 for women's garments"><input value={s.tax.hsn} onChange={(e) => setS({ ...s, tax: { ...s.tax, hsn: e.target.value.replace(/\D/g, "").slice(0, 8) } })} inputMode="numeric" className={input} /></Field>
+            <Field label="Invoice number prefix"><input value={s.tax.invoicePrefix} onChange={(e) => setS({ ...s, tax: { ...s.tax, invoicePrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) } })} className={cn(input, "uppercase")} /></Field>
+          </div>
+          <Toggle on={s.tax.inclusive} onChange={(v) => setS({ ...s, tax: { ...s.tax, inclusive: v } })} label="Prices include GST" sub={s.tax.inclusive ? "Recommended. ₹1,180 price = ₹1,000 + ₹180 GST on the invoice." : "GST is added on top of your prices at checkout."} />
+          {!s.tax.gstin && s.tax.rate > 0 && <p className="rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-700">Add your GSTIN — without it invoices won't show GST.</p>}
+        </div>
+      )}
+
       {section === "pages" && (
         <div className="space-y-3">
           <p className="px-1 text-sm text-muted">Turn a page on and it appears in your store footer. Off = hidden.</p>
@@ -94,6 +121,34 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
               {s.pages[k].on && <textarea value={s.pages[k].content} onChange={(e) => setS({ ...s, pages: { ...s.pages, [k]: { ...s.pages[k], content: e.target.value } } })} rows={7} placeholder={`Write your ${TITLES[k].toLowerCase()}…`} className={cn(input, "resize-y text-sm")} />}
             </div>
           ))}
+        </div>
+      )}
+
+      {section === "reviews" && (
+        <div className="space-y-3">
+          <Toggle on={tm.on} onChange={(v) => setTm({ on: v })} label="Show testimonials on my store" sub={tm.on ? `${tm.items.filter((t) => t.on).length} visible on your home page` : "Off — the section is hidden from shoppers"} />
+          {tm.items.map((t, i) => (
+            <div key={t.id} className={cn(card, "space-y-3 p-4", !t.on && "opacity-70")}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold tracking-[2px] text-muted">REVIEW {i + 1}</p>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setItem(t.id, { on: !t.on })} className={cn("rounded-full px-3 py-1.5 text-xs font-bold", t.on ? "bg-emerald-500/10 text-emerald-600" : "bg-foreground/5 text-muted")}>{t.on ? "Visible" : "Hidden"}</button>
+                  <button type="button" onClick={() => setTm({ items: tm.items.filter((x) => x.id !== t.id) })} aria-label="Delete review" className="grid size-8 place-items-center rounded-full text-red-500 hover:bg-red-500/10"><Trash2 className="size-4" /></button>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input value={t.name} onChange={(e) => setItem(t.id, { name: e.target.value })} placeholder="Customer name" className={input} />
+                <input value={t.place} onChange={(e) => setItem(t.id, { place: e.target.value })} placeholder="City (optional)" className={input} />
+              </div>
+              <textarea value={t.text} onChange={(e) => setItem(t.id, { text: e.target.value })} rows={3} placeholder="What did they say?" className={cn(input, "resize-y text-sm")} />
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => <button type="button" key={n} onClick={() => setItem(t.id, { rating: n })} aria-label={`${n} stars`} className="p-1"><Star className={cn("size-5", n <= t.rating ? "fill-amber-400 text-amber-400" : "text-foreground/20")} /></button>)}
+              </div>
+            </div>
+          ))}
+          {tm.items.length < 30 && (
+            <button type="button" onClick={() => setTm({ items: [...tm.items, { id: `t${Date.now().toString(36)}`, name: "", place: "", text: "", rating: 5, on: true }] })} className="flex w-full items-center justify-center gap-2 rounded-[1.6rem] border-2 border-dashed border-border py-4 text-sm font-semibold text-muted transition hover:border-foreground/30 hover:text-foreground"><Plus className="size-4" /> Add a testimonial</button>
+          )}
         </div>
       )}
 

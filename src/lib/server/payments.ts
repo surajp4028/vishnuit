@@ -6,9 +6,11 @@ import { formatINR } from "@/lib/utils";
 import { invoiceNumber, invoicePath } from "./invoice";
 import { renderInvoicePdf } from "./invoice-pdf";
 import { payeePath, putObject, s3Configured } from "./s3";
+import { activateSubscription } from "./plan-billing";
+import { getCatalogConfig } from "./catalog";
 import { siteUrl } from "@/lib/site";
 
-type Payment = { id: number; user_id: number | null; plan_id: number | null; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; paid_at: string | null; created_at: string };
+type Payment = { id: number; user_id: number | null; plan_id: number | null; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; paid_at: string | null; created_at: string; kind?: string; meta?: unknown };
 
 /** Render the invoice PDF and keep a copy in S3 under the payer's folder: vishnu/payee/<UID>/invoices/<no>.pdf */
 export async function saveInvoicePdf(orderId: string) {
@@ -20,8 +22,12 @@ export async function saveInvoicePdf(orderId: string) {
   const s = await getSettings();
   const date = new Date(p.paid_at ?? p.created_at);
   const number = invoiceNumber(p.id, date);
+  const cfg = await getCatalogConfig();
+  const m = (typeof p.meta === "string" ? JSON.parse(p.meta) : p.meta) as { unit?: number; years?: number; base?: number; discount?: number; coupon?: string | null; taxable?: number; gstRate?: number; gst?: number } | null;
   const pdf = await renderInvoicePdf({
     number, paid: true,
+    sellerGstin: cfg.sellerGstin || null,
+    tax: m && m.gst != null ? { qty: m.years ?? 1, unit: m.unit ?? m.base ?? 0, base: m.base ?? 0, discount: m.discount ?? 0, coupon: m.coupon ?? null, taxable: m.taxable ?? 0, rate: m.gstRate ?? 18, gst: m.gst } : null,
     date: date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }),
     seller: { name: s.branding.siteName, address: s.contact.address, phone: s.contact.phone, email: s.contact.email, web: "www.vishnuit.co.in" },
     buyer: { name: p.name, company: p.company, email: p.email, phone: p.phone },
@@ -45,6 +51,8 @@ export async function markPaid(orderId: string, paymentId: string, method: strin
   if (r.affectedRows === 0) return; // already processed
   const p = await queryOne<Payment>("SELECT * FROM payments WHERE rzp_order_id=?", [orderId]);
   if (!p) return;
+  // Catalog plan purchases switch the store plan on right away.
+  await activateSubscription(p.id).catch((e) => console.error("[plan] activate failed:", (e as Error).message));
   await saveInvoicePdf(orderId).catch((e) => console.error("[invoice] pdf/s3 failed:", (e as Error).message));
   const s = await getSettings();
   const amount = formatINR(p.amount);

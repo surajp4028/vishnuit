@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { BadgeCheck, ChevronLeft, Inbox, Phone, X } from "lucide-react";
+import { BadgeCheck, ChevronLeft, Download, FileText, Inbox, Phone, X } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { api, card, inr } from "./ui";
@@ -8,15 +8,15 @@ import { api, card, inr } from "./ui";
 export type O = {
   id: number; order_no: string; name: string; phone: string; email: string | null; address: string | null;
   items: { id: number; name: string; variant: string | null; price: number; qty: number }[];
-  subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string;
+  subtotal: number; pay_method: string; utr: string | null; pay_status: string; status: string; note: string | null; created_at: string; invoice?: string;
 };
 const STEPS = ["new", "confirmed", "shipped", "delivered"];
 const COLORS: Record<string, string> = { new: "bg-blue-500/10 text-blue-600", confirmed: "bg-violet-500/10 text-violet-600", shipped: "bg-amber-500/10 text-amber-600", delivered: "bg-emerald-500/10 text-emerald-600", cancelled: "bg-red-500/10 text-red-500" };
 const when = (v: string) => new Date(v).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "numeric", minute: "2-digit" });
 
-export function OrdersPanel({ orders, setOrders }: { orders: O[]; setOrders: (o: O[]) => void }) {
+export function OrdersPanel({ orders, setOrders, openId }: { orders: O[]; setOrders: (o: O[]) => void; openId?: number }) {
   const [filter, setFilter] = useState("all");
-  const [open, setOpen] = useState<O | null>(null);
+  const [open, setOpen] = useState<O | null>(() => orders.find((o) => o.id === openId) ?? null);
   const list = orders.filter((o) => filter === "all" || o.status === filter);
 
   async function patch(o: O, body: Partial<O>) {
@@ -28,6 +28,7 @@ export function OrdersPanel({ orders, setOrders }: { orders: O[]; setOrders: (o:
 
   return (
     <div>
+      <div className="mb-3 flex justify-end"><a href="/api/store/orders/export" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold"><Download className="size-4" /> Export CSV</a></div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {["all", ...STEPS, "cancelled"].map((s) => (
           <button key={s} onClick={() => setFilter(s)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold capitalize", filter === s ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted")}>
@@ -60,6 +61,7 @@ export function OrdersPanel({ orders, setOrders }: { orders: O[]; setOrders: (o:
             <header className="flex items-center gap-3 border-b border-border px-4 py-3">
               <button onClick={() => setOpen(null)} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className="size-5 sm:hidden" /><X className="hidden size-5 sm:block" /></button>
               <div className="flex-1"><h2 className="font-display text-lg font-bold">Order #{open.order_no}</h2><p className="text-xs text-muted">{when(open.created_at)}</p></div>
+              {open.invoice && <a href={open.invoice} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-semibold"><FileText className="size-4" /> Invoice</a>}
             </header>
             <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
               <div className={cn(card, "p-4")}>

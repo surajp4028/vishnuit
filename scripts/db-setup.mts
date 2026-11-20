@@ -40,6 +40,13 @@ for (const sql of [
   "ALTER TABLE payments ADD COLUMN user_id INT NULL AFTER plan_name",
   "ALTER TABLE payments ADD COLUMN invoice_key VARCHAR(400) NULL AFTER paid_at",
   "ALTER TABLE payments ADD INDEX idx_user (user_id)",
+  "ALTER TABLE payments ADD COLUMN kind VARCHAR(20) NOT NULL DEFAULT 'service' AFTER user_id",
+  "ALTER TABLE payments ADD COLUMN meta JSON NULL AFTER notes",
+  "ALTER TABLE stores ADD COLUMN reminder_sent_at DATETIME NULL AFTER plan_expires_at",
+  "ALTER TABLE store_orders ADD COLUMN rzp_order_id VARCHAR(64) NULL AFTER utr",
+  "ALTER TABLE payments MODIFY amount DECIMAL(10,2) NOT NULL",
+  "ALTER TABLE stores ADD COLUMN tax JSON NULL AFTER payments",
+  "ALTER TABLE stores ADD COLUMN testimonials JSON NULL AFTER tax",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }

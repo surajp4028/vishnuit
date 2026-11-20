@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BadgeCheck, MessageCircle, Quote, RotateCcw, Star, Truck } from "lucide-react";
 import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl } from "@/lib/server/catalog";
 import { ProductCard } from "@/components/catalog/product-card";
 
@@ -10,58 +10,122 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   const s = await getStoreByHandle((await params).handle);
   if (!s) notFound();
   const base = `/catalog/@${s.handle}`;
-  const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 24 })]);
-  const featured = products.filter((p) => p.featured).slice(0, 8);
-  const latest = products.filter((p) => !p.featured).slice(0, 12);
+  const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 40 })]);
+  const featured = products.filter((p) => p.featured).slice(0, 10);
+  const latest = products.slice(0, 12);
   const banner = imgUrl(s.banner_key);
+  const catTiles = cats.map((c) => ({ ...c, img: imgUrl(products.find((p) => p.category_id === c.id && p.images[0])?.images[0]) })).slice(0, 10);
+  const perks = [
+    s.payments.cod && { icon: Truck, t: "Cash on delivery", d: "Pay when it arrives" },
+    { icon: BadgeCheck, t: "Secure checkout", d: s.payments.razorpay.on ? "UPI, cards & netbanking" : "Pay by UPI or COD" },
+    s.pages.refund.on && { icon: RotateCcw, t: "Easy returns", d: "See our refund policy" },
+    s.contact.whatsapp && { icon: MessageCircle, t: "WhatsApp support", d: "We reply fast" },
+  ].filter(Boolean) as { icon: typeof Truck; t: string; d: string }[];
+  const reviews = s.testimonials.on ? s.testimonials.items.filter((t) => t.on) : [];
+  const avg = reviews.length ? reviews.reduce((a, t) => a + t.rating, 0) / reviews.length : 0;
 
   return (
     <>
       {/* hero */}
-      <section className="px-4 pt-4 sm:px-6 sm:pt-6">
-        <div className="relative mx-auto flex min-h-[62svh] max-w-6xl items-end overflow-hidden rounded-[2rem] bg-[#0a0f1f] text-white sm:min-h-[560px]">
+      <section className="mx-auto max-w-7xl sm:px-6 sm:pt-5">
+        <div className="relative isolate flex aspect-[4/5] items-end overflow-hidden bg-[#0b0d12] text-white sm:aspect-[21/9] sm:rounded-3xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {banner && <img src={banner} alt="" className="absolute inset-0 size-full object-cover" />}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-          {!banner && <div className="absolute -top-32 -right-32 size-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,.35),transparent)]" />}
-          <div className="relative w-full p-7 sm:p-12">
-            <p className="text-xs font-semibold tracking-[4px] text-white/70">WELCOME TO</p>
-            <h1 className="mt-3 max-w-2xl font-display text-4xl leading-[1.02] font-extrabold tracking-tight sm:text-6xl">{s.name}</h1>
-            {s.tagline && <p className="mt-4 max-w-lg text-[15px] text-white/80 sm:text-lg">{s.tagline}</p>}
-            <Link href={`${base}/shop`} className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-black transition hover:gap-3">Shop now <ArrowRight className="size-4" /></Link>
+          {banner ? <img src={banner} alt="" className="absolute inset-0 -z-10 size-full object-cover" /> : (
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_10%,rgba(212,160,23,.28),transparent_55%),radial-gradient(ellipse_at_10%_90%,rgba(59,130,246,.25),transparent_55%)]" />
+          )}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="w-full p-6 sm:p-12">
+            <p className="text-[11px] font-semibold tracking-[5px] text-white/70">NEW SEASON</p>
+            <h1 className="mt-3 max-w-xl font-display text-[2.4rem] leading-[1.02] font-extrabold tracking-tight sm:text-6xl">{s.name}</h1>
+            {s.tagline && <p className="mt-3 max-w-md text-[15px] text-white/80">{s.tagline}</p>}
+            <Link href={`${base}/shop`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop the collection <ArrowRight className="size-4" /></Link>
           </div>
         </div>
       </section>
 
-      {cats.length > 0 && (
-        <section className="mx-auto mt-12 max-w-6xl px-4 sm:px-6">
-          <div className="flex gap-2.5 overflow-x-auto pb-2">
-            {cats.map((c) => <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="shrink-0 rounded-full border border-border px-5 py-2.5 text-sm font-semibold transition hover:border-foreground">{c.name}</Link>)}
+      {perks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-3 sm:px-6">
+          <div className="mt-4 flex gap-2 overflow-x-auto [scrollbar-width:none] sm:mt-6 sm:grid sm:grid-cols-4 sm:gap-3">
+            {perks.map((x) => (
+              <div key={x.t} className="flex min-w-[180px] items-center gap-3 rounded-2xl border border-border px-4 py-3">
+                <x.icon className="size-5 shrink-0 text-foreground/70" /><span><span className="block text-[13px] font-semibold">{x.t}</span><span className="block text-[11px] text-muted">{x.d}</span></span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {catTiles.length > 0 && (
+        <section className="mx-auto mt-10 max-w-7xl px-3 sm:mt-14 sm:px-6">
+          <h2 className="text-center text-[13px] font-bold tracking-[4px] text-muted">SHOP BY CATEGORY</h2>
+          <div className="mt-5 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] sm:justify-center sm:gap-7">
+            {catTiles.map((c) => (
+              <Link key={c.id} href={`${base}/shop?c=${c.slug}`} className="group flex w-[84px] shrink-0 flex-col items-center gap-2 sm:w-28">
+                <span className="grid size-[84px] place-items-center overflow-hidden rounded-full bg-foreground/[.05] ring-1 ring-border transition group-hover:ring-foreground/40 sm:size-28">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {c.img ? <img src={c.img} alt="" className="size-full object-cover" /> : <span className="font-display text-xl font-bold text-muted">{c.name[0]}</span>}
+                </span>
+                <span className="w-full truncate text-center text-[12.5px] font-semibold">{c.name}</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
 
       {featured.length > 0 && (
-        <section className="mx-auto mt-14 max-w-6xl px-4 sm:px-6">
-          <div className="flex items-end justify-between"><h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Featured</h2><Link href={`${base}/shop`} className="text-sm font-semibold text-muted hover:text-foreground">View all →</Link></div>
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-4">{featured.map((p) => <ProductCard key={p.id} p={p} base={base} />)}</div>
+        <section className="mx-auto mt-12 max-w-7xl sm:mt-16 sm:px-6">
+          <div className="flex items-end justify-between px-3 sm:px-0"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">MOST LOVED</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Bestsellers</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">View all</Link></div>
+          <div className="mt-5 flex snap-x gap-3 overflow-x-auto px-3 pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:gap-x-5 sm:gap-y-8 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+            {featured.map((p) => <div key={p.id} className="w-[44vw] shrink-0 snap-start sm:w-auto"><ProductCard p={p} base={base} /></div>)}
+          </div>
         </section>
       )}
 
-      <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6">
-        <div className="flex items-end justify-between"><h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{featured.length ? "New arrivals" : "Our collection"}</h2><Link href={`${base}/shop`} className="text-sm font-semibold text-muted hover:text-foreground">Shop all →</Link></div>
-        {latest.length || featured.length ? (
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-4">{(latest.length ? latest : featured).map((p) => <ProductCard key={p.id} p={p} base={base} />)}</div>
+      <section className="mx-auto mt-12 max-w-7xl px-3 sm:mt-16 sm:px-6">
+        <div className="flex items-end justify-between"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">JUST IN</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">New arrivals</h2></div><Link href={`${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">Shop all</Link></div>
+        {latest.length ? (
+          <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">{latest.map((p) => <ProductCard key={p.id} p={p} base={base} />)}</div>
         ) : (
-          <p className="mt-6 rounded-[1.6rem] border border-dashed border-border p-12 text-center text-muted">New products are coming soon.</p>
+          <p className="mt-6 rounded-2xl border border-dashed border-border p-12 text-center text-muted">New products are coming soon.</p>
         )}
+        {products.length > 12 && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
       </section>
 
+      {reviews.length > 0 && (
+        <section className="mt-16 overflow-hidden sm:mt-24">
+          <div className="mx-auto max-w-7xl px-3 sm:px-6">
+            <div className="flex flex-col items-center text-center">
+              <p className="text-[11px] font-bold tracking-[4px] text-muted">LOVED BY CUSTOMERS</p>
+              <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-4xl">What people are saying</h2>
+              <div className="mt-3 flex items-center gap-2 text-sm text-muted">
+                <span className="flex">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={n <= Math.round(avg) ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
+                <span><b className="text-foreground">{avg.toFixed(1)}</b> · {reviews.length} review{reviews.length > 1 ? "s" : ""}</span>
+              </div>
+            </div>
+            <div className="mt-8 flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible lg:grid-cols-3">
+              {reviews.map((t) => (
+                <figure key={t.id} className="relative flex w-[82vw] shrink-0 snap-center flex-col rounded-3xl border border-border bg-card p-6 sm:w-auto sm:p-7">
+                  <Quote className="absolute top-6 right-6 size-8 text-foreground/[.07]" />
+                  <span className="flex">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={n <= t.rating ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
+                  <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-foreground/85">“{t.text}”</blockquote>
+                  <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-5">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-sm font-bold text-background">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                    <span className="min-w-0"><span className="flex items-center gap-1.5 truncate text-sm font-semibold">{t.name}<BadgeCheck className="size-3.5 shrink-0 text-emerald-500" /></span>{t.place && <span className="block truncate text-xs text-muted">{t.place}</span>}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {s.about && (
-        <section className="mx-auto mt-20 max-w-3xl px-5 text-center">
-          <p className="text-xs font-semibold tracking-[4px] text-muted">OUR STORY</p>
-          <p className="mt-5 line-clamp-5 font-display text-xl leading-relaxed sm:text-2xl">{s.about}</p>
-          <Link href={`${base}/about`} className="mt-6 inline-block text-sm font-semibold underline underline-offset-4">Read more</Link>
+        <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6">
+          <div className="rounded-3xl bg-foreground/[.03] px-6 py-12 text-center sm:px-16 sm:py-20">
+            <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
+            <p className="mx-auto mt-5 line-clamp-5 max-w-3xl font-display text-xl leading-relaxed sm:text-[1.7rem] sm:leading-snug">{s.about}</p>
+            <Link href={`${base}/about`} className="mt-7 inline-block text-[13px] font-bold tracking-wide uppercase underline underline-offset-[6px]">Read more</Link>
+          </div>
         </section>
       )}
     </>

@@ -20,3 +20,7 @@ export function invoiceNumber(id: number, date: Date) {
   const y = date.getMonth() >= 3 ? date.getFullYear() : date.getFullYear() - 1;
   return `VIT/${y}-${String(y + 1).slice(2)}/${String(id).padStart(4, "0")}`;
 }
+
+/** Link to a shop order's invoice (merchant and customer both use it). */
+export const orderInvoicePath = (orderNo: string) => `/invoice/order/${encodeURIComponent(orderNo)}?t=${invoiceToken(`order:${orderNo}`)}`;
+export const orderInvoiceTokenOk = (orderNo: string, token: string) => invoiceTokenOk(`order:${orderNo}`, token);

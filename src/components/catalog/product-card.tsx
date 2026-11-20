@@ -3,23 +3,32 @@ import { imgUrl, type Product } from "@/lib/server/catalog";
 
 const rupee = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 
-export function ProductCard({ p, base }: { p: Product; base: string }) {
+/** Fashion-style product tile: tall image, hover swap, tight price row with % off. */
+export function ProductCard({ p, base, store }: { p: Product; base: string; store?: string }) {
   const img = imgUrl(p.images[0]);
   const second = imgUrl(p.images[1]);
   const off = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
   const soldOut = p.variants.length ? p.variants.every((v) => v.stock === 0) : p.stock === 0;
+  const lowStock = !soldOut && (p.variants.length ? false : p.stock != null && p.stock <= 3);
   return (
     <Link href={`${base}/p/${p.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] bg-foreground/[.04]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-foreground/[.04] sm:rounded-2xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {img && <img src={img} alt={p.name} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-[1.04]" />}
+        {img && <img src={img} alt={p.name} loading="lazy" className={`absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-[1.03] ${soldOut ? "opacity-60 grayscale" : ""}`} />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {second && <img src={second} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-0 transition duration-700 group-hover:opacity-100" />}
-        {off > 0 && !soldOut && <span className="absolute top-3 left-3 rounded-full bg-background/95 px-2.5 py-1 text-[11px] font-bold">{off}% OFF</span>}
-        {soldOut && <span className="absolute top-3 left-3 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold text-background">SOLD OUT</span>}
+        {second && !soldOut && <img src={second} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-0 transition duration-700 group-hover:opacity-100" />}
+        {soldOut && <span className="absolute inset-x-3 bottom-3 rounded-lg bg-background/95 py-1.5 text-center text-[11px] font-bold tracking-wider">SOLD OUT</span>}
+        {lowStock && <span className="absolute bottom-3 left-3 rounded-md bg-background/95 px-2 py-1 text-[10px] font-bold text-[#ff3f6c]">Only {p.stock} left</span>}
+        {p.featured && !soldOut && <span className="absolute top-2.5 left-2.5 rounded-md bg-foreground/85 px-2 py-0.5 text-[10px] font-bold tracking-wider text-background">BESTSELLER</span>}
       </div>
-      <p className="mt-3 line-clamp-2 text-[15px] font-medium leading-snug">{p.name}</p>
-      <p className="mt-1 text-[15px]"><b>{rupee(p.price)}</b>{p.compare_price ? <span className="ml-2 text-sm text-muted line-through">{rupee(p.compare_price)}</span> : null}</p>
+      <div className="mt-2.5 px-0.5">
+        {store && <p className="truncate text-[11px] font-bold tracking-wide text-foreground/90 uppercase">{store}</p>}
+        <p className="truncate text-[13.5px] text-muted">{p.name}</p>
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-[13.5px]">
+          <b className="text-foreground">{rupee(p.price)}</b>
+          {p.compare_price ? <><span className="text-xs text-muted line-through">{rupee(p.compare_price)}</span><span className="text-xs font-semibold text-[#ff905a]">({off}% OFF)</span></> : null}
+        </p>
+      </div>
     </Link>
   );
 }

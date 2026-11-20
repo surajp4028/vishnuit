@@ -4,13 +4,14 @@ import Link from "next/link";
 import { CheckCircle2, Loader2, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
+import { loadRazorpay } from "@/components/site/plan-checkout";
 
 const field = "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-[15px] outline-none transition focus:border-foreground/50";
 
 /** Cart + checkout on one page (built for phones). */
-export function Checkout({ handle, base, storeName, pay }: { handle: string; base: string; storeName: string; pay: { cod: boolean; upi: boolean; vpa: string; qr: string | null } }) {
+export function Checkout({ handle, base, storeName, pay }: { handle: string; base: string; storeName: string; pay: { cod: boolean; upi: boolean; vpa: string; qr: string | null; razorpay: boolean } }) {
   const { lines, total, setQty, remove, clear, ready } = useCart();
-  const [method, setMethod] = useState<"cod" | "upi">(pay.cod ? "cod" : "upi");
+  const [method, setMethod] = useState<"cod" | "upi" | "razorpay">(pay.razorpay ? "razorpay" : pay.cod ? "cod" : "upi");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<{ orderNo: string; subtotal: number } | null>(null);
@@ -20,8 +21,24 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
     const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const r = await fetch(`/api/catalog/@${handle}/order`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, pay_method: method, items: lines.map((l) => ({ id: l.id, variant: l.variant ?? undefined, qty: l.qty })) }) });
     const j = await r.json().catch(() => ({}));
+    if (!r.ok) { setBusy(false); return setErr(j.error || "Could not place the order."); }
+    if (j.rzp) {
+      const ok = await loadRazorpay();
+      if (!ok || !window.Razorpay) { setBusy(false); return setErr("Could not open the payment window. Your order is saved — the store will contact you."); }
+      const rp = new window.Razorpay({
+        key: j.rzp.keyId, order_id: j.rzp.orderId, amount: j.rzp.amount, currency: j.rzp.currency, name: storeName,
+        description: `Order #${j.orderNo}`, prefill: { name: f.name, email: f.email, contact: f.phone }, theme: { color: "#0a0f1f" },
+        handler: async (res: Record<string, string>) => {
+          await fetch(`/api/catalog/@${handle}/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(res) });
+          setBusy(false); setDone({ orderNo: j.orderNo, subtotal: j.subtotal }); clear(); window.scrollTo({ top: 0 });
+        },
+        modal: { ondismiss: () => { setBusy(false); setErr(`Payment not completed. Your order #${j.orderNo} is saved as unpaid — try again or contact the store.`); } },
+      });
+      rp.open();
+      return;
+    }
     setBusy(false);
-    if (r.ok) { setDone({ orderNo: j.orderNo, subtotal: j.subtotal }); clear(); window.scrollTo({ top: 0 }); } else setErr(j.error || "Could not place the order.");
+    setDone({ orderNo: j.orderNo, subtotal: j.subtotal }); clear(); window.scrollTo({ top: 0 });
   }
 
   if (done)
@@ -87,6 +104,7 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
         <div className="rounded-[1.6rem] border border-border p-5">
           <p className="font-display text-lg font-bold">Payment</p>
           <div className="mt-4 grid gap-2.5">
+            {pay.razorpay && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "razorpay" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "razorpay"} onChange={() => setMethod("razorpay")} className="accent-black" /><span><span className="block font-semibold">Pay online</span><span className="block text-xs text-muted">UPI, cards, net banking · secure by Razorpay</span></span></label>}
             {pay.cod && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "cod" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "cod"} onChange={() => setMethod("cod")} className="accent-black" /><span className="font-semibold">Cash on delivery</span></label>}
             {pay.upi && <label className={cn("flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5", method === "upi" ? "border-foreground" : "border-border")}><input type="radio" checked={method === "upi"} onChange={() => setMethod("upi")} className="accent-black" /><span className="font-semibold">Pay by UPI</span></label>}
           </div>

@@ -559,7 +559,6 @@ export const settings: Record<string, unknown> = {
     leadNotify: true,
     payNowOnDesktop: true,
     payNowOnMobile: true,
-    storeCardOnAccount: false,
     announcement: "Free website audit for new clients this month — limited slots!",
   },
 };

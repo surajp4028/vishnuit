@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { exec } from "@/lib/server/db";
-import { PAGE_KEYS, PLANS, effectivePlan, encryptSecret, getStoreForUser, storeForOwner, type StorePages, type StorePayments } from "@/lib/server/catalog";
+import { PAGE_KEYS, effectivePlan, encryptSecret, getCatalogConfig, getStoreForUser, storeForOwner, type StorePages, type StorePayments, type StoreTax, type StoreTestimonials } from "@/lib/server/catalog";
 import { requireStoreApi, str } from "@/lib/server/store-auth";
 
 const keyOk = (k: unknown) => k === null || (typeof k === "string" && /^catalog\/VISHNU\d{5,10}\/[a-z]+\/[\w.-]+$/.test(k));
@@ -38,7 +38,7 @@ export async function PATCH(req: Request) {
     const p = b.payments as { cod?: unknown; upi?: { on?: unknown; vpa?: unknown; qr_key?: unknown }; razorpay?: { on?: unknown; key_id?: unknown; key_secret?: unknown } };
     const vpa = str(p.upi?.vpa, 80);
     if (vpa && !/^[\w.-]{2,}@[a-zA-Z]{2,}$/.test(vpa)) return Response.json({ error: "Enter a valid UPI ID like name@okhdfcbank." }, { status: 422 });
-    const allowRzp = PLANS[effectivePlan(store)].razorpay;
+    const allowRzp = (await getCatalogConfig()).plans[effectivePlan(store)].razorpay;
     const keyId = str(p.razorpay?.key_id, 60);
     const secret = str(p.razorpay?.key_secret, 80);
     if (p.razorpay?.on && !allowRzp) return Response.json({ error: "Razorpay checkout needs the Starter plan or higher." }, { status: 403 });
@@ -51,10 +51,31 @@ export async function PATCH(req: Request) {
     if (!payments.cod && !payments.upi.on && !payments.razorpay.on) return Response.json({ error: "Keep at least one payment method on." }, { status: 422 });
   }
 
-  await exec("UPDATE stores SET name=?, tagline=?, about=?, logo_key=?, banner_key=?, contact=?, pages=?, payments=? WHERE id=?", [
-    name, tagline || null, about || null, logo, banner, JSON.stringify(contact), JSON.stringify(pages), JSON.stringify(payments), store.id,
+  let tax: StoreTax = store.tax;
+  if (b.tax) {
+    const t = b.tax as Record<string, unknown>;
+    const gstin = str(t.gstin, 15).toUpperCase();
+    if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return Response.json({ error: "GSTIN looks wrong — 15 characters like 07ABCDE1234F1Z5." }, { status: 422 });
+    const rate = Number(t.rate);
+    if (![0, 3, 5, 12, 18, 28].includes(rate)) return Response.json({ error: "Choose a GST rate: 0, 3, 5, 12, 18 or 28%." }, { status: 422 });
+    tax = { gstin, legalName: str(t.legalName, 120), rate, inclusive: t.inclusive !== false, hsn: str(t.hsn, 12), invoicePrefix: (str(t.invoicePrefix, 8).toUpperCase().replace(/[^A-Z0-9]/g, "") || "INV") };
+  }
+
+  let testimonials: StoreTestimonials = store.testimonials;
+  if (b.testimonials) {
+    const t = b.testimonials as { on?: unknown; items?: unknown };
+    const raw = Array.isArray(t.items) ? (t.items as Record<string, unknown>[]).slice(0, 30) : [];
+    const items = raw
+      .map((x, i) => ({ id: str(x.id, 24) || `t${Date.now().toString(36)}${i}`, name: str(x.name, 60), place: str(x.place, 60), text: str(x.text, 600), rating: Math.min(5, Math.max(1, Math.round(Number(x.rating) || 5))), on: x.on !== false }))
+      .filter((x) => x.name || x.text);
+    if (items.some((x) => !x.name || x.text.length < 5)) return Response.json({ error: "Each testimonial needs a customer name and a few words of review." }, { status: 422 });
+    testimonials = { on: Boolean(t.on), items };
+  }
+
+  await exec("UPDATE stores SET name=?, tagline=?, about=?, logo_key=?, banner_key=?, contact=?, pages=?, payments=?, tax=?, testimonials=? WHERE id=?", [
+    name, tagline || null, about || null, logo, banner, JSON.stringify(contact), JSON.stringify(pages), JSON.stringify(payments), JSON.stringify(tax), JSON.stringify(testimonials), store.id,
   ]);
   revalidatePath(`/catalog/@${store.handle}`, "layout");
   const fresh = await getStoreForUser(store.user_id);
-  return Response.json({ ok: true, store: storeForOwner(fresh!) });
+  return Response.json({ ok: true, store: storeForOwner(fresh!, (await getCatalogConfig()).plans) });
 }

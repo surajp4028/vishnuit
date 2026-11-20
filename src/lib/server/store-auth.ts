@@ -1,11 +1,12 @@
 import "server-only";
 import { getUser, type User } from "./users";
-import { getStoreForUser, type Store } from "./catalog";
+import { getCatalogConfig, getStoreForUser, type Store } from "./catalog";
 
 /** For merchant API routes: the signed-in user and their store, or an error Response. */
 export async function requireStoreApi(): Promise<{ user: User; store: Store } | Response> {
   const user = await getUser();
   if (!user) return Response.json({ error: "Please log in." }, { status: 401 });
+  if (!(await getCatalogConfig()).features.enabled) return Response.json({ error: "Online stores are paused right now." }, { status: 503 });
   const store = await getStoreForUser(user.id);
   if (!store) return Response.json({ error: "Create your store first." }, { status: 404 });
   return { user, store };

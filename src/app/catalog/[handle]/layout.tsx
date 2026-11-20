@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getStoreByHandle, imgUrl } from "@/lib/server/catalog";
+import { Suspense } from "react";
+import { getStoreByHandle, getStoreCategories, imgUrl } from "@/lib/server/catalog";
 import { CartProvider } from "@/components/catalog/cart";
 import { StoreHeader, WhatsAppFloat } from "@/components/catalog/chrome";
 import { StoreFooter } from "@/components/catalog/footer";
@@ -24,12 +25,13 @@ export default async function StoreLayout({ children, params }: { children: Reac
   if (!s) notFound();
   const base = `/catalog/@${s.handle}`;
   const logo = imgUrl(s.logo_key);
+  const cats = (await getStoreCategories(s.id)).map((c) => ({ name: c.name, slug: c.slug }));
   return (
     <CartProvider handle={s.handle}>
       <div className="min-h-dvh bg-background text-foreground">
-        <StoreHeader base={base} name={s.name} logo={logo} />
+        <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} name={s.name} logo={logo} categories={cats} /></Suspense>
         <main>{children}</main>
-        <StoreFooter store={s} base={base} logo={logo} />
+        <StoreFooter store={s} base={base} logo={logo} categories={cats} />
         <WhatsAppFloat number={s.contact.whatsapp ?? ""} store={s.name} />
       </div>
     </CartProvider>
