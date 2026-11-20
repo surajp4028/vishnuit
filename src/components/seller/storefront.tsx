@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, BarChart3, BookOpen, Check, ChevronDown, Moon, Palette, Loader2, MapPin, Megaphone, Images, Plus, Settings2, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BarChart3, BookOpen, Check, ChevronDown, Moon, Palette, Loader2, MapPin, Megaphone, Images, Plus, Settings2, Sparkles, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, imgUrl, input, Toggle } from "@/components/store/ui";
 import { HIGHLIGHT_ICON_MAP, type HighlightIconKey } from "@/components/catalog/highlight-icons";
@@ -11,7 +11,7 @@ export type Front = {
   bar: { on: boolean; items: string[] };
   highlights: { icon: HighlightIconKey; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
-  about: { images: string[]; heading: string };
+  about: { images: string[]; heading: string; home?: boolean };
   look: "sharp" | "minimal" | "soft";
   shipping: { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
   closed: { on: boolean; message: string };
@@ -26,10 +26,12 @@ const LOOKS: { k: Front["look"]; name: string; like: string; r: string; pill: st
   { k: "soft", name: "Soft", like: "Friendly & rounded — gifts, plants, bakery", r: "18px", pill: "999px" },
 ];
 
-type TabKey = "design" | "banners" | "offers" | "about" | "more";
+type TabKey = "design" | "banners" | "offers" | "reviews" | "about" | "more";
+export type Reviews = { on: boolean; items: { id: string; name: string; place: string; text: string; rating: number; on: boolean }[] };
 const TABS: { k: TabKey; label: string; icon: typeof MapPin }[] = [
   { k: "banners", label: "Banners", icon: Images },
   { k: "offers", label: "Offers & highlights", icon: Megaphone },
+  { k: "reviews", label: "Reviews", icon: Star },
   { k: "design", label: "Design", icon: Palette },
   { k: "about", label: "About & map", icon: BookOpen },
   { k: "more", label: "More", icon: Settings2 },
@@ -48,14 +50,21 @@ function Section({ icon: Icon, title, sub, children }: { icon: typeof MapPin; ti
 }
 
 /** Seller → Storefront: hero banners, announcement bar, 4 highlights and the contact map. */
-export function StorefrontEditor({ initial, address, handle }: { initial: Front; address: string; handle: string }) {
+export function StorefrontEditor({ initial, address, handle, reviews, initialTab, about }: { initial: Front; address: string; handle: string; reviews: Reviews; initialTab?: string; about: string }) {
+  const [story, setStory] = useState(about);
   const [f, setF] = useState<Front>(initial);
+  const [rv, setRv] = useState<Reviews>(reviews);
+  const [openReview, setOpenReview] = useState<string | null>(null);
+  const setReview = (id: string, x: Partial<Reviews["items"][number]>) => setRv((p) => ({ ...p, items: p.items.map((t) => (t.id === id ? { ...t, ...x } : t)) }));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   const [tab, setTab] = useState<TabKey>("banners");
   const [openBanner, setOpenBanner] = useState<string | null>(null);
   // Remember the last tab (per browser) so coming back lands where you were.
-  useEffect(() => { try { const t = localStorage.getItem("vit-storefront-tab") as TabKey | null; if (t && TABS.some((x) => x.k === t)) setTab(t); } catch {} }, []);
+  useEffect(() => {
+    if (initialTab && TABS.some((x) => x.k === initialTab)) { setTab(initialTab as TabKey); return; }
+    try { const t = localStorage.getItem("vit-storefront-tab") as TabKey | null; if (t && TABS.some((x) => x.k === t)) setTab(t); } catch {}
+  }, [initialTab]);
   const pick = (t: TabKey) => { setTab(t); try { localStorage.setItem("vit-storefront-tab", t); } catch {} };
   const set = (x: Partial<Front>) => setF((p) => ({ ...p, ...x }));
   const setBanner = (id: string, x: Partial<Banner>) => set({ banners: f.banners.map((b) => (b.id === id ? { ...b, ...x } : b)) });
@@ -64,9 +73,9 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
 
   async function save() {
     setBusy(true); setMsg(null);
-    const r = await api<{ store: { storefront: Front } }>("/api/store/settings", "PATCH", { storefront: f });
+    const r = await api<{ store: { storefront: Front; testimonials?: Reviews; about?: string } }>("/api/store/settings", "PATCH", { storefront: f, testimonials: rv, about: story });
     setBusy(false);
-    if (r.ok) { setF(r.data.store.storefront); setMsg({ ok: true, t: "Saved — your store is updated." }); } else setMsg({ ok: false, t: r.data.error || "Could not save." });
+    if (r.ok) { setF(r.data.store.storefront); if (r.data.store.testimonials) setRv(r.data.store.testimonials); if (typeof r.data.store.about === "string") setStory(r.data.store.about); setMsg({ ok: true, t: "Saved — your store is updated." }); } else setMsg({ ok: false, t: r.data.error || "Could not save." });
   }
 
   return (
@@ -74,8 +83,8 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
       {/* One part at a time instead of a very long page. Everything still saves together. */}
       <nav className="sticky top-14 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-card/95 p-1 backdrop-blur [scrollbar-width:none] md:top-[4.5rem]">
         {TABS.map((t) => (
-          <button key={t.k} type="button" onClick={() => pick(t.k)} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition", tab === t.k ? "bg-foreground text-background" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
-            <t.icon className="size-4" />{t.label}{t.k === "banners" && f.banners.length > 0 && <span className={cn("rounded-full px-1.5 text-[10px]", tab === t.k ? "bg-background/20" : "bg-foreground/10")}>{f.banners.length}</span>}
+          <button key={t.k} type="button" ref={(el) => { if (el && tab === t.k) el.scrollIntoView({ block: "nearest", inline: "nearest" }); }} onClick={() => pick(t.k)} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition", tab === t.k ? "bg-foreground text-background" : "text-muted hover:bg-foreground/5 hover:text-foreground")}>
+            <t.icon className="size-4" />{t.label}{(t.k === "banners" ? f.banners.length : t.k === "reviews" ? rv.items.length : 0) > 0 && <span className={cn("rounded-full px-1.5 text-[10px]", tab === t.k ? "bg-background/20" : "bg-foreground/10")}>{t.k === "banners" ? f.banners.length : rv.items.length}</span>}
           </button>
         ))}
       </nav>
@@ -206,8 +215,13 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
       )}
 
       {tab === "about" && (
-        <Section icon={BookOpen} title="About page" sub="Add 1–2 photos of you, your workshop or your products — the layout adjusts automatically. Your story text is in Settings → Profile.">
+        <Section icon={BookOpen} title="About your store" sub="Headline, your story and 1–2 photos. Shown as “Our story” on your home page and on the About page.">
+          <Toggle on={f.about.home !== false} onChange={(v) => set({ about: { ...f.about, home: v } })} label="Show “Our story” on my home page" sub={f.about.home !== false ? "On — shoppers see it near the bottom of your home page" : "Off — it stays only on your About page"} />
           <Field label="Headline (optional)"><input value={f.about.heading} maxLength={120} onChange={(e) => set({ about: { ...f.about, heading: e.target.value } })} placeholder="e.g. Made by hand, in small batches" className={input} /></Field>
+          <Field label="Your story" hint="Who you are, what you make, why shoppers will love it. A blank line starts a new paragraph — the home page shows the first one.">
+            <textarea value={story} onChange={(e) => setStory(e.target.value)} rows={7} maxLength={8000} placeholder={"e.g. Pandey Fashion started in 2018 in Delhi with one small shop…\n\nToday we design festive and everyday wear…"} className={cn(input, "resize-y leading-relaxed")} />
+            <span className="mt-1 block text-right text-[11px] text-muted">{story.length}/8000</span>
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             {[0, 1].map((n) => (
               <ImagePick key={n} value={f.about.images[n] ?? null} kind="banner" label={n ? "Photo 2 (optional)" : "Photo 1"} aspect="aspect-[4/5]"
@@ -226,6 +240,46 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
               <Field label={`Zoom: ${f.map.zoom}`} hint="Higher = closer"><input type="range" min={5} max={19} value={f.map.zoom} onChange={(e) => set({ map: { ...f.map, zoom: Number(e.target.value) } })} className="w-full accent-foreground" /></Field>
               {mapQ ? <iframe title="Map preview" src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&z=${f.map.zoom}&output=embed`} className="aspect-[16/9] w-full rounded-2xl border border-border" loading="lazy" /> : <p className="rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-700">Add a location to show the map.</p>}
             </>
+          )}
+        </Section>
+      )}
+
+      {tab === "reviews" && (
+        <Section icon={Star} title="Customer reviews" sub="Shown as scrolling cards on your home page. Turn single reviews on or off any time.">
+          <Toggle on={rv.on} onChange={(v) => setRv((p) => ({ ...p, on: v }))} label="Show reviews on my store" sub={rv.on ? `${rv.items.filter((t) => t.on).length} visible on your home page` : "Off — the section is hidden from shoppers"} />
+          {rv.items.map((t, i) => {
+            const open = openReview === t.id;
+            return (
+              <div key={t.id} className={cn("rounded-2xl border transition", open ? "border-foreground/30 shadow-sm" : "border-border", !t.on && !open && "opacity-60")}>
+                <div className="flex items-center gap-3 p-2.5 sm:p-3">
+                  <button type="button" onClick={() => setOpenReview(open ? null : t.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-[12px] font-bold text-background">{(t.name || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{t.name || <span className="font-normal text-muted">Review {i + 1}</span>}{t.place && <span className="font-normal text-muted"> · {t.place}</span>}</span>
+                      <span className="flex items-center gap-1.5"><span className="flex shrink-0">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={cn("size-3", n <= t.rating ? "fill-amber-400 text-amber-400" : "text-foreground/15")} />)}</span><span className="truncate text-xs text-muted">{t.text || "No text yet"}</span></span>
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => setReview(t.id, { on: !t.on })} className={cn("shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold", t.on ? "bg-emerald-500/10 text-emerald-600" : "bg-foreground/5 text-muted")}>{t.on ? "Visible" : "Hidden"}</button>
+                  <button type="button" onClick={() => setOpenReview(open ? null : t.id)} aria-label={open ? "Close" : "Edit review"} className="grid size-8 shrink-0 place-items-center rounded-full hover:bg-foreground/5"><ChevronDown className={cn("size-4 transition", open && "rotate-180")} /></button>
+                </div>
+                {open && (
+                  <div className="space-y-3 border-t border-border p-3 sm:p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input value={t.name} onChange={(e) => setReview(t.id, { name: e.target.value })} placeholder="Customer name" className={input} />
+                      <input value={t.place} onChange={(e) => setReview(t.id, { place: e.target.value })} placeholder="City (optional)" className={input} />
+                    </div>
+                    <textarea value={t.text} onChange={(e) => setReview(t.id, { text: e.target.value })} rows={3} placeholder="What did they say?" className={cn(input, "resize-y text-sm")} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="flex items-center">{[1, 2, 3, 4, 5].map((n) => <button type="button" key={n} onClick={() => setReview(t.id, { rating: n })} aria-label={`${n} stars`} className="p-1"><Star className={cn("size-5", n <= t.rating ? "fill-amber-400 text-amber-400" : "text-foreground/20")} /></button>)}</span>
+                      <button type="button" onClick={() => { if (confirm("Delete this review?")) { setRv((p) => ({ ...p, items: p.items.filter((x) => x.id !== t.id) })); setOpenReview(null); } }} className="ml-auto inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-500/10"><Trash2 className="size-3.5" />Delete</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {rv.items.length < 30 && (
+            <button type="button" onClick={() => { const id = `t${Date.now().toString(36)}`; setRv((p) => ({ ...p, items: [...p.items, { id, name: "", place: "", text: "", rating: 5, on: true }] })); setOpenReview(id); }} className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-3.5 text-sm font-semibold text-muted transition hover:border-foreground/30 hover:text-foreground"><Plus className="size-4" /> Add a review</button>
           )}
         </Section>
       )}

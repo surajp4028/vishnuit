@@ -35,7 +35,7 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
   async function save() {
     setBusy(true); setMsg(null);
     const body =
-      section === "profile" ? { name: s.name, tagline: s.tagline, about: s.about, logo_key: s.logo_key, banner_key: s.banner_key, contact: s.contact }
+      section === "profile" ? { name: s.name, tagline: s.tagline, logo_key: s.logo_key, banner_key: s.banner_key, contact: s.contact }
       : section === "tax" ? { tax: s.tax }
       : section === "reviews" ? { testimonials: s.testimonials }
       : section === "delivery" ? { shipping: ship }
@@ -57,7 +57,7 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
             </div>
             <Field label="Store name"><input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} className={input} /></Field>
             <Field label="Tagline" hint="One line under your name on the home page"><input value={s.tagline} onChange={(e) => setS({ ...s, tagline: e.target.value })} placeholder="Handcrafted ethnic wear, delivered across India" className={input} /></Field>
-            <Field label="About your store" hint="Shown on your About page"><textarea value={s.about} onChange={(e) => setS({ ...s, about: e.target.value })} rows={6} className={cn(input, "resize-y")} /></Field>
+            <p className="rounded-2xl bg-foreground/[.04] px-4 py-3 text-sm text-muted">Your store story, headline and photos are now in <a href="/seller/storefront?tab=about" className="font-semibold text-foreground underline underline-offset-4">Storefront → About</a>.</p>
           </div>
           <div className={cn(card, "grid gap-4 p-5 sm:grid-cols-2")}>
             <Field label="Phone"><input value={s.contact.phone ?? ""} onChange={(e) => c("phone", e.target.value)} inputMode="tel" className={input} /></Field>

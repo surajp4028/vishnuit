@@ -1,11 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Film, AlertTriangle, ChevronLeft, Copy, ExternalLink, Loader2, PackagePlus, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react";
+import { Film, Images, AlertTriangle, ChevronLeft, Copy, ExternalLink, Loader2, PackagePlus, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flattenTree } from "@/lib/category-tree";
 import { isColourOption } from "@/lib/colors";
 import { ValuesEditor, type Attr } from "@/components/seller/attributes";
-import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, ProgressRing, Toggle, uploadVideo } from "./ui";
+import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, MediaPicker, ProgressRing, Toggle, uploadVideo } from "./ui";
 
 type Variant = { key: string; price: number | null; stock: number | null; sku?: string | null };
 export type P = {
@@ -475,6 +475,7 @@ function RelatedPicker({ value, onChange, all }: { value: number[]; onChange: (v
 /** One product video: upload with % progress, preview, replace or remove. */
 function VideoPick({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
   const [pct, setPct] = useState<number | null>(null);
+  const [lib, setLib] = useState(false);
   const [err, setErr] = useState("");
   async function pick(file: File | undefined) {
     if (!file) return;
@@ -500,7 +501,12 @@ function VideoPick({ value, onChange }: { value: string | null; onChange: (v: st
         </div>
       )}
       {pct != null && <div className="flex items-center gap-3 rounded-2xl border border-border p-3"><ProgressRing pct={pct} /><span className="text-sm font-semibold">Uploading video… {pct}%</span></div>}
-      <div className="flex flex-wrap items-center gap-3">{choose}{value && pct == null && <button type="button" onClick={() => onChange(null)} className="text-sm font-semibold text-red-600">Remove</button>}</div>
+      <div className="flex flex-wrap items-center gap-3">
+        {choose}
+        <button type="button" onClick={() => setLib(true)} disabled={pct != null} className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-semibold hover:border-foreground/40 disabled:opacity-50"><Images className="size-4" />Choose from library</button>
+        {value && pct == null && <button type="button" onClick={() => onChange(null)} className="text-sm font-semibold text-red-600">Remove</button>}
+      </div>
+      <MediaPicker open={lib} onClose={() => setLib(false)} kind="video" multiple={false} onPick={(keys) => keys[0] && onChange(keys[0])} />
       {err && <p className="rounded-2xl bg-red-500/10 px-4 py-2.5 text-sm text-red-600">{err}</p>}
     </div>
   );

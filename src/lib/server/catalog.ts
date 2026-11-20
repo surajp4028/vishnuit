@@ -62,7 +62,8 @@ export type StoreFront = {
   bar: { on: boolean; items: string[] };
   highlights: { icon: HighlightIcon; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
-  about: { images: string[]; heading: string };
+  /** home = show the "Our story" block on the home page (default on). */
+  about: { images: string[]; heading: string; home: boolean };
   look: "sharp" | "minimal" | "soft";
   shipping: { cod: number; upi: number; razorpay: number; freeAbove: number; minOrder: number };
   closed: { on: boolean; message: string };
@@ -79,7 +80,7 @@ export const emptyFront = (): StoreFront => ({
     { icon: "message", title: "WhatsApp support", sub: "We reply fast", on: true },
   ],
   map: { on: true, query: "", zoom: 15 },
-  about: { images: [], heading: "" },
+  about: { images: [], heading: "", home: true },
   look: "sharp",
   shipping: { cod: 79, upi: 49, razorpay: 49, freeAbove: 1500, minOrder: 0 },
   closed: { on: false, message: "" },
@@ -141,7 +142,7 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     closed: { on: Boolean(f.closed?.on), message: f.closed?.message ?? "" },
     pixels: { meta: f.pixels?.meta ?? "", ga: f.pixels?.ga ?? "" },
     favicon: typeof f.favicon === "string" ? f.favicon : null,
-    about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "" },
+    about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "", home: f.about?.home !== false },
   };
 }
 

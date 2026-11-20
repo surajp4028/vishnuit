@@ -86,7 +86,8 @@ export function Toggle({ on, onChange, label, sub, disabled }: { on: boolean; on
 type Media = { key: string; url: string; kind: string; width: number | null; height: number | null };
 
 /** Media library: pick one or many photos already uploaded to this store (and upload more). */
-export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "product" }: { open: boolean; onClose: () => void; onPick: (keys: string[]) => void; multiple?: boolean; kind?: "product" | "logo" | "banner" | "qr" }) {
+export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "product" }: { open: boolean; onClose: () => void; onPick: (keys: string[]) => void; multiple?: boolean; kind?: "product" | "logo" | "banner" | "qr" | "video" }) {
+  const isVideo = kind === "video";
   const [items, setItems] = useState<Media[] | null>(null);
   const [all, setAll] = useState(false);
   const [sel, setSel] = useState<string[]>([]);
@@ -101,7 +102,7 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
     fetch(`/api/store/media${all ? "" : `?kind=${kind}`}`).then((r) => r.json()).then((j) => { setItems(j.items ?? []); if (j.usage) setUsage(j.usage); }).catch(() => setItems([]));
   }, [open, all, kind]);
   async function remove(key: string) {
-    if (!confirm("Delete this photo from your library? This frees up storage and can't be undone.")) return;
+    if (!confirm(`Delete this ${isVideo ? "video" : "photo"} from your library? This frees up storage and can't be undone.`)) return;
     setErr(""); setDeleting(key);
     const r = await api<{ usage: Usage }>(`/api/store/media?k=${encodeURIComponent(key)}`, "DELETE");
     setDeleting("");
@@ -116,7 +117,7 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
       const id = Math.random().toString(36).slice(2);
       setUps((u) => [...u, { id, name: f.name, pct: 0 }]);
       try {
-        const r = await uploadImage(f, kind, (pct) => setUps((u) => u.map((x) => (x.id === id ? { ...x, pct } : x))));
+        const r = await (isVideo ? uploadVideo(f, (pct) => setUps((u) => u.map((x) => (x.id === id ? { ...x, pct } : x)))) : uploadImage(f, kind as "product" | "logo" | "banner" | "qr", (pct) => setUps((u) => u.map((x) => (x.id === id ? { ...x, pct } : x)))));
         setItems((it) => [{ key: r.key, url: r.url, kind, width: null, height: null }, ...(it ?? [])]);
         setSel((s) => (multiple ? [...s, r.key] : [r.key]));
       } catch (e) { setErr((e as Error).message); }
@@ -128,13 +129,13 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
       <div className="flex h-full w-full flex-col bg-background sm:h-[85dvh] sm:max-w-3xl sm:rounded-[2rem] sm:border sm:border-border" onClick={(e) => e.stopPropagation()}>
         <header className="flex items-center gap-3 border-b border-border px-4 py-3">
           <button onClick={onClose} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><X className="size-5" /></button>
-          <div className="flex-1"><p className="font-display text-lg font-bold">Media library</p><p className="text-xs text-muted">Choose photos you&apos;ve uploaded before, or upload new ones.</p></div>
+          <div className="flex-1"><p className="font-display text-lg font-bold">{isVideo ? "Video library" : "Media library"}</p><p className="text-xs text-muted">{isVideo ? "Choose a video you've uploaded before, or upload a new one." : <>Choose photos you&apos;ve uploaded before, or upload new ones.</>}</p></div>
           <button onClick={() => ref.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-semibold"><Upload className="size-4" /> Upload</button>
         </header>
         {usage && <StorageBar usage={usage} className="border-b border-border px-4 py-2.5" />}
         <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs">
-          <button onClick={() => setAll(false)} className={cn("rounded-full px-3 py-1.5 font-semibold", !all ? "bg-foreground text-background" : "text-muted")}>{kind === "product" ? "Product photos" : "This type"}</button>
-          <button onClick={() => setAll(true)} className={cn("rounded-full px-3 py-1.5 font-semibold", all ? "bg-foreground text-background" : "text-muted")}>All media</button>
+          <button onClick={() => setAll(false)} className={cn("rounded-full px-3 py-1.5 font-semibold", !all ? "bg-foreground text-background" : "text-muted")}>{kind === "product" ? "Product photos" : isVideo ? "Videos" : "This type"}</button>
+          {!isVideo && <button onClick={() => setAll(true)} className={cn("rounded-full px-3 py-1.5 font-semibold", all ? "bg-foreground text-background" : "text-muted")}>All media</button>}
           {err && <span className="ml-auto text-red-500">{err}</span>}
         </div>
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
@@ -149,8 +150,10 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
               return (
                 <div key={m.key} className="group relative">
                   <button onClick={() => toggle(m.key)} className={cn("relative block aspect-square w-full overflow-hidden rounded-xl bg-foreground/5 ring-offset-2 ring-offset-background transition", on ? "ring-2 ring-foreground" : "hover:opacity-90", deleting === m.key && "opacity-40")}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.url} alt="" loading="lazy" className="size-full object-cover" />
+                    {m.kind === "video"
+                      ? <video src={`${m.url}#t=0.5`} muted playsInline preload="metadata" className="size-full bg-black object-cover" />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      : <img src={m.url} alt="" loading="lazy" className="size-full object-cover" />}
                     {on && <span className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{multiple ? sel.indexOf(m.key) + 1 : "✓"}</span>}
                   </button>
                   <button onClick={() => remove(m.key)} disabled={!!deleting} aria-label="Delete photo" title="Delete to free storage" className="absolute top-1.5 left-1.5 grid size-7 place-items-center rounded-full bg-black/55 text-white opacity-100 transition hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100">
@@ -161,13 +164,13 @@ export function MediaPicker({ open, onClose, onPick, multiple = true, kind = "pr
             })}
           </div>
           {items === null && <p className="py-10 text-center text-sm text-muted"><Loader2 className="mx-auto size-5 animate-spin" /></p>}
-          {items?.length === 0 && !ups.length && <p className="py-14 text-center text-sm text-muted">No photos yet — tap Upload to add some.</p>}
+          {items?.length === 0 && !ups.length && <p className="py-14 text-center text-sm text-muted">{isVideo ? "No videos yet — tap Upload to add one." : "No photos yet — tap Upload to add some."}</p>}
         </div>
         <footer className="flex items-center gap-3 border-t border-border p-3">
-          <p className="flex-1 text-sm text-muted">{sel.length ? `${sel.length} selected` : "Tap photos to select"}</p>
-          <button disabled={!sel.length} onClick={() => { onPick(sel); onClose(); }} className={cn(btnDark, "py-2.5")}>Use {sel.length > 1 ? `${sel.length} photos` : "photo"}</button>
+          <p className="flex-1 text-sm text-muted">{sel.length ? `${sel.length} selected` : isVideo ? "Tap a video to select" : "Tap photos to select"}</p>
+          <button disabled={!sel.length} onClick={() => { onPick(sel); onClose(); }} className={cn(btnDark, "py-2.5")}>Use {isVideo ? "video" : sel.length > 1 ? `${sel.length} photos` : "photo"}</button>
         </footer>
-        <input ref={ref} type="file" accept="image/*" multiple={multiple} hidden onChange={(e) => { const fs = Array.from(e.target.files ?? []); e.target.value = ""; if (fs.length) upload(fs); }} />
+        <input ref={ref} type="file" accept={isVideo ? "video/mp4,video/webm,video/quicktime" : "image/*"} multiple={multiple && !isVideo} hidden onChange={(e) => { const fs = Array.from(e.target.files ?? []); e.target.value = ""; if (fs.length) upload(fs); }} />
       </div>
     </div>
   );

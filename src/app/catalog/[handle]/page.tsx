@@ -98,7 +98,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
 
       {reviews.length > 0 && <Testimonials reviews={reviews.map((t) => ({ id: t.id, name: t.name, place: t.place, text: t.text, rating: t.rating }))} />}
 
-      {s.about && (
+      {s.storefront.about.home !== false && (s.about || s.storefront.about.heading || aboutImgs.length > 0) && (
         <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6">
           <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
             <div className="relative">
@@ -123,7 +123,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
             <div>
               <p className="text-[11px] font-bold tracking-[4px] text-muted">OUR STORY</p>
               <h2 className="mt-3 font-display text-3xl leading-[1.08] font-extrabold tracking-tight sm:text-5xl">{s.storefront.about.heading || s.tagline || `Meet ${s.name}`}</h2>
-              <p className="mt-5 line-clamp-5 text-[16px] leading-relaxed text-foreground/75 sm:text-[17px]">{s.about.split(/\n\s*\n/)[0]}</p>
+              {(s.about || s.tagline) && <p className="mt-5 line-clamp-5 text-[16px] leading-relaxed text-foreground/75 sm:text-[17px]">{(s.about || s.tagline || "").split(/\n\s*\n/)[0]}</p>}
               {perks.length > 0 && (
                 <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-3">
                   {perks.slice(0, 4).map((h) => { const I = HIGHLIGHT_ICON_MAP[h.icon] ?? BadgeCheck; return <li key={h.title} className="flex items-center gap-2.5 text-[13.5px] font-semibold"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground/[.06]"><I className="size-4" /></span>{h.title}</li>; })}

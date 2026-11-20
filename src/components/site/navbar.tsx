@@ -40,6 +40,10 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
   }, [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    const k = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
   }, [open]);
 
   const cats = ["Development", "Design", "Digital Marketing", "SEO"];
@@ -99,7 +103,11 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
             onClick={() => setOpen((o) => !o)}
             className="grid size-9 place-items-center rounded-full border border-border bg-card/60 lg:hidden"
           >
-            {open ? <X className="size-4" /> : <Menu className="size-4" />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span key={open ? "x" : "m"} initial={{ rotate: -90, opacity: 0, scale: 0.6 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: 90, opacity: 0, scale: 0.6 }} transition={{ duration: 0.18 }} className="grid place-items-center">
+                {open ? <X className="size-4" /> : <Menu className="size-4" />}
+              </motion.span>
+            </AnimatePresence>
           </button>
         </div>
 
@@ -165,51 +173,109 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
         </AnimatePresence>
       </motion.nav>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer: blurred backdrop + panel springing in from the right, links arriving one by one. */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-x-3 top-[72px] bottom-3 z-40 overflow-y-auto rounded-3xl border border-border bg-background/95 p-5 shadow-2xl backdrop-blur-xl lg:hidden"
-          >
-            <ul className="space-y-1">
-              {LINKS.map((l, i) => (
-                <motion.li key={l.href} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
-                  <Link
-                    href={l.href}
-                    className={cn(
-                      "flex items-center justify-between rounded-2xl px-4 py-3 font-display text-lg font-semibold",
-                      isActive(l.href) ? "bg-foreground/5 text-foreground" : "text-foreground/80",
-                    )}
-                  >
-                    {l.label}
-                    <ArrowUpRight className="size-4 text-muted" />
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-            <p className="mt-6 mb-2 px-4 text-xs font-semibold tracking-widest text-accent uppercase">Our products</p>
-            {PRODUCTS.map((p) => (
-              <Link key={p.href} href={p.href} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-white"><p.icon className="size-4" /></span>
-                <span className="min-w-0"><span className="flex items-center gap-1.5 text-sm font-semibold">{p.title}{p.badge && <span className="rounded-full bg-amber-400/20 px-1.5 py-px text-[9px] font-extrabold text-amber-600">{p.badge}</span>}</span><span className="block truncate text-xs text-muted">{p.desc}</span></span>
-              </Link>
-            ))}
-            <p className="mt-6 mb-2 px-4 text-xs font-semibold tracking-widest text-accent uppercase">Popular services</p>
-            <div className="grid grid-cols-2 gap-2">
-              {services.slice(0, 8).map((s) => (
-                <Link key={s.slug} href={`/services/${s.slug}`} className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm">
-                  <Icon name={s.icon} className="size-4 shrink-0 text-accent" />
-                  <span className="truncate">{s.title}</span>
+          <>
+            <motion.div
+              key="scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[60] bg-slate-950/40 backdrop-blur-[6px] lg:hidden"
+            />
+            <motion.aside
+              key="panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu"
+              initial={{ x: "105%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "105%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 34, mass: 0.9 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0, right: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.x > 90 || info.velocity.x > 500) setOpen(false); }}
+              className="fixed inset-y-0 right-0 z-[61] flex w-[88%] max-w-[390px] flex-col overflow-hidden rounded-l-[2rem] border-l border-border bg-background shadow-[-30px_0_80px_-20px_rgba(15,23,42,.35)] lg:hidden"
+            >
+              {/* soft brand glow */}
+              <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.18),transparent)]" />
+              <div className="pointer-events-none absolute -bottom-28 -left-20 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.16),transparent)]" />
+
+              <div className="relative flex items-center justify-between px-5 pt-5 pb-3">
+                <Link href="/" onClick={() => setOpen(false)} aria-label={`${name} — home`} className="relative h-10 w-[112px]">
+                  <Image src={logoLight} alt={name} fill sizes="112px" className="object-contain object-left dark:hidden" />
+                  <Image src={logoDark} alt={name} fill sizes="112px" className="hidden object-contain object-left dark:block" />
                 </Link>
-              ))}
-            </div>
-            <Link href={ctaHref} onClick={() => setOpen(false)} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background">
-              Get a free quote <ArrowUpRight className="size-4" />
-            </Link>
-          </motion.div>
+                <motion.button
+                  initial={{ rotate: -90, scale: 0.6, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.12, type: "spring", stiffness: 380, damping: 20 }}
+                  onClick={() => setOpen(false)}
+                  aria-label="Close menu"
+                  className="grid size-10 place-items-center rounded-full border border-border bg-card"
+                >
+                  <X className="size-4" />
+                </motion.button>
+              </div>
+
+              <div className="relative flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
+                <motion.ul
+                  initial="hide"
+                  animate="show"
+                  variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.08 } } }}
+                  className="space-y-1"
+                >
+                  {LINKS.map((l) => (
+                    <motion.li key={l.href} variants={{ hide: { opacity: 0, x: 28 }, show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 380, damping: 28 } } }}>
+                      <Link
+                        href={l.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "group flex items-center justify-between rounded-2xl px-4 py-3 font-display text-[1.35rem] font-bold tracking-tight transition",
+                          isActive(l.href) ? "bg-accent/10 text-accent" : "text-foreground/85 hover:bg-foreground/5",
+                        )}
+                      >
+                        {l.label}
+                        <ArrowUpRight className={cn("size-5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5", isActive(l.href) ? "text-accent" : "text-muted")} />
+                      </Link>
+                    </motion.li>
+                  ))}
+                </motion.ul>
+
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32, duration: 0.35 }}>
+                  <p className="mt-6 mb-2 px-4 text-[11px] font-bold tracking-[3px] text-accent uppercase">Our products</p>
+                  <div className="space-y-2">
+                    {PRODUCTS.map((p) => (
+                      <Link key={p.href} href={p.href} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3 transition active:scale-[.98]">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-white shadow-[0_8px_18px_-8px_rgba(37,99,235,.7)]"><p.icon className="size-4" /></span>
+                        <span className="min-w-0"><span className="flex items-center gap-1.5 text-sm font-semibold">{p.title}{p.badge && <span className="rounded-full bg-amber-400/20 px-1.5 py-px text-[9px] font-extrabold text-amber-600">{p.badge}</span>}</span><span className="block truncate text-xs text-muted">{p.desc}</span></span>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <p className="mt-6 mb-2 px-4 text-[11px] font-bold tracking-[3px] text-accent uppercase">Popular services</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {services.slice(0, 8).map((sv) => (
+                      <Link key={sv.slug} href={`/services/${sv.slug}`} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm transition active:scale-[.98]">
+                        <Icon name={sv.icon} className="size-4 shrink-0 text-accent" />
+                        <span className="truncate">{sv.title}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 26 }} className="relative border-t border-border bg-background/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
+                <Link href={ctaHref} onClick={() => setOpen(false)} className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background transition active:scale-[.98]">
+                  Get a free quote <ArrowUpRight className="size-4" />
+                </Link>
+              </motion.div>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </header>

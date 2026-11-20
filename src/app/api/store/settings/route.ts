@@ -102,7 +102,7 @@ export async function PATCH(req: Request) {
       closed: (() => { const x = (f.closed ?? {}) as Record<string, unknown>; return { on: Boolean(x.on), message: str(x.message, 200) }; })(),
       favicon: f.favicon && ownKey(f.favicon) ? String(f.favicon) : null,
       pixels: (() => { const x = (f.pixels ?? {}) as Record<string, unknown>; return { meta: str(x.meta, 20).replace(/\D/g, ""), ga: str(x.ga, 20).toUpperCase() }; })(),
-      about: (() => { const a = (f.about ?? {}) as { images?: unknown; heading?: unknown }; return { images: (Array.isArray(a.images) ? a.images : []).filter((k) => k && ownKey(k)).slice(0, 2).map(String), heading: str(a.heading, 120) }; })(),
+      about: (() => { const a = (f.about ?? {}) as { images?: unknown; heading?: unknown; home?: unknown }; return { images: (Array.isArray(a.images) ? a.images : []).filter((k) => k && ownKey(k)).slice(0, 2).map(String), heading: str(a.heading, 120), home: a.home !== false }; })(),
     };
   }
 
