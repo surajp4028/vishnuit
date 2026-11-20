@@ -11,6 +11,7 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
   const s = await getStoreByHandle((await params).handle);
   if (!s) notFound();
   const c = s.contact;
+  const mapQ = s.storefront.map.on ? (s.storefront.map.query || c.address || "").trim() : "";
   const rows = [
     c.whatsapp && { icon: FaWhatsapp, label: "WhatsApp", value: `+${c.whatsapp}`, href: `https://wa.me/${c.whatsapp}` },
     c.phone && { icon: Phone, label: "Call", value: c.phone, href: `tel:${c.phone}` },
@@ -19,7 +20,7 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
     c.address && { icon: MapPin, label: "Visit", value: c.address, href: `https://www.google.com/maps/search/${encodeURIComponent(c.address)}` },
   ].filter(Boolean) as { icon: typeof Phone; label: string; value: string; href: string }[];
   return (
-    <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-16">
+    <section className="mx-auto max-w-4xl px-5 pt-10 sm:pt-16">
       <p className="text-xs font-semibold tracking-[4px] text-muted">CONTACT</p>
       <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">We&apos;d love to hear from you</h1>
       <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -31,6 +32,12 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
         ))}
         {!rows.length && <p className="text-muted">Contact details coming soon.</p>}
       </div>
+      {mapQ && (
+        <div className="mt-8 overflow-hidden rounded-[1.6rem] border border-border">
+          <iframe title={`${s.name} on Google Maps`} src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&z=${s.storefront.map.zoom}&output=embed`} className="block aspect-[4/3] w-full sm:aspect-[16/7]" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          <a href={`https://www.google.com/maps/search/${encodeURIComponent(mapQ)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 bg-card px-5 py-3.5 text-sm font-semibold"><span className="flex min-w-0 items-center gap-2"><MapPin className="size-4 shrink-0 text-muted" /><span className="truncate">{mapQ}</span></span><span className="shrink-0 text-muted">Get directions →</span></a>
+        </div>
+      )}
     </section>
   );
 }

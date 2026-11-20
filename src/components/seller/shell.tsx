@@ -3,15 +3,17 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CreditCard, ExternalLink, FileText, Home, LogOut, MoreHorizontal, Package, Settings, ShoppingBag, UserRound, X } from "lucide-react";
+import { BarChart3, CreditCard, ExternalLink, FileText, Home, LayoutGrid, LogOut, MoreHorizontal, Package, Palette, Settings, ShoppingBag, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/seller", label: "Dashboard", icon: Home },
   { href: "/seller/products", label: "Products", icon: Package },
+  { href: "/seller/categories", label: "Categories", icon: LayoutGrid },
   { href: "/seller/orders", label: "Orders", icon: ShoppingBag, badge: true },
   { href: "/seller/sales", label: "Sales & reports", icon: BarChart3 },
+  { href: "/seller/storefront", label: "Storefront", icon: Palette },
   { href: "/seller/invoices", label: "Invoices", icon: FileText },
   { href: "/seller/billing", label: "Plan & billing", icon: CreditCard },
   { href: "/seller/settings", label: "Settings", icon: Settings },

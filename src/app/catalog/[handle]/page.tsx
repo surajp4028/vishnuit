@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BadgeCheck, MessageCircle, Quote, RotateCcw, Star, Truck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Quote, Star } from "lucide-react";
+import { HeroCarousel } from "@/components/catalog/hero-carousel";
+import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
 import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl } from "@/lib/server/catalog";
 import { ProductCard } from "@/components/catalog/product-card";
 
@@ -15,12 +17,8 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   const latest = products.slice(0, 12);
   const banner = imgUrl(s.banner_key);
   const catTiles = cats.map((c) => ({ ...c, img: imgUrl(products.find((p) => p.category_id === c.id && p.images[0])?.images[0]) })).slice(0, 10);
-  const perks = [
-    s.payments.cod && { icon: Truck, t: "Cash on delivery", d: "Pay when it arrives" },
-    { icon: BadgeCheck, t: "Secure checkout", d: s.payments.razorpay.on ? "UPI, cards & netbanking" : "Pay by UPI or COD" },
-    s.pages.refund.on && { icon: RotateCcw, t: "Easy returns", d: "See our refund policy" },
-    s.contact.whatsapp && { icon: MessageCircle, t: "WhatsApp support", d: "We reply fast" },
-  ].filter(Boolean) as { icon: typeof Truck; t: string; d: string }[];
+  const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
+  const slides = s.storefront.banners.map((x) => ({ ...x, url: imgUrl(x.key)! })).filter((x) => x.url);
   const reviews = s.testimonials.on ? s.testimonials.items.filter((t) => t.on) : [];
   const avg = reviews.length ? reviews.reduce((a, t) => a + t.rating, 0) / reviews.length : 0;
 
@@ -28,6 +26,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
     <>
       {/* hero */}
       <section className="mx-auto max-w-7xl sm:px-6 sm:pt-5">
+        {slides.length ? <HeroCarousel slides={slides} interval={s.storefront.interval} fallbackLink={`${base}/shop`} /> : (
         <div className="relative isolate flex aspect-[4/5] items-end overflow-hidden bg-[#0b0d12] text-white sm:aspect-[21/9] sm:rounded-3xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {banner ? <img src={banner} alt="" className="absolute inset-0 -z-10 size-full object-cover" /> : (
@@ -41,16 +40,18 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
             <Link href={`${base}/shop`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop the collection <ArrowRight className="size-4" /></Link>
           </div>
         </div>
+        )}
       </section>
 
       {perks.length > 0 && (
         <section className="mx-auto max-w-7xl px-3 sm:px-6">
-          <div className="mt-4 flex gap-2 overflow-x-auto [scrollbar-width:none] sm:mt-6 sm:grid sm:grid-cols-4 sm:gap-3">
-            {perks.map((x) => (
-              <div key={x.t} className="flex min-w-[180px] items-center gap-3 rounded-2xl border border-border px-4 py-3">
-                <x.icon className="size-5 shrink-0 text-foreground/70" /><span><span className="block text-[13px] font-semibold">{x.t}</span><span className="block text-[11px] text-muted">{x.d}</span></span>
+          <div className={`mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3 ${perks.length === 4 ? "lg:grid-cols-4" : perks.length === 3 ? "lg:grid-cols-3" : ""}`}>
+            {perks.map((x) => { const I = HIGHLIGHT_ICON_MAP[x.icon] ?? BadgeCheck; return (
+              <div key={x.title} className="flex items-center gap-3 rounded-2xl border border-border px-3 py-3 sm:px-4 sm:py-4">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground/[.05] sm:size-10"><I className="size-[18px] text-foreground/75" /></span>
+                <span className="min-w-0"><span className="block truncate text-[12.5px] font-semibold sm:text-[13.5px]">{x.title}</span>{x.sub && <span className="block truncate text-[11px] text-muted sm:text-xs">{x.sub}</span>}</span>
               </div>
-            ))}
+            ); })}
           </div>
         </section>
       )}
@@ -102,15 +103,17 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
                 <span><b className="text-foreground">{avg.toFixed(1)}</b> · {reviews.length} review{reviews.length > 1 ? "s" : ""}</span>
               </div>
             </div>
-            <div className="mt-8 flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible lg:grid-cols-3">
-              {reviews.map((t) => (
-                <figure key={t.id} className="relative flex w-[82vw] shrink-0 snap-center flex-col rounded-3xl border border-border bg-card p-6 sm:w-auto sm:p-7">
-                  <Quote className="absolute top-6 right-6 size-8 text-foreground/[.07]" />
-                  <span className="flex">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={n <= t.rating ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
-                  <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-foreground/85">“{t.text}”</blockquote>
-                  <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-5">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-sm font-bold text-background">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
-                    <span className="min-w-0"><span className="flex items-center gap-1.5 truncate text-sm font-semibold">{t.name}<BadgeCheck className="size-3.5 shrink-0 text-emerald-500" /></span>{t.place && <span className="block truncate text-xs text-muted">{t.place}</span>}</span>
+          </div>
+          <div className="group relative mt-8 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]">
+            <div className={`flex w-max gap-4 py-2 ${reviews.length > 1 ? "animate-[marquee_var(--d)_linear_infinite] group-hover:[animation-play-state:paused]" : "mx-auto"}`} style={{ ["--d" as string]: `${Math.max(25, reviews.length * 9)}s` }}>
+              {(reviews.length > 1 ? [...reviews, ...reviews] : reviews).map((t, n) => (
+                <figure key={`${t.id}-${n}`} aria-hidden={n >= reviews.length} className="relative flex w-[300px] shrink-0 flex-col rounded-3xl border border-border bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,.02),0_12px_32px_-18px_rgba(0,0,0,.18)] transition duration-300 hover:-translate-y-1 hover:border-foreground/25 sm:w-[380px] sm:p-7">
+                  <Quote className="absolute top-6 right-6 size-9 fill-foreground/[.04] text-foreground/[.08]" />
+                  <span className="flex gap-0.5">{[1, 2, 3, 4, 5].map((k) => <Star key={k} className={k <= t.rating ? "size-4 fill-amber-400 text-amber-400" : "size-4 text-foreground/15"} />)}</span>
+                  <blockquote className="mt-4 line-clamp-5 flex-1 font-display text-[16px] leading-relaxed text-foreground/90 sm:text-[17px]">“{t.text}”</blockquote>
+                  <figcaption className="mt-6 flex items-center gap-3 border-t border-dashed border-border pt-5">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-foreground to-foreground/70 text-sm font-bold text-background">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-semibold capitalize">{t.name}</span><span className="block truncate text-xs text-muted">{t.place || "Happy customer"}</span></span>
                   </figcaption>
                 </figure>
               ))}

@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { exec } from "@/lib/server/db";
-import { PAGE_KEYS, effectivePlan, encryptSecret, getCatalogConfig, getStoreForUser, storeForOwner, type StorePages, type StorePayments, type StoreTax, type StoreTestimonials } from "@/lib/server/catalog";
+import { PAGE_KEYS, effectivePlan, encryptSecret, getCatalogConfig, getStoreForUser, storeForOwner, type StorePages, type StorePayments, type StoreTax, type StoreTestimonials, type StoreFront, HIGHLIGHT_ICONS, type HighlightIcon } from "@/lib/server/catalog";
 import { requireStoreApi, str } from "@/lib/server/store-auth";
 
 const keyOk = (k: unknown) => k === null || (typeof k === "string" && /^catalog\/VISHNU\d{5,10}\/[a-z]+\/[\w.-]+$/.test(k));
@@ -72,8 +72,30 @@ export async function PATCH(req: Request) {
     testimonials = { on: Boolean(t.on), items };
   }
 
-  await exec("UPDATE stores SET name=?, tagline=?, about=?, logo_key=?, banner_key=?, contact=?, pages=?, payments=?, tax=?, testimonials=? WHERE id=?", [
-    name, tagline || null, about || null, logo, banner, JSON.stringify(contact), JSON.stringify(pages), JSON.stringify(payments), JSON.stringify(tax), JSON.stringify(testimonials), store.id,
+  let storefront: StoreFront = store.storefront;
+  if (b.storefront) {
+    const f = b.storefront as Record<string, unknown>;
+    const linkOk = (l: string) => !l || l.startsWith("/") || /^https?:\/\/[^\s]+$/.test(l);
+    const banners = (Array.isArray(f.banners) ? (f.banners as Record<string, unknown>[]) : []).slice(0, 6).filter((x) => ownKey(x.key) && x.key).map((x, i) => ({
+      id: str(x.id, 24) || `b${Date.now().toString(36)}${i}`, key: String(x.key), title: str(x.title, 80), subtitle: str(x.subtitle, 160), cta: str(x.cta, 30), link: str(x.link, 300),
+    }));
+    if (banners.some((x) => !linkOk(x.link))) return Response.json({ error: "Banner link must start with / or https://" }, { status: 422 });
+    const bar = (f.bar ?? {}) as { on?: unknown; items?: unknown };
+    const hl = (Array.isArray(f.highlights) ? (f.highlights as Record<string, unknown>[]) : []).slice(0, 4).map((x) => ({
+      icon: (HIGHLIGHT_ICONS as readonly string[]).includes(String(x.icon)) ? (x.icon as HighlightIcon) : "badge" as HighlightIcon,
+      title: str(x.title, 40), sub: str(x.sub, 60), on: x.on !== false,
+    }));
+    const map = (f.map ?? {}) as { on?: unknown; query?: unknown; zoom?: unknown };
+    storefront = {
+      banners, interval: Math.min(15, Math.max(2, Math.round(Number(f.interval) || 5))),
+      bar: { on: Boolean(bar.on), items: (Array.isArray(bar.items) ? bar.items : []).map((x) => str(x, 120)).filter(Boolean).slice(0, 6) },
+      highlights: hl.length ? hl : store.storefront.highlights,
+      map: { on: map.on !== false, query: str(map.query, 300), zoom: Math.min(20, Math.max(3, Math.round(Number(map.zoom) || 15))) },
+    };
+  }
+
+  await exec("UPDATE stores SET name=?, tagline=?, about=?, logo_key=?, banner_key=?, contact=?, pages=?, payments=?, tax=?, testimonials=?, storefront=? WHERE id=?", [
+    name, tagline || null, about || null, logo, banner, JSON.stringify(contact), JSON.stringify(pages), JSON.stringify(payments), JSON.stringify(tax), JSON.stringify(testimonials), JSON.stringify(storefront), store.id,
   ]);
   revalidatePath(`/catalog/@${store.handle}`, "layout");
   const fresh = await getStoreForUser(store.user_id);

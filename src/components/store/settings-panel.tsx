@@ -13,6 +13,7 @@ export type S = {
   planName: string; limit: number | null; plan_expires_at: string | null; razorpayAllowed: boolean;
   tax: { gstin: string; legalName: string; rate: number; inclusive: boolean; hsn: string; invoicePrefix: string };
   testimonials: { on: boolean; items: Testi[] };
+  pageDefaults?: Record<PageKey, string>;
 };
 type Testi = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
 const TITLES: Record<PageKey, string> = { privacy: "Privacy Policy", terms: "Terms & Conditions", refund: "Refund & Exchange Policy", shipping: "Shipping Policy" };
@@ -114,11 +115,11 @@ export function SettingsPanel({ store, setStore, section }: { store: S; setStore
 
       {section === "pages" && (
         <div className="space-y-3">
-          <p className="px-1 text-sm text-muted">Turn a page on and it appears in your store footer. Off = hidden.</p>
+          <p className="px-1 text-sm text-muted">Each page starts with ready-made text using your store name — edit it to match how you work. Off = hidden from your footer.</p>
           {(Object.keys(TITLES) as PageKey[]).map((k) => (
             <div key={k} className={cn(card, "space-y-3 p-4")}>
               <Toggle on={s.pages[k].on} onChange={(v) => setS({ ...s, pages: { ...s.pages, [k]: { ...s.pages[k], on: v } } })} label={TITLES[k]} />
-              {s.pages[k].on && <textarea value={s.pages[k].content} onChange={(e) => setS({ ...s, pages: { ...s.pages, [k]: { ...s.pages[k], content: e.target.value } } })} rows={7} placeholder={`Write your ${TITLES[k].toLowerCase()}…`} className={cn(input, "resize-y text-sm")} />}
+              {s.pages[k].on && <textarea value={s.pages[k].content || s.pageDefaults?.[k] || ""} onChange={(e) => setS({ ...s, pages: { ...s.pages, [k]: { ...s.pages[k], content: e.target.value } } })} rows={7} placeholder={`Write your ${TITLES[k].toLowerCase()}…`} className={cn(input, "resize-y text-sm")} />}
             </div>
           ))}
         </div>

@@ -51,11 +51,31 @@ export const emptyTax = (): StoreTax => ({ gstin: "", legalName: "", rate: 0, in
 export type Testimonial = { id: string; name: string; place: string; text: string; rating: number; on: boolean };
 export type StoreTestimonials = { on: boolean; items: Testimonial[] };
 export const emptyTestimonials = (): StoreTestimonials => ({ on: false, items: [] });
+export const HIGHLIGHT_ICONS = ["truck", "shield", "rotate", "message", "gift", "star", "sparkles", "leaf", "badge", "clock", "package", "heart"] as const;
+export type HighlightIcon = (typeof HIGHLIGHT_ICONS)[number];
+export type StoreBanner = { id: string; key: string; title: string; subtitle: string; cta: string; link: string };
+export type StoreFront = {
+  banners: StoreBanner[]; interval: number;
+  bar: { on: boolean; items: string[] };
+  highlights: { icon: HighlightIcon; title: string; sub: string; on: boolean }[];
+  map: { on: boolean; query: string; zoom: number };
+};
+export const emptyFront = (): StoreFront => ({
+  banners: [], interval: 5,
+  bar: { on: false, items: [] },
+  highlights: [
+    { icon: "truck", title: "Cash on delivery", sub: "Pay when it arrives", on: true },
+    { icon: "shield", title: "Secure checkout", sub: "100% safe payments", on: true },
+    { icon: "rotate", title: "Easy returns", sub: "Hassle-free exchange", on: true },
+    { icon: "message", title: "WhatsApp support", sub: "We reply fast", on: true },
+  ],
+  map: { on: true, query: "", zoom: 15 },
+});
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
   id: number; user_id: number; code: string; handle: string; name: string; tagline: string | null;
   logo_key: string | null; banner_key: string | null; about: string | null;
-  contact: StoreContact; pages: StorePages; payments: StorePayments; tax: StoreTax; testimonials: StoreTestimonials;
+  contact: StoreContact; pages: StorePages; payments: StorePayments; tax: StoreTax; testimonials: StoreTestimonials; storefront: StoreFront;
   plan: PlanKey; plan_expires_at: string | null; status: string; created_at: string;
 };
 export type Product = {
@@ -70,7 +90,7 @@ export const PAGE_KEYS = ["privacy", "terms", "refund", "shipping"] as const;
 export const PAGE_TITLES: Record<(typeof PAGE_KEYS)[number], string> = {
   privacy: "Privacy Policy", terms: "Terms & Conditions", refund: "Refund & Exchange Policy", shipping: "Shipping Policy",
 };
-const emptyPages = (): StorePages => ({ privacy: { on: false, content: "" }, terms: { on: false, content: "" }, refund: { on: false, content: "" }, shipping: { on: false, content: "" } });
+const emptyPages = (): StorePages => ({ privacy: { on: true, content: "" }, terms: { on: true, content: "" }, refund: { on: true, content: "" }, shipping: { on: true, content: "" } });
 const emptyPayments = (): StorePayments => ({ cod: true, upi: { on: false, vpa: "", qr_key: null }, razorpay: { on: false, key_id: "", secret_enc: null } });
 
 const json = <T,>(v: unknown, fallback: T): T => {
@@ -78,6 +98,76 @@ const json = <T,>(v: unknown, fallback: T): T => {
   if (typeof v === "string") { try { return JSON.parse(v) as T; } catch { return fallback; } }
   return v as T;
 };
+
+function hydrateFront(f: Partial<StoreFront>): StoreFront {
+  const d = emptyFront();
+  return {
+    banners: Array.isArray(f.banners) ? f.banners : [],
+    interval: Number(f.interval) >= 2 ? Number(f.interval) : d.interval,
+    bar: { ...d.bar, ...(f.bar ?? {}) },
+    highlights: Array.isArray(f.highlights) && f.highlights.length ? f.highlights : d.highlights,
+    map: { ...d.map, ...(f.map ?? {}) },
+  };
+}
+
+/** Ready-to-use policy text with the store's name, shown until the merchant writes their own. */
+export function policyTemplate(k: (typeof PAGE_KEYS)[number], s: { name: string; contact: StoreContact }) {
+  const n = s.name;
+  const reach = [s.contact.email && `email ${s.contact.email}`, s.contact.phone && `call ${s.contact.phone}`, s.contact.whatsapp && `WhatsApp +${s.contact.whatsapp}`].filter(Boolean).join(", ") || "use the Contact page";
+  const T: Record<(typeof PAGE_KEYS)[number], string> = {
+    privacy: `${n} respects your privacy. This policy explains what we collect and how we use it.
+
+1. What we collect
+When you place an order we collect your name, phone number, email, delivery address and order details. Payments are processed by secure payment partners — we never see or store your card or UPI PIN.
+
+2. How we use it
+Only to process and deliver your order, send order updates, handle returns and answer your questions. With your consent we may send offers; you can opt out any time.
+
+3. Sharing
+We share delivery details only with our courier partners, and payment details only with our payment gateway. We never sell your data.
+
+4. Security & retention
+Your data is stored on secure servers and kept only as long as needed for orders, accounting and legal requirements.
+
+5. Your choices
+You can ask us to view, correct or delete your personal data. To do so, ${reach}.`,
+    terms: `Welcome to ${n}. By browsing or buying from this store you agree to these terms.
+
+1. Products & pricing
+We try to show colours and details accurately; slight variations may occur due to screens and handmade finishes. Prices are in INR and may change without notice. Orders are confirmed only after we accept them.
+
+2. Orders & payment
+We accept the payment methods shown at checkout. For Cash on Delivery orders we may call to confirm. We can cancel an order if an item is unavailable or a pricing error occurs — any amount paid will be refunded in full.
+
+3. Shipping
+Delivery timelines are estimates and may vary by location and courier.
+
+4. Returns
+Returns and exchanges follow our Refund & Exchange Policy.
+
+5. Use of the site
+Content, images and branding on this store belong to ${n} and may not be copied without permission.
+
+6. Contact
+For any question about these terms, ${reach}.`,
+    refund: `We want you to love what you buy from ${n}.
+
+• Exchange or return within 7 days of delivery for unused items with original tags and packaging.
+• Damaged, defective or wrong items: tell us within 48 hours with photos and we will replace or refund at no extra cost.
+• Sale items, innerwear, jewellery and customised products are not returnable unless damaged.
+• Refunds are issued to the original payment method (or bank/UPI for COD orders) within 5–7 working days after we receive and check the item.
+
+To start a return, ${reach} with your order number.`,
+    shipping: `${n} ships across India.
+
+• Orders are packed and dispatched within 1–3 working days.
+• Delivery usually takes 3–7 working days depending on your location.
+• You will receive tracking details once your order ships.
+• Shipping charges, if any, are shown at checkout before you pay.
+• If a package is delayed or arrives damaged, ${reach} and we'll sort it out quickly.`,
+  };
+  return T[k];
+}
 
 export function hydrateStore(r: Record<string, unknown>): Store {
   const pages = { ...emptyPages(), ...json<Partial<StorePages>>(r.pages, {}) };
@@ -87,6 +177,7 @@ export function hydrateStore(r: Record<string, unknown>): Store {
     contact: json<StoreContact>(r.contact, {}),
     tax: { ...emptyTax(), ...json<Partial<StoreTax>>(r.tax, {}) },
     testimonials: { ...emptyTestimonials(), ...json<Partial<StoreTestimonials>>(r.testimonials, {}) },
+    storefront: hydrateFront(json<Partial<StoreFront>>(r.storefront, {})),
     pages,
     payments: { ...emptyPayments(), ...pay, upi: { ...emptyPayments().upi, ...(pay.upi ?? {}) }, razorpay: { ...emptyPayments().razorpay, ...(pay.razorpay ?? {}) } },
     created_at: String(r.created_at),
@@ -180,6 +271,8 @@ export function storeForOwner(s: Store, plans: Record<PlanKey, PlanDef>) {
     id: s.id, code: s.code, handle: s.handle, name: s.name, tagline: s.tagline ?? "", about: s.about ?? "",
     logo: imgUrl(s.logo_key), logo_key: s.logo_key, banner: imgUrl(s.banner_key), banner_key: s.banner_key,
     contact: s.contact, pages: s.pages, tax: s.tax, testimonials: s.testimonials,
+    storefront: { ...s.storefront, banners: s.storefront.banners.map((b) => ({ ...b, url: imgUrl(b.key) })) },
+    pageDefaults: Object.fromEntries(PAGE_KEYS.map((k) => [k, policyTemplate(k, s)])) as Record<(typeof PAGE_KEYS)[number], string>,
     payments: { cod: s.payments.cod, upi: { ...s.payments.upi, qr: imgUrl(s.payments.upi.qr_key) }, razorpay: { on: s.payments.razorpay.on, key_id: s.payments.razorpay.key_id, hasSecret: Boolean(s.payments.razorpay.secret_enc) } },
     plan: s.plan, effectivePlan: plan, planName: plans[plan].name, limit: plans[plan].limit,
     plan_expires_at: s.plan_expires_at, razorpayAllowed: plans[plan].razorpay,

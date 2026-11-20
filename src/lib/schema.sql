@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS stores (
   payments JSON NULL,
   tax JSON NULL,
   testimonials JSON NULL,
+  storefront JSON NULL,
   plan VARCHAR(20) NOT NULL DEFAULT 'free',
   plan_expires_at DATETIME NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'active',

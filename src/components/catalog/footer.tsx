@@ -30,13 +30,13 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
       <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-80 w-[60rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.13),transparent)]" />
 
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
         {/* brand statement */}
-        <div className="flex flex-col gap-8 border-b border-white/[.07] py-14 sm:py-20 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
+        <div className="flex flex-col gap-8 border-b border-white/[.07] py-12 sm:py-16 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {logo && <img src={logo} alt={store.name} className="mb-6 h-11 w-auto max-w-[170px] rounded-xl bg-white p-1.5 object-contain" />}
-            <p className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-tight sm:text-5xl">
+            <p className="font-display text-[1.7rem] leading-[1.1] font-extrabold tracking-tight sm:text-[2.6rem]">
               <span className="bg-gradient-to-br from-white via-white to-white/45 bg-clip-text text-transparent">{store.tagline || `Thoughtfully made. Delivered to you.`}</span>
             </p>
             <p className="mt-4 text-sm text-white/45">— {store.name}</p>
@@ -98,14 +98,14 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
 
       {/* oversized wordmark: up to 2 words, caps, sized to fit the width */}
       <div aria-hidden className="pointer-events-none overflow-hidden px-4 pt-4 pb-6 text-center select-none sm:pb-8">
-        <span className="inline-block bg-gradient-to-b from-white/[.16] to-white/[.02] bg-clip-text font-display leading-none font-extrabold tracking-tight whitespace-nowrap text-transparent uppercase" style={{ fontSize: `min(15vw, ${(128 / Math.max(mark.length, 4)).toFixed(2)}vw, 13rem)` }}>
+        <span className="inline-block bg-gradient-to-b from-white/[.16] to-white/[.02] bg-clip-text font-display leading-none font-extrabold tracking-tight whitespace-nowrap text-transparent uppercase" style={{ fontSize: `min(15vw, ${(128 / Math.max(mark.length, 4)).toFixed(2)}vw, 10rem)` }}>
           {mark}
         </span>
       </div>
 
       {/* bottom bar */}
       <div className="border-t border-white/[.07]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 pt-6 pb-28 text-xs text-white/40 sm:flex-row sm:px-8 sm:pr-24 sm:pb-6 2xl:pr-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 pt-6 pb-28 text-xs text-white/40 sm:flex-row sm:px-8 sm:pr-24 sm:pb-6 2xl:pr-8">
           <p>© {year} {store.name}. All rights reserved.</p>
           <a href="https://www.vishnuit.co.in" target="_blank" rel="noopener" className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[.03] py-1.5 pr-3 pl-4 transition hover:border-white/25">
             <span className="text-[11px] tracking-wide text-white/50 transition group-hover:text-white/80">Designed by</span>

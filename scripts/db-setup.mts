@@ -47,6 +47,7 @@ for (const sql of [
   "ALTER TABLE payments MODIFY amount DECIMAL(10,2) NOT NULL",
   "ALTER TABLE stores ADD COLUMN tax JSON NULL AFTER payments",
   "ALTER TABLE stores ADD COLUMN testimonials JSON NULL AFTER tax",
+  "ALTER TABLE stores ADD COLUMN storefront JSON NULL AFTER testimonials",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }
