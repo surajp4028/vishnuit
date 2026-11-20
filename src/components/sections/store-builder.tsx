@@ -86,12 +86,12 @@ export function StoreMockup({ size = "lg" }: { size?: "md" | "lg" }) {
   return (
     <div className={`relative mx-auto w-full pt-6 pb-[7%] ${size === "lg" ? "max-w-[640px]" : "max-w-[520px]"}`}>
       <LaptopFrame src="/stores/desktop-home-v2.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[86%]" />
-      <PhoneFrame src="/stores/phone-product-v2.webp" alt="Product page on a phone" className="absolute bottom-0 left-[2%] w-[23%] drop-shadow-[0_25px_35px_rgba(15,23,42,.35)]" />
-      <div className="absolute top-0 left-[18%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
+      <PhoneFrame src="/stores/phone-product-v2.webp" alt="Product page on a phone" className="absolute bottom-0 left-0 w-[27%] drop-shadow-[0_25px_35px_rgba(15,23,42,.35)] sm:left-[2%] sm:w-[23%]" />
+      <div className="absolute top-0 left-[18%] hidden sm:flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
         <span className="grid size-8 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><ShoppingBag className="size-4" /></span>
         <span><span className="block text-[12px] font-bold text-slate-900">New order · ₹2,499</span><span className="block text-[11px] text-slate-500">Cash on delivery</span></span>
       </div>
-      <div className="absolute right-0 bottom-[2%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
+      <div className="absolute right-0 bottom-[2%] hidden sm:flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_7s_ease-in-out_1.5s_infinite]">
         <span className="grid size-8 place-items-center rounded-full bg-amber-400/15 text-amber-600"><BadgeCheck className="size-4" /></span>
         <span><span className="block text-[12px] font-bold text-slate-900">UPI payment received</span><span className="block text-[11px] text-slate-500">GST invoice sent</span></span>
       </div>
@@ -104,21 +104,21 @@ export function StoreTeaser() {
   return (
     <section id="online-store" className="container-x scroll-mt-24 pt-14 pb-2 md:pt-20 md:pb-4">
       <Reveal>
-        <div className="relative isolate grid items-center gap-10 overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-[#f6f8ff] via-white to-[#fff8e8] p-7 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:p-12 dark:from-card dark:via-card dark:to-card">
+        <div className="relative isolate grid items-center gap-8 overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-[#f6f8ff] via-white to-[#fff8e8] p-6 sm:gap-10 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:p-12 dark:from-card dark:via-card dark:to-card">
           <div className="pointer-events-none absolute -top-24 -left-24 -z-10 size-80 rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.14),transparent)]" />
           <div className="pointer-events-none absolute -right-24 -bottom-32 -z-10 size-96 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.18),transparent)]" />
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[10.5px] font-bold tracking-[3px] text-accent"><Sparkles className="size-3.5" /> NEW · VISHNU STORES</span>
             <h2 className="mt-5 font-display text-3xl leading-[1.08] font-extrabold tracking-tight sm:text-[2.5rem]">
-              Launch your online store for <FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" />
+              Launch your online store for <span className="block min-h-[1.15em] sm:inline sm:min-h-0"><FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" /></span>
             </h2>
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted">Your own catalogue link, COD & UPI orders, GST invoices and delivery tracking — set up from your phone in 5 minutes.</p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-foreground/70">
               {["Free plan", "0% commission", "No coding"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
             </div>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/online-store" className="group inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
-              <Link href="/account/store" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:border-accent">Create free store</Link>
+            <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
+              <Link href="/online-store" className="group inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
+              <Link href="/account/store" className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:border-accent">Create free store</Link>
             </div>
           </div>
           <StoreMockup size="md" />

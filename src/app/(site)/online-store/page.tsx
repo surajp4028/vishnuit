@@ -39,7 +39,7 @@ export default async function OnlineStorePage() {
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3.5 py-1.5 text-[11px] font-bold tracking-[3px] text-accent"><Sparkles className="size-3.5" /> VISHNU STORES</span>
             <h1 className="mt-6 font-display text-[2.6rem] leading-[1.03] font-extrabold tracking-tight sm:text-6xl">
-              Sell online with your own store for <FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" />
+              Sell online with your own store for <span className="block min-h-[1.1em] lg:inline lg:min-h-0"><FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" /></span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">A premium catalogue with your logo and link. Take COD & UPI orders, send GST invoices and track every delivery — all from your phone. No coding, no commission.</p>
             <div className="mt-8 flex flex-wrap gap-3">

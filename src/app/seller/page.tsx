@@ -34,7 +34,7 @@ export default async function SellerHome() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-sm text-muted">Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""} 👋</p>
+        <p className="text-sm text-muted">Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""} 👋 <span className="ml-1 rounded-full bg-foreground/5 px-2 py-0.5 font-mono text-[11px] font-semibold">ID {store.code}</span></p>
         <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">Dashboard</h1>
       </div>
       <StoreLinkCard handle={store.handle} name={store.name} />

@@ -58,6 +58,8 @@ for (const sql of [
   "ALTER TABLE store_orders ADD COLUMN state VARCHAR(4) NULL AFTER address",
   "ALTER TABLE store_products ADD COLUMN gst_rate DECIMAL(4,2) NULL AFTER compare_price",
   "ALTER TABLE store_products ADD COLUMN hsn VARCHAR(12) NULL AFTER gst_rate",
+  "ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL AFTER password_hash",
+  "ALTER TABLE users ADD UNIQUE KEY uniq_google (google_sub)",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }

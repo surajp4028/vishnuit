@@ -15,7 +15,7 @@ export default async function SellerLayout({ children }: { children: React.React
   const pu = publicUser(user);
   return (
     <SellerShell
-      store={{ name: store.name, handle: store.handle, logo: imgUrl(store.logo_key), planName: cfg.plans[effectivePlan(store)].name }}
+      store={{ name: store.name, handle: store.handle, uid: store.code, logo: imgUrl(store.logo_key), planName: cfg.plans[effectivePlan(store)].name }}
       user={{ name: pu.name || pu.email || "", avatar: pu.avatar }}
       newOrders={Number(n?.n ?? 0)}
     >
