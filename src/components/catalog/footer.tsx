@@ -112,7 +112,7 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
       {/* bottom bar */}
       <div className="border-t border-white/[.07]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 pt-6 pb-28 text-xs text-white/40 sm:flex-row sm:px-8 sm:pr-24 sm:pb-6 2xl:pr-8">
-          <p>© {year} {store.name}. All rights reserved.</p>
+          <p className="text-center sm:text-left">© {year} {store.name}. All rights reserved. <a href="https://www.vishnuit.co.in/seller" className="ml-1 whitespace-nowrap text-white/45 underline-offset-4 transition hover:text-white/80 hover:underline">Seller login</a></p>
           <a href="https://www.vishnuit.co.in" target="_blank" rel="noopener" className="group inline-flex items-center gap-2.5 rounded-pill border border-white/10 bg-white/[.03] py-1.5 pr-3 pl-4 transition hover:border-white/25">
             <span className="text-[11px] tracking-wide text-white/50 transition group-hover:text-white/80">Designed by</span>
             <Image src="/brand/vishnuit-vishnu-logo-black.png" alt="Vishnu IT Solutions" width={78} height={30} className="h-5 w-auto opacity-80 transition group-hover:opacity-100" />

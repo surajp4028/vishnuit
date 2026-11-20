@@ -3,7 +3,9 @@ import { after } from "next/server";
 import sharp from "sharp";
 import { payeePath, putObject, s3Configured } from "@/lib/server/s3";
 import { exec, queryOne } from "@/lib/server/db";
-import { findOrCreateUser, startSession, type User } from "@/lib/server/users";
+import { createToken, findOrCreateUser, startSession, type User } from "@/lib/server/users";
+import { randomBytes } from "node:crypto";
+import { storeOrigin } from "@/lib/server/domains";
 
 type IdToken = { iss: string; aud: string; sub: string; email?: string; email_verified?: boolean; name?: string; picture?: string; exp: number };
 
@@ -14,10 +16,12 @@ type IdToken = { iss: string; aud: string; sub: string; email?: string; email_ve
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const jar = await cookies();
-  const saved = (() => { try { return JSON.parse(jar.get("g_oauth")?.value ?? "") as { state: string; next: string }; } catch { return null; } })();
+  const saved = (() => { try { return JSON.parse(jar.get("g_oauth")?.value ?? "") as { state: string; next: string; to?: string | null }; } catch { return null; } })();
   jar.delete({ name: "g_oauth", path: "/api/account/google" });
   const store = saved?.next.match(/^\/catalog\/@[\w.-]+/)?.[0];
-  const fail = (why: string) => Response.redirect(new URL(`${store ? `${store}/login` : "/login"}?error=${why}`, url.origin), 302);
+  const fail = (why: string) => saved?.to
+    ? Response.redirect(`${storeOrigin(saved.to)}/login?error=${why}`, 302)
+    : Response.redirect(new URL(`${store ? `${store}/login` : "/login"}?error=${why}`, url.origin), 302);
   const code = url.searchParams.get("code");
   if (!saved || !code || url.searchParams.get("state") !== saved.state) return fail("google");
 
@@ -61,6 +65,14 @@ export async function GET(req: Request) {
         console.error("[google] avatar:", (e as Error).message);
       }
     });
+  }
+  // Came from a store's own domain → hand the login back with a one-time code for that domain only.
+  if (saved.to) {
+    const code = randomBytes(24).toString("base64url");
+    // Target = domain + a slice of the code, so two shoppers logging in at once don't cancel each other.
+    await createToken("handoff", `${saved.to.split(":")[0]}#${code.slice(0, 10)}`, owner.id, 2, code);
+    const q = new URLSearchParams({ c: code, next: saved.next });
+    return Response.redirect(`${storeOrigin(saved.to)}/api/account/handoff?${q}`, 302);
   }
   return Response.redirect(new URL(saved.next, url.origin), 302);
 }

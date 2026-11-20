@@ -39,14 +39,22 @@ export async function proxy(req: NextRequest) {
     }
     // "~" paths are only for custom domains.
     if (pathname.startsWith("/catalog/~")) return NextResponse.redirect(new URL(pathname.replace("/catalog/~", "/catalog/@"), req.url));
+    // Store sitemaps live in an API route.
+    const sm = pathname.match(/^\/catalog\/@([a-z0-9_-]+)\/sitemap\.xml$/i);
+    if (sm) { const url = req.nextUrl.clone(); url.pathname = `/api/catalog/@${sm[1]}/sitemap`; return NextResponse.rewrite(url); }
     return NextResponse.next();
   }
 
   // ---- A seller's own domain ----
-  // Public files (images, icons) are served as-is; sitemap.xml belongs to the store.
-  if (/\.[a-z0-9]+$/i.test(pathname) && pathname !== "/sitemap.xml") return NextResponse.next();
+  // Public files (images, icons) are served as-is; sitemap.xml and robots.txt belong to the store.
+  if (/\.[a-z0-9]+$/i.test(pathname) && pathname !== "/sitemap.xml" && pathname !== "/robots.txt") return NextResponse.next();
   const handle = await lookup(req, bare);
   if (!handle) return new NextResponse("This domain is not connected to a store.", { status: 404, headers: { "Content-Type": "text/plain" } });
+  if (pathname === "/sitemap.xml") { const url = req.nextUrl.clone(); url.pathname = `/api/catalog/@${handle}/sitemap`; return NextResponse.rewrite(url); }
+  if (pathname === "/robots.txt") {
+    const origin = `https://${host}`;
+    return new NextResponse(`User-agent: *\nAllow: /\nDisallow: /cart\nDisallow: /account\nDisallow: /login\nDisallow: /register\n\nSitemap: ${origin}/sitemap.xml\n`, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+  }
 
   // Old-style links (/catalog/@handle/…) on the custom domain → the clean address.
   const old = `/catalog/@${handle}`;

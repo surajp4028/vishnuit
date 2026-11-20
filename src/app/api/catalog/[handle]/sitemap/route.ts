@@ -3,7 +3,11 @@ import { getStoreByHandle, getStoreCategories, getStoreProducts, storeAbsUrl } f
 export const revalidate = 3600;
 const x = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!);
 
-/** /catalog/@store/sitemap.xml (or /sitemap.xml on the store's own domain) — store pages, categories and every live product. */
+/**
+ * Store sitemap. Served at /catalog/@store/sitemap.xml and at /sitemap.xml on the store's own domain —
+ * src/proxy.ts rewrites both here (an API route works the same in dev and on Vercel).
+ */
+/** — store pages, categories and every live product. */
 export async function GET(_req: Request, { params }: { params: Promise<{ handle: string }> }) {
   const s = await getStoreByHandle((await params).handle);
   if (!s) return new Response("Not found", { status: 404 });

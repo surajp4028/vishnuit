@@ -2,7 +2,7 @@ import { googleLoginOn } from "@/lib/server/content";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { getStoreByHandle, imgUrl, onOwnDomain, storeBase } from "@/lib/server/catalog";
+import { getStoreByHandle, imgUrl, storeBase } from "@/lib/server/catalog";
 import { getUser } from "@/lib/server/users";
 import { RegisterForm } from "@/components/account/auth-forms";
 import { StoreAuthShell } from "@/components/catalog/store-auth";
@@ -18,7 +18,7 @@ export default async function StoreRegister({ params, searchParams }: { params: 
   if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : `${base}/account`);
   return (
     <StoreAuthShell store={s.name} base={base} logo={imgUrl(s.logo_key)} title="Create your account" subtitle={`Faster checkout and order tracking at ${s.name}.`}>
-      <Suspense><RegisterForm base={base} google={(await googleLoginOn()) && !onOwnDomain(handle)} /></Suspense>
+      <Suspense><RegisterForm base={base} google={await googleLoginOn()} /></Suspense>
     </StoreAuthShell>
   );
 }

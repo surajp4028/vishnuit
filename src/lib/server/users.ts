@@ -125,11 +125,11 @@ export const publicUser = (u: User) => ({
 export type PublicUser = ReturnType<typeof publicUser>;
 
 /* ---------- one-time codes (password-reset links & OTP) ---------- */
-export async function createToken(kind: "reset" | "otp", target: string, userId: number | null, minutes: number, code: string) {
+export async function createToken(kind: "reset" | "otp" | "handoff", target: string, userId: number | null, minutes: number, code: string) {
   await exec("UPDATE user_tokens SET used_at=NOW() WHERE target=? AND kind=? AND used_at IS NULL", [target, kind]);
   await exec("INSERT INTO user_tokens (user_id,kind,target,code_hash,expires_at) VALUES (?,?,?,?,DATE_ADD(NOW(), INTERVAL ? MINUTE))", [userId, kind, target, sha(code), minutes]);
 }
-export async function consumeToken(kind: "reset" | "otp", target: string, code: string) {
+export async function consumeToken(kind: "reset" | "otp" | "handoff", target: string, code: string) {
   const t = await queryOne<{ id: number; user_id: number | null; code_hash: string; attempts: number }>(
     "SELECT id,user_id,code_hash,attempts FROM user_tokens WHERE target=? AND kind=? AND used_at IS NULL AND expires_at>NOW() ORDER BY id DESC LIMIT 1",
     [target, kind],
