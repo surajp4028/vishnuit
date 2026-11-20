@@ -51,7 +51,7 @@ export type Settings = {
   social: Record<string, string>;
   seo: { title: string; description: string; keywords: string; ogImage: string };
   founder: { name: string; role: string; photo: string; bio: string; cv: string; portfolio: string };
-  conversion: { whatsappButton: boolean; stickyCta: boolean; leadNotify: boolean; payNowOnDesktop: boolean; payNowOnMobile: boolean; announcement: string };
+  conversion: { whatsappButton: boolean; stickyCta: boolean; leadNotify: boolean; payNowOnDesktop: boolean; payNowOnMobile: boolean; storeCardOnAccount: boolean; announcement: string };
 };
 
 // ---------- Helpers ----------

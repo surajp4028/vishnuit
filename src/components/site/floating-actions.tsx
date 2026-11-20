@@ -1,17 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowUp } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 
 export function FloatingActions({ whatsapp, show }: { whatsapp: string; show: boolean }) {
   const [up, setUp] = useState(false);
+  const pathname = usePathname();
   useEffect(() => {
     const on = () => setUp(window.scrollY > 600);
     on();
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
+  // The merchant dashboard has its own bottom bar on phones — keep it clear.
+  if (pathname?.startsWith("/account/store")) return null;
   return (
     <div className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 md:right-6 md:bottom-6">
       <button

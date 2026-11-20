@@ -14,7 +14,7 @@ type Tab = "overview" | "payments" | "profile";
 
 const d = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-export function AccountDashboard({ user: initial, memberSince, payments, initialTab }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab }) {
+export function AccountDashboard({ user: initial, memberSince, payments, initialTab, showStoreCard, store }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab; showStoreCard: boolean; store: { name: string; handle: string } | null }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [user, setUser] = useState(initial);
   const paid = payments.filter((p) => p.status === "paid");
@@ -54,17 +54,17 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
               <Stat label="Total paid" value={formatINR(total)} />
               <Stat label="Payments" value={String(paid.length)} />
               <Stat label="Invoices" value={String(paid.length)} />
-              <div className="relative overflow-hidden rounded-3xl bg-[#0a0f1f] p-6 text-white md:col-span-3 md:p-8">
+              {(store || showStoreCard) && <div className="relative overflow-hidden rounded-3xl bg-[#0a0f1f] p-6 text-white md:col-span-3 md:p-8">
                 <div className="pointer-events-none absolute -top-20 -right-20 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(59,130,246,.45),transparent)]" />
                 <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[#f5c542]/15 px-3 py-1 text-xs font-bold tracking-widest text-[#f5c542]"><Store className="size-3.5" /> COMING SOON</span>
-                    <h2 className="mt-3 font-display text-2xl font-extrabold">Launch your own online store</h2>
-                    <p className="mt-1.5 max-w-lg text-sm text-white/70">List your products, get your own store link at vishnuit.co.in/catalog/@yourname and take orders on WhatsApp, UPI or COD — free for up to 15 products.</p>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-[#f5c542]/15 px-3 py-1 text-xs font-bold tracking-widest text-[#f5c542]"><Store className="size-3.5" /> {store ? "YOUR STORE" : "NEW"}</span>
+                    <h2 className="mt-3 font-display text-2xl font-extrabold">{store ? store.name : "Launch your own online store"}</h2>
+                    <p className="mt-1.5 max-w-lg text-sm text-white/70">{store ? `vishnuit.co.in/catalog/@${store.handle}` : "List your products, get your own store link at vishnuit.co.in/catalog/@yourname and take orders on WhatsApp, UPI or COD — free for up to 15 products."}</p>
                   </div>
-                  <button disabled className="shrink-0 rounded-full bg-white/10 px-6 py-3 text-sm font-bold text-white/60">Enroll — opening soon</button>
+                  <a href="/account/store" className="shrink-0 rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-black">{store ? "Manage store" : "Create my store"}</a>
                 </div>
-              </div>
+              </div>}
               {paid[0] && (
                 <div className="rounded-3xl border border-border bg-card p-5 md:col-span-3">
                   <p className="text-xs font-bold tracking-widest text-muted">LATEST PAYMENT</p>
@@ -124,7 +124,7 @@ function PaymentRow({ p }: { p: AccountPayment }) {
 function Avatar({ user, size }: { user: U; size: string }) {
   const initials = (user.name || user.email || "U").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <span className={cn("grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#d4a017]/70 bg-gradient-to-br from-[#1d4ed8] to-[#3b82f6] font-bold text-white", size)}>
+    <span className={cn("grid shrink-0 place-items-center overflow-hidden rounded-full bg-accent text-white font-bold", size)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {user.avatar ? <img src={user.avatar} alt="" className="size-full object-cover" /> : initials}
     </span>

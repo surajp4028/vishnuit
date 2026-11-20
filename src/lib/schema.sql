@@ -182,3 +182,74 @@ CREATE TABLE IF NOT EXISTS user_tokens (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX (target), INDEX (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS stores (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL UNIQUE,
+  code VARCHAR(20) NOT NULL UNIQUE,
+  handle VARCHAR(40) NOT NULL UNIQUE,
+  name VARCHAR(120) NOT NULL,
+  tagline VARCHAR(200) NULL,
+  logo_key VARCHAR(400) NULL,
+  banner_key VARCHAR(400) NULL,
+  about TEXT NULL,
+  contact JSON NULL,
+  pages JSON NULL,
+  payments JSON NULL,
+  plan VARCHAR(20) NOT NULL DEFAULT 'free',
+  plan_expires_at DATETIME NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX (created_at), INDEX (plan)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS store_categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  store_id INT NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  slug VARCHAR(90) NOT NULL,
+  sort INT NOT NULL DEFAULT 0,
+  UNIQUE KEY store_slug (store_id, slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS store_products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  store_id INT NOT NULL,
+  category_id INT NULL,
+  name VARCHAR(160) NOT NULL,
+  slug VARCHAR(180) NOT NULL,
+  description TEXT NULL,
+  price DECIMAL(10,2) NOT NULL DEFAULT 0,
+  compare_price DECIMAL(10,2) NULL,
+  sku VARCHAR(60) NULL,
+  stock INT NULL,
+  images JSON NULL,
+  options JSON NULL,
+  variants JSON NULL,
+  status VARCHAR(12) NOT NULL DEFAULT 'active',
+  featured TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY store_slug (store_id, slug), INDEX (store_id, status), INDEX (category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS store_orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  store_id INT NOT NULL,
+  order_no VARCHAR(24) NOT NULL UNIQUE,
+  customer_id INT NULL,
+  name VARCHAR(120) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  email VARCHAR(190) NULL,
+  address TEXT NULL,
+  items JSON NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL,
+  pay_method VARCHAR(12) NOT NULL,
+  utr VARCHAR(40) NULL,
+  pay_status VARCHAR(12) NOT NULL DEFAULT 'pending',
+  status VARCHAR(12) NOT NULL DEFAULT 'new',
+  note TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX (store_id, created_at), INDEX (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

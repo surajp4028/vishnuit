@@ -52,7 +52,7 @@ export function LoginForm() {
   const [mode, setMode] = useState<"password" | "otp">("password");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [phone, setPhone] = useState("");
+  const [otpId, setOtpId] = useState("");
   const [sent, setSent] = useState(false);
 
   async function onPassword(e: React.FormEvent<HTMLFormElement>) {
@@ -64,14 +64,14 @@ export function LoginForm() {
   }
   async function sendOtp() {
     setErr(""); setBusy(true);
-    const r = await post("/api/account/otp/send", { phone });
+    const r = await post("/api/account/otp/send", { id: otpId });
     setBusy(false);
     if (r.ok) setSent(true); else setErr(r.error || "Could not send OTP.");
   }
   async function onOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setErr(""); setBusy(true);
     const code = String(new FormData(e.currentTarget).get("code") ?? "");
-    const r = await post("/api/account/otp/verify", { phone, code });
+    const r = await post("/api/account/otp/verify", { id: otpId, code });
     setBusy(false);
     if (r.ok) { router.replace(next); router.refresh(); } else setErr(r.error || "Wrong code.");
   }
@@ -81,7 +81,7 @@ export function LoginForm() {
       <div className="grid grid-cols-2 rounded-full border border-border bg-background p-1 text-sm font-semibold">
         {(["password", "otp"] as const).map((m) => (
           <button key={m} onClick={() => { setMode(m); setErr(""); }} className={cn("rounded-full py-2.5 transition", mode === m ? "bg-foreground text-background" : "text-muted")}>
-            {m === "password" ? "Password" : "Mobile OTP"}
+            {m === "password" ? "Password" : "OTP"}
           </button>
         ))}
       </div>
@@ -95,19 +95,17 @@ export function LoginForm() {
         </form>
       ) : (
         <form onSubmit={onOtp} className="space-y-4">
-          <div className="flex gap-2">
-            <span className="grid place-items-center rounded-xl border border-border bg-background px-3.5 text-sm font-semibold">+91</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" required placeholder="10-digit mobile number" className={field} disabled={sent} />
-          </div>
+          <input value={otpId} onChange={(e) => setOtpId(e.target.value.trim())} required placeholder="Mobile number or email" autoComplete="username" className={field} disabled={sent} />
+          <p className="-mt-2 text-xs text-muted">{sent ? `Code sent to ${otpId}. It's valid for 10 minutes.` : "We'll send a 6-digit code by SMS or email."}</p>
           {sent && <input name="code" inputMode="numeric" autoComplete="one-time-code" required maxLength={6} placeholder="6-digit OTP" className={cn(field, "text-center text-lg font-bold tracking-[.5em]")} />}
           <Err msg={err} />
           {sent ? (
             <>
               <button disabled={busy} className={btn}>{busy ? <Loader2 className="size-4 animate-spin" /> : <>Verify & log in <ArrowRight className="size-4" /></>}</button>
-              <button type="button" onClick={() => { setSent(false); setErr(""); }} className="w-full text-sm text-muted hover:text-foreground">Change number</button>
+              <button type="button" onClick={() => { setSent(false); setErr(""); }} className="w-full text-sm text-muted hover:text-foreground">Change mobile / email</button>
             </>
           ) : (
-            <button type="button" disabled={busy || phone.length !== 10} onClick={sendOtp} className={btn}>{busy ? <Loader2 className="size-4 animate-spin" /> : <><Phone className="size-4" /> Send OTP</>}</button>
+            <button type="button" disabled={busy || otpId.length < 6} onClick={sendOtp} className={btn}>{busy ? <Loader2 className="size-4 animate-spin" /> : <><Phone className="size-4" /> Send OTP</>}</button>
           )}
         </form>
       )}

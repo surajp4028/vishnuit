@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Receipt, UserRound, UserCog } from "lucide-react";
+import { LayoutDashboard, LogOut, Receipt, Store, UserRound, UserCog } from "lucide-react";
 
 type Me = { uid: string; name: string; email: string | null; avatar: string | null } | null;
 
@@ -39,7 +39,7 @@ export function UserMenu() {
   const initials = (me.name || me.email || "U").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button onClick={() => setOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center overflow-hidden rounded-full border-2 border-[#d4a017]/70 bg-gradient-to-br from-[#1d4ed8] to-[#3b82f6] text-xs font-bold text-white">
+      <button onClick={() => setOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center overflow-hidden rounded-full bg-accent text-white text-xs font-bold">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {me.avatar ? <img src={me.avatar} alt="" className="size-full object-cover" /> : initials}
       </button>
@@ -50,7 +50,7 @@ export function UserMenu() {
               <p className="truncate text-sm font-semibold">{me.name || "My account"}</p>
               <p className="truncate text-xs text-muted">{me.email ?? me.uid}</p>
             </div>
-            {[["/account", "Dashboard", LayoutDashboard], ["/account?tab=payments", "Payments & invoices", Receipt], ["/account?tab=profile", "Profile & password", UserCog]].map(([href, label, Icon]) => {
+            {[["/account", "Dashboard", LayoutDashboard], ["/account/store", "My store", Store], ["/account?tab=payments", "Payments & invoices", Receipt], ["/account?tab=profile", "Profile & password", UserCog]].map(([href, label, Icon]) => {
               const I = Icon as typeof LayoutDashboard;
               return (
                 <Link key={href as string} href={href as string} className="mt-1 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-foreground/5">
