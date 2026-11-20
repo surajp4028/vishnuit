@@ -60,6 +60,7 @@ export type StoreFront = {
   highlights: { icon: HighlightIcon; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
   about: { images: string[]; heading: string };
+  look: "sharp" | "minimal" | "soft";
 };
 export const emptyFront = (): StoreFront => ({
   banners: [], interval: 5,
@@ -72,6 +73,7 @@ export const emptyFront = (): StoreFront => ({
   ],
   map: { on: true, query: "", zoom: 15 },
   about: { images: [], heading: "" },
+  look: "sharp",
 });
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
@@ -109,6 +111,7 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     bar: { ...d.bar, ...(f.bar ?? {}) },
     highlights: Array.isArray(f.highlights) && f.highlights.length ? f.highlights : d.highlights,
     map: { ...d.map, ...(f.map ?? {}) },
+    look: f.look === "minimal" || f.look === "soft" ? f.look : "sharp",
     about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "" },
   };
 }

@@ -32,7 +32,7 @@ export default async function StoreLayout({ children, params }: { children: Reac
   const cats = all.filter((c) => c.depth === 0).map((c) => ({ name: c.name, slug: c.slug, children: all.filter((k) => k.parent_id === c.id).map((k) => ({ name: k.name, slug: k.slug })) }));
   return (
     <CartProvider handle={s.handle}>
-      <div className="min-h-dvh bg-background text-foreground">
+      <div data-look={s.storefront.look} className="min-h-dvh bg-background text-foreground">
         <ScrollTop />
         {s.storefront.bar.on && <AnnounceBar items={s.storefront.bar.items} />}
         <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} name={s.name} logo={logo} categories={cats} /></Suspense>

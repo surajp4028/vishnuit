@@ -22,7 +22,7 @@ export function Testimonials({ reviews }: { reviews: T[] }) {
 
   return (
     <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="grid overflow-hidden rounded-[2rem] border border-border md:grid-cols-[.85fr_1.4fr]">
+      <div className="grid overflow-hidden rounded-3xl border border-border md:grid-cols-[.85fr_1.4fr]">
         <div className="flex flex-col justify-between gap-8 bg-foreground/[.03] p-7 sm:p-10">
           <div>
             <p className="text-[11px] font-bold tracking-[4px] text-muted">LOVED BY CUSTOMERS</p>

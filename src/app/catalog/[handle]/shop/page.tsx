@@ -74,14 +74,14 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
       </div>
       {cat && subs.length > 0 && (
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-          {(() => { const top = parent ?? cat; return [{ slug: top.slug, name: `All ${top.name}` }, ...subs].map((x) => <Link key={x.slug} href={`${base}/shop?c=${x.slug}`} scroll={false} className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold ${x.slug === cat.slug ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/40"}`}>{x.name}</Link>); })()}
+          {(() => { const top = parent ?? cat; return [{ slug: top.slug, name: `All ${top.name}` }, ...subs].map((x) => <Link key={x.slug} href={`${base}/shop?c=${x.slug}`} scroll={false} className={`shrink-0 rounded-pill border px-4 py-2 text-[13px] font-semibold ${x.slug === cat.slug ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/40"}`}>{x.name}</Link>); })()}
         </div>
       )}
       <div className="mt-4"><ShopFilters facets={facets} applied={applied} /></div>
       {products.length ? (
         <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">{products.map((p) => <ProductCard key={p.id} p={p} base={base} />)}</div>
       ) : (
-        <div className="mt-8 rounded-3xl border border-dashed border-border p-12 text-center"><p className="font-display text-lg font-bold">No products match</p><p className="mt-1 text-sm text-muted">Try removing a filter or searching another word.</p><Link href={`${base}/shop`} className="mt-5 inline-block rounded-full bg-foreground px-6 py-2.5 text-sm font-bold text-background">Clear filters</Link></div>
+        <div className="mt-8 rounded-3xl border border-dashed border-border p-12 text-center"><p className="font-display text-lg font-bold">No products match</p><p className="mt-1 text-sm text-muted">Try removing a filter or searching another word.</p><Link href={`${base}/shop`} className="mt-5 inline-block rounded-pill bg-foreground px-6 py-2.5 text-sm font-bold text-background">Clear filters</Link></div>
       )}
     </section>
   );

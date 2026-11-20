@@ -39,7 +39,7 @@ export function HeroCarousel({ slides, interval, fallbackLink }: { slides: Slide
                   <div className="absolute inset-x-0 bottom-0 p-6 sm:top-0 sm:flex sm:max-w-xl sm:flex-col sm:justify-end sm:p-12">
                     {s.title && <h2 className="font-display text-[2.2rem] leading-[1.02] font-extrabold tracking-tight sm:text-6xl">{s.title}</h2>}
                     {s.subtitle && <p className="mt-3 max-w-md text-[15px] text-white/85">{s.subtitle}</p>}
-                    {s.cta && <span className="mt-6 inline-flex w-max items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition group-hover:gap-3">{s.cta} <ArrowRight className="size-4" /></span>}
+                    {s.cta && <span className="mt-6 inline-flex w-max items-center gap-2 rounded-pill bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition group-hover:gap-3">{s.cta} <ArrowRight className="size-4" /></span>}
                   </div>
                 </>
               )}

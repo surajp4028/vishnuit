@@ -52,7 +52,7 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
         <h1 className="mt-6 font-display text-3xl font-extrabold">Order placed!</h1>
         <p className="mt-2 text-muted">Order <b className="text-foreground">#{done.orderNo}</b> · {rupee(done.subtotal)}</p>
         <p className="mt-4 text-sm text-muted">{storeName} will confirm your order shortly{method === "upi" ? " after checking your UPI payment" : ""}. Keep your phone handy.</p>
-        <Link href={base} className="mt-8 inline-block rounded-full bg-foreground px-7 py-3.5 text-sm font-bold text-background">Continue shopping</Link>
+        <Link href={base} className="mt-8 inline-block rounded-pill bg-foreground px-7 py-3.5 text-sm font-bold text-background">Continue shopping</Link>
       </div>
     );
 
@@ -62,7 +62,7 @@ export function Checkout({ handle, base, storeName, pay }: { handle: string; bas
       <div className="mx-auto max-w-md px-5 py-20 text-center">
         <ShoppingBag className="mx-auto size-10 text-muted" />
         <h1 className="mt-5 font-display text-2xl font-extrabold">Your cart is empty</h1>
-        <Link href={`${base}/shop`} className="mt-7 inline-block rounded-full bg-foreground px-7 py-3.5 text-sm font-bold text-background">Start shopping</Link>
+        <Link href={`${base}/shop`} className="mt-7 inline-block rounded-pill bg-foreground px-7 py-3.5 text-sm font-bold text-background">Start shopping</Link>
       </div>
     );
 

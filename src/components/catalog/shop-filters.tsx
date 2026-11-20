@@ -49,13 +49,13 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
   return (
     <>
       <div className="flex items-center gap-2 border-y border-border/70 py-2.5">
-        <button onClick={() => setOpen(true)} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-foreground/80 px-4 py-2 text-[13px] font-bold">
+        <button onClick={() => setOpen(true)} className="inline-flex shrink-0 items-center gap-2 rounded-pill border border-foreground/80 px-4 py-2 text-[13px] font-bold">
           <SlidersHorizontal className="size-4" /> Filters{count ? <span className="grid size-5 place-items-center rounded-full bg-foreground text-[10px] text-background">{count}</span> : null}
         </button>
         <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto [scrollbar-width:none]">
-          {chips.map((c) => <button key={c.k} onClick={() => go(c.rm)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground/[.06] px-3 py-2 text-xs font-semibold">{c.label}<X className="size-3" /></button>)}
+          {chips.map((c) => <button key={c.k} onClick={() => go(c.rm)} className="inline-flex shrink-0 items-center gap-1.5 rounded-pill bg-foreground/[.06] px-3 py-2 text-xs font-semibold">{c.label}<X className="size-3" /></button>)}
         </div>
-        <select value={applied.sort} onChange={(e) => go({ ...applied, sort: e.target.value })} aria-label="Sort" className="shrink-0 rounded-full border border-border bg-background px-3 py-2 text-[13px] font-semibold outline-none">
+        <select value={applied.sort} onChange={(e) => go({ ...applied, sort: e.target.value })} aria-label="Sort" className="shrink-0 rounded-pill border border-border bg-background px-3 py-2 text-[13px] font-semibold outline-none">
           {SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
       </div>
@@ -99,7 +99,7 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
                       const on = a.f.includes(`${o.name}:${v}`);
                       const hex = COLOR_HEX[v.toLowerCase()];
                       return (
-                        <button key={v} disabled={!n && !on} onClick={() => toggleF(o.name, v)} className={cn("inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition", on ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/40", !n && !on && "cursor-not-allowed text-muted line-through opacity-50")}>
+                        <button key={v} disabled={!n && !on} onClick={() => toggleF(o.name, v)} className={cn("inline-flex items-center gap-2 rounded-pill border px-3.5 py-2 text-[13px] font-semibold transition", on ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground/40", !n && !on && "cursor-not-allowed text-muted line-through opacity-50")}>
                           {isColor && hex && <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: hex }} />}
                           {v}<span className={cn("text-[11px]", on ? "text-background/60" : "text-muted")}>{n}</span>
                           {on && <Check className="size-3.5" />}
@@ -120,7 +120,7 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
                   <label className="flex flex-1 items-center rounded-xl border border-border px-3"><span className="text-muted">₹</span><input inputMode="numeric" value={a.max} onChange={(e) => setA({ ...a, max: e.target.value.replace(/\D/g, "") })} placeholder={String(facets.price.max)} className="w-full bg-transparent px-1.5 py-2.5 text-sm outline-none" /></label>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {[500, 1000, 2000, 5000].filter((x) => x > facets.price.min && x < facets.price.max * 1.5).map((x) => <button key={x} onClick={() => setA({ ...a, min: "", max: String(x) })} className={cn("rounded-full border px-3 py-1.5 text-xs font-semibold", a.max === String(x) && !a.min ? "border-foreground bg-foreground text-background" : "border-border")}>Under ₹{x.toLocaleString("en-IN")}</button>)}
+                  {[500, 1000, 2000, 5000].filter((x) => x > facets.price.min && x < facets.price.max * 1.5).map((x) => <button key={x} onClick={() => setA({ ...a, min: "", max: String(x) })} className={cn("rounded-pill border px-3 py-1.5 text-xs font-semibold", a.max === String(x) && !a.min ? "border-foreground bg-foreground text-background" : "border-border")}>Under ₹{x.toLocaleString("en-IN")}</button>)}
                 </div>
               </section>
             )}

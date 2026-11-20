@@ -88,7 +88,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
               <div className="flex items-center gap-3 py-5">
                 <span className="grid size-10 place-items-center rounded-full bg-foreground/5"><StoreIcon className="size-4" /></span>
                 <span className="flex-1 text-sm"><span className="block text-xs text-muted">Sold by</span><b>{s.name}</b></span>
-                <Link href={`${base}/contact`} className="rounded-full border border-border px-4 py-2 text-xs font-bold">Contact</Link>
+                <Link href={`${base}/contact`} className="rounded-pill border border-border px-4 py-2 text-xs font-bold">Contact</Link>
               </div>
             </div>
           </StickyColumn>

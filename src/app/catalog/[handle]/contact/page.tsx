@@ -25,7 +25,7 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
       <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">We&apos;d love to hear from you</h1>
       <div className="mt-10 grid gap-3 sm:grid-cols-2">
         {rows.map((r) => (
-          <a key={r.label} href={r.href} target={r.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="flex items-start gap-4 rounded-[1.4rem] border border-border p-5 transition hover:border-foreground/40">
+          <a key={r.label} href={r.href} target={r.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="flex items-start gap-4 rounded-2xl border border-border p-5 transition hover:border-foreground/40">
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-foreground text-background"><r.icon className="size-5" /></span>
             <span className="min-w-0"><span className="block text-xs font-semibold tracking-widest text-muted uppercase">{r.label}</span><span className="mt-1 block font-semibold break-words whitespace-pre-line">{r.value}</span></span>
           </a>
@@ -33,7 +33,7 @@ export default async function Contact({ params }: { params: Promise<{ handle: st
         {!rows.length && <p className="text-muted">Contact details coming soon.</p>}
       </div>
       {mapQ && (
-        <div className="mt-8 overflow-hidden rounded-[1.6rem] border border-border">
+        <div className="mt-8 overflow-hidden rounded-3xl border border-border">
           <iframe title={`${s.name} on Google Maps`} src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&z=${s.storefront.map.zoom}&output=embed`} className="block aspect-[4/3] w-full sm:aspect-[16/7]" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           <a href={`https://www.google.com/maps/search/${encodeURIComponent(mapQ)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 bg-card px-5 py-3.5 text-sm font-semibold"><span className="flex min-w-0 items-center gap-2"><MapPin className="size-4 shrink-0 text-muted" /><span className="truncate">{mapQ}</span></span><span className="shrink-0 text-muted">Get directions →</span></a>
         </div>

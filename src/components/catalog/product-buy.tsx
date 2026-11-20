@@ -27,7 +27,7 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
         {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
         {images.length > 1 && (
           <>
-            <span className="pointer-events-none absolute right-4 bottom-4 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
+            <span className="pointer-events-none absolute right-4 bottom-4 rounded-pill bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
             <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
           </>
         )}
@@ -103,7 +103,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
               const on = sel[o.name] === v;
               return (
                 <button key={v} disabled={out} onClick={() => { setSel((s) => ({ ...s, [o.name]: v })); setErr(""); }}
-                  className={cn("relative grid h-12 min-w-12 place-items-center rounded-full border px-4 text-sm font-bold transition", on ? "border-[#ff3f6c] text-[#ff3f6c] ring-1 ring-[#ff3f6c]" : "border-border hover:border-foreground", out && "cursor-not-allowed text-muted opacity-50 after:absolute after:inset-x-2 after:top-1/2 after:h-px after:-rotate-[20deg] after:bg-muted")}>{v}</button>
+                  className={cn("relative grid h-12 min-w-12 place-items-center rounded-pill border px-4 text-sm font-bold transition", on ? "border-[#ff3f6c] text-[#ff3f6c] ring-1 ring-[#ff3f6c]" : "border-border hover:border-foreground", out && "cursor-not-allowed text-muted opacity-50 after:absolute after:inset-x-2 after:top-1/2 after:h-px after:-rotate-[20deg] after:bg-muted")}>{v}</button>
               );
             })}
           </div>

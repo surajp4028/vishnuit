@@ -35,14 +35,14 @@ export default async function About({ params }: { params: Promise<{ handle: stri
 
       {imgs.length === 0 && (
         <section className="mx-auto mt-12 max-w-6xl px-5 sm:px-6">
-          <div className="rounded-[2rem] bg-foreground/[.03] px-6 py-12 sm:px-16 sm:py-20"><Story center /></div>
+          <div className="rounded-3xl bg-foreground/[.03] px-6 py-12 sm:px-16 sm:py-20"><Story center /></div>
         </section>
       )}
 
       {imgs.length === 1 && (
         <section className="mx-auto mt-10 grid max-w-6xl items-center gap-10 px-5 sm:mt-14 sm:px-6 md:grid-cols-2 md:gap-16">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+          <img src={imgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-3xl object-cover" />
           <Story />
         </section>
       )}
@@ -51,9 +51,9 @@ export default async function About({ params }: { params: Promise<{ handle: stri
         <section className="mx-auto mt-10 grid max-w-6xl items-center gap-12 px-5 sm:mt-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:gap-16">
           <div className="relative pr-[22%] pb-[18%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+            <img src={imgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-3xl object-cover" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imgs[1]} alt="" className="absolute right-0 bottom-0 aspect-square w-[46%] rounded-[1.6rem] border-[6px] border-background object-cover shadow-2xl" />
+            <img src={imgs[1]} alt="" className="absolute right-0 bottom-0 aspect-square w-[46%] rounded-3xl border-[6px] border-background object-cover shadow-2xl" />
           </div>
           <Story />
         </section>
@@ -61,7 +61,7 @@ export default async function About({ params }: { params: Promise<{ handle: stri
 
       {perks.length > 0 && (
         <section className="mx-auto mt-16 max-w-6xl px-5 sm:mt-24 sm:px-6">
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.6rem] border border-border bg-border md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-border bg-border md:grid-cols-4">
             {perks.map((h) => { const I = HIGHLIGHT_ICON_MAP[h.icon]; return (
               <div key={h.title} className="bg-background p-5 sm:p-7"><I className="size-6 text-foreground/70" /><p className="mt-4 font-display text-[15px] font-bold">{h.title}</p>{h.sub && <p className="mt-1 text-[13px] text-muted">{h.sub}</p>}</div>
             ); })}
@@ -70,11 +70,11 @@ export default async function About({ params }: { params: Promise<{ handle: stri
       )}
 
       <section className="mx-auto mt-16 max-w-6xl px-5 sm:mt-24 sm:px-6">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] bg-[#0b0d12] px-7 py-10 text-white sm:flex-row sm:items-center sm:px-12 sm:py-14">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-[#0b0d12] px-7 py-10 text-white sm:flex-row sm:items-center sm:px-12 sm:py-14">
           <div><p className="text-[11px] font-bold tracking-[4px] text-white/50">COME SAY HELLO</p><p className="mt-2 max-w-md font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Find something you&apos;ll love.</p></div>
           <div className="flex flex-wrap gap-3">
-            <Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase">Shop now <ArrowRight className="size-4" /></Link>
-            <Link href={`${base}/contact`} className="inline-flex items-center rounded-full border border-white/20 px-6 py-3 text-[13px] font-bold tracking-wide uppercase">Contact us</Link>
+            <Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase">Shop now <ArrowRight className="size-4" /></Link>
+            <Link href={`${base}/contact`} className="inline-flex items-center rounded-pill border border-white/20 px-6 py-3 text-[13px] font-bold tracking-wide uppercase">Contact us</Link>
           </div>
         </div>
       </section>

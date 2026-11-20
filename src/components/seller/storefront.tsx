@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowDown, ArrowUp, BookOpen, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpen, Check, Palette, Loader2, MapPin, Megaphone, Images, Plus, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, input, Toggle } from "@/components/store/ui";
 import { HIGHLIGHT_ICON_MAP, type HighlightIconKey } from "@/components/catalog/highlight-icons";
@@ -12,7 +12,15 @@ export type Front = {
   highlights: { icon: HighlightIconKey; title: string; sub: string; on: boolean }[];
   map: { on: boolean; query: string; zoom: number };
   about: { images: string[]; heading: string };
+  look: "sharp" | "minimal" | "soft";
 };
+
+
+const LOOKS: { k: Front["look"]; name: string; like: string; r: string; pill: string }[] = [
+  { k: "sharp", name: "Sharp", like: "Bold & editorial — like Snitch, Zara", r: "0px", pill: "0px" },
+  { k: "minimal", name: "Minimal", like: "Clean & familiar — like Myntra", r: "4px", pill: "4px" },
+  { k: "soft", name: "Soft", like: "Friendly & rounded — gifts, plants, bakery", r: "18px", pill: "999px" },
+];
 
 function Section({ icon: Icon, title, sub, children }: { icon: typeof MapPin; title: string; sub: string; children: React.ReactNode }) {
   return (
@@ -45,6 +53,25 @@ export function StorefrontEditor({ initial, address, handle }: { initial: Front;
 
   return (
     <div className="space-y-4">
+      <Section icon={Palette} title="Design style" sub="Changes the shape of every image, card and button on your store in one click.">
+        <div className="grid gap-3 sm:grid-cols-3">
+          {LOOKS.map((l) => (
+            <button key={l.k} type="button" onClick={() => set({ look: l.k })} className={cn("relative rounded-2xl border-2 p-3 text-left transition", f.look === l.k ? "border-foreground" : "border-border hover:border-foreground/30")}>
+              {f.look === l.k && <span className="absolute top-2.5 right-2.5 grid size-6 place-items-center rounded-full bg-foreground text-background"><Check className="size-3.5" /></span>}
+              <div className="flex gap-2 rounded-xl bg-foreground/[.04] p-3">
+                <div className="h-20 flex-1 bg-gradient-to-br from-amber-200 to-rose-300" style={{ borderRadius: l.r }} />
+                <div className="flex flex-1 flex-col justify-between">
+                  <div className="h-2 w-4/5 rounded-full bg-foreground/30" /><div className="h-2 w-1/2 rounded-full bg-foreground/15" />
+                  <div className="grid h-6 place-items-center bg-foreground text-[8px] font-bold tracking-wider text-background" style={{ borderRadius: l.pill }}>ADD TO BAG</div>
+                </div>
+              </div>
+              <p className="mt-3 font-display font-bold">{l.name}{l.k === "sharp" && <span className="ml-2 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-700">RECOMMENDED</span>}</p>
+              <p className="text-xs text-muted">{l.like}</p>
+            </button>
+          ))}
+        </div>
+      </Section>
+
       <Section icon={Megaphone} title="Announcement bar" sub="Black strip on top of your store that scrolls your offers — like “Free delivery above ₹999”.">
         <Toggle on={f.bar.on} onChange={(v) => set({ bar: { ...f.bar, on: v } })} label="Show announcement bar" sub={f.bar.on ? "Visible on every page" : "Hidden"} />
         {f.bar.items.map((t, i) => (

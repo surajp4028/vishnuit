@@ -18,7 +18,7 @@ function SearchBox({ base, autoFocus, onDone }: { base: string; autoFocus?: bool
   return (
     <form onSubmit={(e) => { e.preventDefault(); router.push(`${base}/shop${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`); onDone?.(); }} className="relative w-full">
       <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
-      <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for products" enterKeyHint="search" className="h-10 w-full rounded-full border border-transparent bg-foreground/[.05] pr-4 pl-11 text-sm outline-none transition placeholder:text-muted focus:border-foreground/15 focus:bg-background" />
+      <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for products" enterKeyHint="search" className="h-10 w-full rounded-pill border border-transparent bg-foreground/[.05] pr-4 pl-11 text-sm outline-none transition placeholder:text-muted focus:border-foreground/15 focus:bg-background" />
     </form>
   );
 }
@@ -57,7 +57,7 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
           <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base)}`} aria-label={me ? "My account" : "Log in"} className="grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">{me ? <span className="grid size-8 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{me}</span> : <UserRound className="size-5" />}</Link>
           <Link href={`${base}/cart`} aria-label="Bag" className="relative grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">
             <ShoppingBag className="size-5" />
-            {mounted && ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
+            {mounted && ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-pill bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
           </Link>
         </div>
       </div>
@@ -65,8 +65,8 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
       {categories.length > 0 && (
         <div className="border-t border-border/70">
           <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] sm:px-6">
-            <Link href={`${base}/shop`} className={cn("shrink-0 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition", path === `${base}/shop` && !activeCat ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>All</Link>
-            {categories.map((c) => <Link key={c.slug} href={`${base}/shop?c=${c.slug}`} className={cn("shrink-0 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition", activeCat === c.slug ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>{c.name}</Link>)}
+            <Link href={`${base}/shop`} className={cn("shrink-0 rounded-pill px-3.5 py-1.5 text-[12.5px] font-semibold transition", path === `${base}/shop` && !activeCat ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>All</Link>
+            {categories.map((c) => <Link key={c.slug} href={`${base}/shop?c=${c.slug}`} className={cn("shrink-0 rounded-pill px-3.5 py-1.5 text-[12.5px] font-semibold transition", activeCat === c.slug ? "bg-foreground text-background" : "text-muted hover:text-foreground")}>{c.name}</Link>)}
           </div>
         </div>
       )}

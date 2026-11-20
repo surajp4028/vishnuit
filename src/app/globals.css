@@ -137,3 +137,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
+
+/* ---- Store design styles (Seller → Storefront → Design style) ----
+   Tailwind v4 radius utilities read --radius-*; a store wrapper with data-look swaps them. */
+@utility rounded-pill {
+  border-radius: var(--radius-pill, calc(infinity * 1px));
+}
+[data-look="sharp"] {
+  --radius-xs: 0px; --radius-sm: 0px; --radius-md: 0px; --radius-lg: 0px; --radius-xl: 0px;
+  --radius-2xl: 0px; --radius-3xl: 0px; --radius-4xl: 0px; --radius-pill: 0px;
+}
+[data-look="minimal"] {
+  --radius-xs: 1px; --radius-sm: 2px; --radius-md: 3px; --radius-lg: 4px; --radius-xl: 4px;
+  --radius-2xl: 6px; --radius-3xl: 8px; --radius-4xl: 10px; --radius-pill: 4px;
+}

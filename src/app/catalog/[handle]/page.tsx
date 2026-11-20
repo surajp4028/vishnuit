@@ -40,7 +40,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
             <p className="text-[11px] font-semibold tracking-[5px] text-white/70">NEW SEASON</p>
             <h1 className="mt-3 max-w-xl font-display text-[2.4rem] leading-[1.02] font-extrabold tracking-tight sm:text-6xl">{s.name}</h1>
             {s.tagline && <p className="mt-3 max-w-md text-[15px] text-white/80">{s.tagline}</p>}
-            <Link href={`${base}/shop`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop the collection <ArrowRight className="size-4" /></Link>
+            <Link href={`${base}/shop`} className="mt-7 inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop the collection <ArrowRight className="size-4" /></Link>
           </div>
         </div>
         )}
@@ -108,7 +108,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
         ) : (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-12 text-center text-muted">New products are coming soon.</p>
         )}
-        {products.length > latest.length && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
+        {products.length > latest.length && <div className="mt-10 text-center"><Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-pill border border-foreground px-7 py-3 text-[13px] font-bold tracking-wide uppercase">View all {products.length} products <ArrowRight className="size-4" /></Link></div>}
       </section>
 
       {reviews.length > 0 && <Testimonials reviews={reviews.map((t) => ({ id: t.id, name: t.name, place: t.place, text: t.text, rating: t.rating }))} />}
@@ -120,15 +120,15 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
               {aboutImgs.length >= 2 ? (
                 <div className="relative pr-[20%] pb-[16%]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+                  <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-3xl object-cover" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={aboutImgs[1]} alt="" className="absolute right-0 bottom-0 aspect-square w-[45%] rounded-[1.5rem] border-[6px] border-background object-cover shadow-2xl" />
+                  <img src={aboutImgs[1]} alt="" className="absolute right-0 bottom-0 aspect-square w-[45%] rounded-2xl border-[6px] border-background object-cover shadow-2xl" />
                 </div>
               ) : aboutImgs.length === 1 ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-[2rem] object-cover" />
+                <img src={aboutImgs[0]} alt={s.name} className="aspect-[4/5] w-full rounded-3xl object-cover" />
               ) : (
-                <div className="relative isolate grid aspect-[4/5] place-items-center overflow-hidden rounded-[2rem] bg-[#0b0d12] text-white sm:aspect-[5/5]">
+                <div className="relative isolate grid aspect-[4/5] place-items-center overflow-hidden rounded-3xl bg-[#0b0d12] text-white sm:aspect-[5/5]">
                   <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_30%_10%,rgba(212,160,23,.3),transparent_55%),radial-gradient(ellipse_at_80%_90%,rgba(59,130,246,.22),transparent_55%)]" />
                   <span className="font-display text-[10rem] leading-none font-extrabold text-white/90 sm:text-[13rem]">{s.name[0]}</span>
                   <span className="absolute bottom-6 text-[11px] font-bold tracking-[5px] text-white/50 uppercase">Est. {new Date(s.created_at).getFullYear()}</span>
@@ -145,7 +145,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
                 </ul>
               )}
               <div className="mt-8 flex flex-wrap items-center gap-5">
-                <Link href={`${base}/about`} className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[13px] font-bold tracking-wide text-background uppercase transition hover:gap-3">Read our story <ArrowRight className="size-4" /></Link>
+                <Link href={`${base}/about`} className="inline-flex items-center gap-2 rounded-pill bg-foreground px-6 py-3.5 text-[13px] font-bold tracking-wide text-background uppercase transition hover:gap-3">Read our story <ArrowRight className="size-4" /></Link>
                 <span className="font-display text-lg italic text-muted">— Team {s.name}</span>
               </div>
             </div>

@@ -42,8 +42,8 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
             <p className="mt-4 text-sm text-white/45">— {store.name}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop now <ArrowUpRight className="size-4" /></Link>
-            {c.whatsapp && <a href={`https://wa.me/${c.whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 text-[13px] font-bold tracking-wide uppercase transition hover:border-white/40"><FaWhatsapp className="size-4" /> Chat with us</a>}
+            <Link href={`${base}/shop`} className="inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 text-[13px] font-bold tracking-wide text-black uppercase transition hover:gap-3">Shop now <ArrowUpRight className="size-4" /></Link>
+            {c.whatsapp && <a href={`https://wa.me/${c.whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-pill border border-white/15 px-6 py-3 text-[13px] font-bold tracking-wide uppercase transition hover:border-white/40"><FaWhatsapp className="size-4" /> Chat with us</a>}
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
       <div className="border-t border-white/[.07]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 pt-6 pb-28 text-xs text-white/40 sm:flex-row sm:px-8 sm:pr-24 sm:pb-6 2xl:pr-8">
           <p>© {year} {store.name}. All rights reserved.</p>
-          <a href="https://www.vishnuit.co.in" target="_blank" rel="noopener" className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[.03] py-1.5 pr-3 pl-4 transition hover:border-white/25">
+          <a href="https://www.vishnuit.co.in" target="_blank" rel="noopener" className="group inline-flex items-center gap-2.5 rounded-pill border border-white/10 bg-white/[.03] py-1.5 pr-3 pl-4 transition hover:border-white/25">
             <span className="text-[11px] tracking-wide text-white/50 transition group-hover:text-white/80">Designed by</span>
             <Image src="/brand/vishnuit-vishnu-logo-black.png" alt="Vishnu IT Solutions" width={78} height={30} className="h-5 w-auto opacity-80 transition group-hover:opacity-100" />
           </a>

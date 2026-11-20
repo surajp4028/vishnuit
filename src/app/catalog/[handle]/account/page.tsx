@@ -39,12 +39,12 @@ export default async function StoreAccount({ params }: { params: Promise<{ handl
           <span className="grid size-14 place-items-center rounded-full bg-white text-lg font-extrabold text-black">{(u.name || "U").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
           <div><p className="text-xs text-white/55">Hello,</p><p className="font-display text-2xl font-extrabold">{first}</p><p className="text-xs text-white/55">{u.phone || u.email}</p></div>
         </div>
-        <div className="flex gap-2"><Link href={`${base}/shop`} className="rounded-full bg-white px-4 py-2 text-xs font-bold text-black">Continue shopping</Link><span className="[&_button]:border-white/20 [&_button]:text-white"><StoreLogout base={base} /></span></div>
+        <div className="flex gap-2"><Link href={`${base}/shop`} className="rounded-pill bg-white px-4 py-2 text-xs font-bold text-black">Continue shopping</Link><span className="[&_button]:border-white/20 [&_button]:text-white"><StoreLogout base={base} /></span></div>
       </div>
 
       <h1 className="mt-8 font-display text-2xl font-extrabold tracking-tight">My orders <span className="text-base font-semibold text-muted">· {orders.length}</span></h1>
       {orders.length === 0 ? (
-        <div className="mt-5 rounded-3xl border border-dashed border-border p-12 text-center"><Package className="mx-auto size-9 text-muted" /><p className="mt-3 font-display text-lg font-bold">No orders yet</p><p className="mt-1 text-sm text-muted">When you order from {s.name}, it shows up here.</p><Link href={`${base}/shop`} className="mt-5 inline-block rounded-full bg-foreground px-6 py-2.5 text-sm font-bold text-background">Start shopping</Link></div>
+        <div className="mt-5 rounded-3xl border border-dashed border-border p-12 text-center"><Package className="mx-auto size-9 text-muted" /><p className="mt-3 font-display text-lg font-bold">No orders yet</p><p className="mt-1 text-sm text-muted">When you order from {s.name}, it shows up here.</p><Link href={`${base}/shop`} className="mt-5 inline-block rounded-pill bg-foreground px-6 py-2.5 text-sm font-bold text-background">Start shopping</Link></div>
       ) : (
         <div className="mt-5 space-y-3">
           {orders.map((o) => {
@@ -77,10 +77,10 @@ export default async function StoreAccount({ params }: { params: Promise<{ handl
                 {o.tracking?.number && <p className="mt-4 flex flex-wrap items-center gap-x-1.5 rounded-2xl bg-foreground/[.03] px-4 py-2.5 text-xs"><Truck className="size-4" /> {o.tracking.courier || "Courier"} · AWB <span className="font-mono font-semibold">{o.tracking.number}</span>{o.tracking.url && <a href={o.tracking.url} target="_blank" rel="noopener noreferrer" className="ml-auto font-bold underline">Track package</a>}</p>}
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
                   <div className="flex flex-wrap gap-2">
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", ORDER_COLOR[o.status])}>{ORDER_LABEL[o.status] ?? o.status}</span>
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", PAY_COLOR[o.pay])}>{o.method === "cod" && o.pay === "pending" ? "Cash on delivery" : PAY_LABEL[o.pay] ?? o.pay}</span>
+                    <span className={cn("rounded-pill px-2.5 py-1 text-xs font-semibold", ORDER_COLOR[o.status])}>{ORDER_LABEL[o.status] ?? o.status}</span>
+                    <span className={cn("rounded-pill px-2.5 py-1 text-xs font-semibold", PAY_COLOR[o.pay])}>{o.method === "cod" && o.pay === "pending" ? "Cash on delivery" : PAY_LABEL[o.pay] ?? o.pay}</span>
                   </div>
-                  <a href={orderInvoicePath(o.no)} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-bold"><FileText className="size-3.5" /> Invoice</a>
+                  <a href={orderInvoicePath(o.no)} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-pill border border-border px-3.5 py-2 text-xs font-bold"><FileText className="size-3.5" /> Invoice</a>
                 </div>
               </div>
             );

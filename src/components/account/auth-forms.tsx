@@ -6,7 +6,7 @@ import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Phone, ShieldCheck } from
 import { cn } from "@/lib/utils";
 
 export const field = "w-full rounded-xl border border-border bg-background px-4 py-3 text-[15px] outline-none transition focus:border-accent focus:ring-4 focus:ring-[var(--ring)]";
-const btn = "flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 text-sm font-bold text-background transition hover:opacity-90 disabled:opacity-60";
+const btn = "flex w-full items-center justify-center gap-2 rounded-pill bg-foreground py-3.5 text-sm font-bold text-background transition hover:opacity-90 disabled:opacity-60";
 
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
@@ -80,9 +80,9 @@ export function LoginForm({ base }: { base?: string } = {}) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 rounded-full border border-border bg-background p-1 text-sm font-semibold">
+      <div className="grid grid-cols-2 rounded-pill border border-border bg-background p-1 text-sm font-semibold">
         {(["password", "otp"] as const).map((m) => (
-          <button key={m} onClick={() => { setMode(m); setErr(""); }} className={cn("rounded-full py-2.5 transition", mode === m ? "bg-foreground text-background" : "text-muted")}>
+          <button key={m} onClick={() => { setMode(m); setErr(""); }} className={cn("rounded-pill py-2.5 transition", mode === m ? "bg-foreground text-background" : "text-muted")}>
             {m === "password" ? "Password" : "OTP"}
           </button>
         ))}

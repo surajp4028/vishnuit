@@ -5,7 +5,7 @@ import { BadgeCheck, Package, Truck } from "lucide-react";
 export function StoreAuthShell({ store, base, logo, title, subtitle, children }: { store: string; base: string; logo: string | null; title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <section className="mx-auto max-w-5xl px-3 pt-6 pb-10 sm:px-6 sm:pt-12">
-      <div className="grid overflow-hidden rounded-[2rem] border border-border bg-card md:grid-cols-[1fr_1.1fr]">
+      <div className="grid overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[1fr_1.1fr]">
         <div className="relative isolate hidden flex-col justify-between bg-[#0b0d12] p-10 text-white md:flex">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_20%_0%,rgba(212,160,23,.22),transparent_55%),radial-gradient(ellipse_at_90%_100%,rgba(59,130,246,.2),transparent_55%)]" />
           <Link href={base} className="flex items-center gap-3">
