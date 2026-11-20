@@ -7,6 +7,7 @@ import { StoreHeader, WhatsAppFloat } from "@/components/catalog/chrome";
 import { StoreFooter } from "@/components/catalog/footer";
 import { AnnounceBar } from "@/components/catalog/announce-bar";
 import { ScrollTop } from "@/components/catalog/scroll-top";
+import { flattenTree } from "@/lib/category-tree";
 
 export const revalidate = 120;
 
@@ -27,7 +28,8 @@ export default async function StoreLayout({ children, params }: { children: Reac
   if (!s) notFound();
   const base = `/catalog/@${s.handle}`;
   const logo = imgUrl(s.logo_key);
-  const cats = (await getStoreCategories(s.id)).map((c) => ({ name: c.name, slug: c.slug }));
+  const all = flattenTree(await getStoreCategories(s.id));
+  const cats = all.filter((c) => c.depth === 0).map((c) => ({ name: c.name, slug: c.slug, children: all.filter((k) => k.parent_id === c.id).map((k) => ({ name: k.name, slug: k.slug })) }));
   return (
     <CartProvider handle={s.handle}>
       <div className="min-h-dvh bg-background text-foreground">

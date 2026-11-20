@@ -7,7 +7,7 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { useCart } from "./cart";
 
-type Cat = { name: string; slug: string };
+type Cat = { name: string; slug: string; children?: { name: string; slug: string }[] };
 
 function SearchBox({ base, autoFocus, onDone }: { base: string; autoFocus?: boolean; onDone?: () => void }) {
   const router = useRouter();
@@ -78,7 +78,12 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
             </nav>
             {categories.length > 0 && <>
               <p className="mt-6 px-3 text-[11px] font-bold tracking-[2px] text-muted">CATEGORIES</p>
-              <nav className="mt-2 space-y-1">{categories.map((c) => <Link key={c.slug} href={`${base}/shop?c=${c.slug}`} className="block rounded-xl px-3 py-2.5 text-[15px] hover:bg-foreground/5">{c.name}</Link>)}</nav>
+              <nav className="mt-2 space-y-1">{categories.map((c) => (
+                <div key={c.slug}>
+                  <Link href={`${base}/shop?c=${c.slug}`} className="block rounded-xl px-3 py-2.5 text-[15px] font-semibold hover:bg-foreground/5">{c.name}</Link>
+                  {c.children?.map((k) => <Link key={k.slug} href={`${base}/shop?c=${k.slug}`} className="ml-3 block border-l border-border py-2 pr-3 pl-4 text-[14px] text-muted hover:text-foreground">{k.name}</Link>)}
+                </div>
+              ))}</nav>
             </>}
           </aside>
         </div>

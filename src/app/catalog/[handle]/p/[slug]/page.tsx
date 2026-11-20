@@ -34,6 +34,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const [cats, relatedAll] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, categoryId: p.category_id ?? undefined, limit: 13 })]);
   const related = relatedAll.filter((x) => x.id !== p.id).slice(0, 8);
   const cat = cats.find((c) => c.id === p.category_id);
+  const parentCat = cat?.parent_id ? cats.find((c) => c.id === cat.parent_id) : undefined;
   const off = p.compare_price && p.compare_price > p.price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
   const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
   const policies = PAGE_KEYS.filter((k) => s.pages[k]?.on && (k === "refund" || k === "shipping"));
@@ -43,7 +44,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   return (
     <>
       <section className="mx-auto max-w-7xl pt-0 sm:px-6 md:pt-8">
-        <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
+        <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parentCat && <> / <Link href={`${base}/shop?c=${parentCat.slug}`} className="hover:text-foreground">{parentCat.name}</Link></>}{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
         <div className="grid gap-6 md:grid-cols-[1.15fr_1fr] md:gap-12 lg:gap-16">
           <ProductGallery images={images} name={p.name} badge={off >= 10 ? `${off}% OFF` : null} />
           <div className="px-4 md:px-0">

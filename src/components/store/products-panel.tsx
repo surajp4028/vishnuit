@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, Loader2, PackagePlus, Plus, Search, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { flattenTree } from "@/lib/category-tree";
 import { api, btnDark, btnLight, card, Field, Gallery, imgUrl, inr, input, Toggle } from "./ui";
 
 export type P = {
@@ -9,7 +10,7 @@ export type P = {
   sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[] }[];
   variants: { key: string; price: number | null; stock: number | null }[]; status: "active" | "draft"; featured: boolean;
 };
-export type C = { id: number; name: string; slug: string };
+export type C = { id: number; name: string; slug: string; parent_id?: number | null; sort?: number };
 
 const cartesian = (opts: { name: string; values: string[] }[]) =>
   opts.filter((o) => o.values.length).reduce<string[]>((acc, o) => (acc.length ? acc.flatMap((a) => o.values.map((v) => `${a} / ${v}`)) : o.values.slice()), []);
@@ -149,7 +150,7 @@ function ProductEditor({ initial, categories, setCategories, onClose, onSaved, o
           <Field label="Category">
             <div className="flex gap-2 overflow-x-auto pb-1">
               <button type="button" onClick={() => set("category_id", null)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold", f.category_id == null ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>None</button>
-              {categories.map((c) => <button type="button" key={c.id} onClick={() => set("category_id", c.id)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold", f.category_id === c.id ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>{c.name}</button>)}
+              {flattenTree(categories.map((c) => ({ ...c, parent_id: c.parent_id ?? null, sort: Number(c.sort ?? 0) }))).map((c) => <button type="button" key={c.id} onClick={() => set("category_id", c.id)} className={cn("shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold whitespace-nowrap", f.category_id === c.id ? "border-foreground bg-foreground text-background" : "border-border text-muted")}>{c.label}</button>)}
             </div>
             <div className="mt-2 flex gap-2"><input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="New category" className={cn(input, "py-2.5")} /><button type="button" onClick={addCategory} className={btnLight}>Add</button></div>
           </Field>

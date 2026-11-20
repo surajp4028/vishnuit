@@ -16,7 +16,7 @@ export default async function SellerCategories() {
     <div>
       <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">Categories</h1>
       <p className="mt-1 mb-5 text-sm text-muted">These show as the menu strip and “Shop by category” on your store.</p>
-      <CategoriesManager initial={cats.map((c) => ({ id: c.id, name: c.name, slug: c.slug, count: n[c.id] ?? 0 }))} handle={store.handle} />
+      <CategoriesManager initial={cats.map((c) => ({ id: c.id, parent_id: c.parent_id ?? null, name: c.name, slug: c.slug, sort: Number(c.sort), count: n[c.id] ?? 0 }))} handle={store.handle} />
     </div>
   );
 }

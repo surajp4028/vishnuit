@@ -5,7 +5,7 @@ import { Check, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type Facets = {
-  categories: { slug: string; name: string; count: number }[];
+  categories: { slug: string; name: string; count: number; depth?: number }[];
   options: { name: string; values: { v: string; count: number }[] }[];
   price: { min: number; max: number };
 };
@@ -79,10 +79,10 @@ export function ShopFilters({ facets, applied }: { facets: Facets; applied: Appl
               <section>
                 <p className="mb-3 text-[11px] font-bold tracking-[3px] text-muted">CATEGORY</p>
                 <div className="space-y-1">
-                  {[{ slug: "", name: "All products", count: 0 }, ...facets.categories].map((c) => (
-                    <button key={c.slug || "all"} onClick={() => setA({ ...a, c: c.slug })} className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[14.5px] hover:bg-foreground/[.04]">
+                  {[{ slug: "", name: "All products", count: 0, depth: 0 }, ...facets.categories].map((c) => (
+                    <button key={c.slug || "all"} onClick={() => setA({ ...a, c: c.slug })} className={cn("flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[14.5px] hover:bg-foreground/[.04]", c.depth === 1 && "pl-8 text-[13.5px]")}>
                       <span className={cn("grid size-5 shrink-0 place-items-center rounded-full border-2", a.c === c.slug ? "border-foreground" : "border-border")}>{a.c === c.slug && <span className="size-2.5 rounded-full bg-foreground" />}</span>
-                      <span className="flex-1 font-medium">{c.name}</span>{c.count > 0 && <span className="text-xs text-muted">{c.count}</span>}
+                      <span className={cn("flex-1", c.depth === 1 ? "text-muted" : "font-medium")}>{c.name}</span>{c.count > 0 && <span className="text-xs text-muted">{c.count}</span>}
                     </button>
                   ))}
                 </div>

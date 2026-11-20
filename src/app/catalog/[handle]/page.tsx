@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BadgeCheck, Quote, Star } from "lucide-react";
 import { HeroCarousel } from "@/components/catalog/hero-carousel";
+import { withChildren } from "@/lib/category-tree";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
 import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl } from "@/lib/server/catalog";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -18,7 +19,7 @@ export default async function StoreHome({ params }: { params: Promise<{ handle: 
   const storyImg = imgUrl(s.storefront.about.images[0]);
   const priceSteps = [499, 999, 1999, 4999].filter((x) => products.some((p) => p.price <= x)).slice(0, 4);
   const banner = imgUrl(s.banner_key);
-  const catTiles = cats.map((c) => ({ ...c, img: imgUrl(products.find((p) => p.category_id === c.id && p.images[0])?.images[0]) })).slice(0, 10);
+  const catTiles = cats.filter((c) => !c.parent_id).map((c) => { const ids = withChildren(cats, c.id); return { ...c, img: imgUrl(products.find((p) => p.category_id != null && ids.includes(p.category_id) && p.images[0])?.images[0]) }; }).slice(0, 10);
   const perks = s.storefront.highlights.filter((h) => h.on && h.title).slice(0, 4);
   const slides = s.storefront.banners.map((x) => ({ ...x, url: imgUrl(x.key)! })).filter((x) => x.url);
   const reviews = s.testimonials.on ? s.testimonials.items.filter((t) => t.on) : [];

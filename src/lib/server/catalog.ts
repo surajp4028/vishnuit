@@ -86,7 +86,7 @@ export type Product = {
   options: { name: string; values: string[] }[]; variants: { key: string; price: number | null; stock: number | null }[];
   status: "active" | "draft"; featured: boolean; created_at: string;
 };
-export type Category = { id: number; store_id: number; name: string; slug: string; sort: number };
+export type Category = { id: number; store_id: number; parent_id: number | null; name: string; slug: string; sort: number };
 
 export const PAGE_KEYS = ["privacy", "terms", "refund", "shipping"] as const;
 export const PAGE_TITLES: Record<(typeof PAGE_KEYS)[number], string> = {
