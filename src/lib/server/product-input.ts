@@ -1,7 +1,8 @@
 import "server-only";
 import { num, str } from "./store-auth";
+import { isCatalogKey } from "./s3";
 
-const keyRe = (code: string) => new RegExp(`^catalog/${code}/(product)/[\\w.-]+$`);
+
 
 /** Validate a product form coming from the merchant dashboard. */
 export function parseProduct(b: Record<string, unknown>, storeCode: string, categoryIds: number[]) {
@@ -11,7 +12,7 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
   if (price == null) return { error: "Enter a valid price." } as const;
   const compare = num(b.compare_price);
   const stockRaw = b.stock === "" || b.stock == null ? null : Math.max(0, Math.floor(Number(b.stock)));
-  const images = (Array.isArray(b.images) ? b.images : []).filter((k): k is string => typeof k === "string" && keyRe(storeCode).test(k)).slice(0, 10);
+  const images = (Array.isArray(b.images) ? b.images : []).filter((k): k is string => isCatalogKey(k, storeCode, "product")).slice(0, 10);
   const options = (Array.isArray(b.options) ? b.options : [])
     .map((o: { name?: unknown; values?: unknown }) => ({
       name: str(o?.name, 30),

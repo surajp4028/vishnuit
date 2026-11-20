@@ -1,11 +1,11 @@
 import { revalidatePath } from "next/cache";
+import { isCatalogKey } from "@/lib/server/s3";
 import { exec } from "@/lib/server/db";
 import { PAGE_KEYS, effectivePlan, encryptSecret, getCatalogConfig, getStoreForUser, storeForOwner, type StorePages, type StorePayments, type StoreTax, type StoreTestimonials, type StoreFront, HIGHLIGHT_ICONS, type HighlightIcon } from "@/lib/server/catalog";
 import { requireStoreApi, str } from "@/lib/server/store-auth";
 
 /** Social links must be real https URLs (blocks javascript: and other schemes). */
 const httpsOnly = (u: string) => (/^https:\/\/[^\s/]+\.[^\s]+$/i.test(u) ? u : u && !u.includes(":") && !u.startsWith("/") ? `https://${u.replace(/^\/+/, "")}` : "");
-const keyOk = (k: unknown) => k === null || (typeof k === "string" && /^catalog\/VISHNU\d{5,10}\/[a-z]+\/[\w.-]+$/.test(k));
 
 /** Save store profile, contact, policy pages and payment methods. */
 export async function PATCH(req: Request) {
@@ -13,7 +13,7 @@ export async function PATCH(req: Request) {
   if (a instanceof Response) return a;
   const { store } = a;
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const ownKey = (k: unknown) => keyOk(k) && (k === null || String(k).startsWith(`catalog/${store.code}/`));
+  const ownKey = (k: unknown) => k === null || isCatalogKey(k, store.code);
 
   const name = b.name !== undefined ? str(b.name, 120) : store.name;
   if (name.length < 2) return Response.json({ error: "Enter your store name." }, { status: 422 });

@@ -1,3 +1,4 @@
+import { CATALOG_DIR } from "./s3";
 import "server-only";
 import { cache } from "react";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
@@ -269,7 +270,7 @@ export const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(
 /* ---------------- images ---------------- */
 /** Public URL for a catalog image (proxied to a signed S3 link so the bucket stays private). */
 export const imgUrl = (key: string | null | undefined) => (key ? `/api/catalog/img?k=${encodeURIComponent(key)}` : null);
-export const catalogKey = (code: string, kind: string, ext = "webp") => `catalog/${code}/${kind}/${Date.now()}-${randomBytes(3).toString("hex")}.${ext}`;
+export const catalogKey = (code: string, kind: string, ext = "webp") => `${CATALOG_DIR}/${code}/${kind}/${Date.now()}-${randomBytes(3).toString("hex")}.${ext}`;
 
 /* ---------------- secrets (merchant Razorpay key) ---------------- */
 const encKey = () => createHash("sha256").update(`store-secrets:${process.env.AUTH_SECRET ?? ""}`).digest();

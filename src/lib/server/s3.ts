@@ -41,5 +41,21 @@ export function signedUrl(key: string, seconds = 300, downloadName?: string) {
   );
 }
 
-/** Every payer/user gets one folder: vishnu/payee/<UID>/ */
-export const payeePath = (uid: string, file: string) => `vishnu/payee/${uid}/${file}`;
+/* ---------- Folder layout (set in env; defaults keep today's paths) ----------
+   S3_CATALOG_DIR  → store images:   <dir>/<VISHNU-ID>/<product|logo|banner|qr|category>/<file>
+   S3_PAYEE_DIR    → user files:     <dir>/<VISHNU-ID>/<avatar | invoices/...>
+   Keys already saved in the DB keep working if a folder is renamed later. */
+const dir = (v: string | undefined, d: string) => (v ?? "").trim().replace(/^\/+|\/+$/g, "") || d;
+export const CATALOG_DIR = dir(process.env.S3_CATALOG_DIR, "catalog");
+export const PAYEE_DIR = dir(process.env.S3_PAYEE_DIR, "vishnu/payee");
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const CATALOG_DIRS = [...new Set([CATALOG_DIR, "catalog"])].map(esc).join("|");
+
+/** Every payer/user gets one folder: <S3_PAYEE_DIR>/<UID>/ */
+export const payeePath = (uid: string, file: string) => `${PAYEE_DIR}/${uid}/${file}`;
+
+/** Is this a store image key (optionally: belonging to this store code / of these kinds)? */
+export function isCatalogKey(k: unknown, code?: string, kinds = "[a-z]+"): k is string {
+  if (typeof k !== "string") return false;
+  return new RegExp(`^(?:${CATALOG_DIRS})/${code ? esc(code) : "VISHNU\\d{5,10}"}/(?:${kinds})/[\\w.-]+$`).test(k);
+}
