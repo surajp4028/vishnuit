@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getStoreByHandle, getStoreCategories, imgUrl } from "@/lib/server/catalog";
+import { getStoreByHandle, getStoreCategories, imgUrl, storeBase, storeAbsUrl } from "@/lib/server/catalog";
 import { CartProvider } from "@/components/catalog/cart";
 import { StoreHeader, WhatsAppFloat } from "@/components/catalog/chrome";
 import { StoreFooter } from "@/components/catalog/footer";
@@ -21,16 +21,17 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
     title: { absolute: s.name, template: `%s · ${s.name}` },
     description,
     icons: icon ? { icon: [{ url: icon }], apple: [{ url: icon }] } : undefined,
-    openGraph: { type: "website", siteName: s.name, title: s.name, description, url: `/catalog/@${s.handle}` },
+    openGraph: { type: "website", siteName: s.name, title: s.name, description, url: storeAbsUrl(s) },
     twitter: { card: "summary_large_image", title: s.name, description },
-    alternates: { canonical: `/catalog/@${s.handle}` },
+    alternates: { canonical: storeAbsUrl(s) },
   };
 }
 
 export default async function StoreLayout({ children, params }: { children: React.ReactNode; params: Promise<{ handle: string }> }) {
-  const s = await getStoreByHandle((await params).handle);
+  const raw = (await params).handle;
+  const s = await getStoreByHandle(raw);
   if (!s) notFound();
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(raw, s.handle);
   const logo = imgUrl(s.logo_key);
   const all = flattenTree(await getStoreCategories(s.id));
   const cats = all.filter((c) => c.depth === 0).map((c) => ({ name: c.name, slug: c.slug, children: all.filter((k) => k.parent_id === c.id).map((k) => ({ name: k.name, slug: k.slug })) }));

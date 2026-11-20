@@ -45,17 +45,17 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:gap-5 sm:px-6">
         <button onClick={() => setMenu(true)} aria-label="Menu" className="grid size-9 shrink-0 place-items-center rounded-full md:hidden"><Menu className="size-5" /></button>
-        <Link href={base} className="flex min-w-0 shrink-0 items-center">
+        <Link href={base || "/"} className="flex min-w-0 shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {logo ? <img src={logo} alt={name} className="h-8 w-auto max-w-[130px] object-contain sm:h-9" /> : <span className="truncate font-display text-[17px] font-extrabold tracking-tight sm:text-xl">{name}</span>}
         </Link>
         <nav className="hidden items-center gap-6 text-[13px] font-semibold tracking-wide md:flex">
-          {links.slice(0, 2).map(([h, l]) => <Link key={l} href={base + h} className={cn("uppercase transition hover:text-foreground", (h === "" ? path === base : path?.startsWith(base + h)) ? "text-foreground" : "text-muted")}>{l}</Link>)}
+          {links.slice(0, 2).map(([h, l]) => <Link key={l} href={base + h || "/"} className={cn("uppercase transition hover:text-foreground", (h === "" ? path === (base || "/") : path?.startsWith(base + h)) ? "text-foreground" : "text-muted")}>{l}</Link>)}
         </nav>
         <div className="hidden max-w-md flex-1 md:block"><SearchBox base={base} /></div>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <button onClick={() => setSearch((s) => !s)} aria-label="Search" className="grid size-9 place-items-center rounded-full md:hidden">{search ? <X className="size-5" /> : <Search className="size-5" />}</button>
-          <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base)}`} aria-label={me ? "My account" : "Log in"} className="grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">{me ? <span className="grid size-8 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{me}</span> : <UserRound className="size-5" />}</Link>
+          <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base || "/")}`} aria-label={me ? "My account" : "Log in"} className="grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">{me ? <span className="grid size-8 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">{me}</span> : <UserRound className="size-5" />}</Link>
           <Link href={`${base}/cart`} aria-label="Bag" className="relative grid size-9 place-items-center rounded-full hover:bg-foreground/5 sm:size-10">
             <ShoppingBag className="size-5" />
             {mounted && ready && count > 0 && <span className="absolute top-0.5 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-pill bg-[#ff3f6c] px-1 text-[10px] font-bold text-white">{count}</span>}
@@ -79,8 +79,8 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
           <aside className="absolute inset-y-0 left-0 h-dvh w-[82%] max-w-xs overflow-y-auto bg-background p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><span className="truncate font-display text-lg font-extrabold">{name}</span><button onClick={() => setMenu(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full"><X className="size-5" /></button></div>
             <nav className="mt-6 space-y-1">
-              {links.map(([h, l]) => <Link key={l} href={base + h} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{l}</Link>)}
-              <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base)}`} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{me ? "My orders" : "Log in / Sign up"}</Link>
+              {links.map(([h, l]) => <Link key={l} href={base + h || "/"} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{l}</Link>)}
+              <Link href={me ? `${base}/account` : `${base}/login?next=${encodeURIComponent(path || base || "/")}`} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{me ? "My orders" : "Log in / Sign up"}</Link>
             </nav>
             {categories.length > 0 && <>
               <p className="mt-6 px-3 text-[11px] font-bold tracking-[2px] text-muted">CATEGORIES</p>

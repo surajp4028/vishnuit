@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { query, queryOne } from "./db";
+import { siteUrl } from "@/lib/site";
 
 /* ---------------- plans (admin can edit prices/limits in Admin → Catalog Stores) ---------------- */
 export type PlanKey = "free" | "starter" | "growth" | "premium";
@@ -87,6 +88,8 @@ export const emptyFront = (): StoreFront => ({
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
   id: number; user_id: number; code: string; handle: string; name: string; tagline: string | null;
+  /** Seller's own domain (e.g. pandeyfashion.com) and whether it was last seen pointing at us. */
+  domain: string | null; domain_ok: boolean;
   logo_key: string | null; banner_key: string | null; about: string | null;
   contact: StoreContact; pages: StorePages; payments: StorePayments; tax: StoreTax; testimonials: StoreTestimonials; storefront: StoreFront;
   plan: PlanKey; plan_expires_at: string | null; status: string; created_at: string;
@@ -97,6 +100,8 @@ export type Product = {
   options: { name: string; values: string[]; swatches?: Record<string, string> }[]; variants: { key: string; price: number | null; stock: number | null; sku?: string | null }[];
   status: "active" | "draft"; featured: boolean; created_at: string;
   gst_rate: number | null; hsn: string | null; low_stock: number | null;
+  /** Product ids the seller picked for "You may also like". */
+  related: number[];
 };
 export type Category = { id: number; store_id: number; parent_id: number | null; name: string; slug: string; sort: number };
 
@@ -201,6 +206,7 @@ export function hydrateStore(r: Record<string, unknown>): Store {
   const pay = json<Partial<StorePayments>>(r.payments, {});
   return {
     ...(r as unknown as Store),
+    domain: r.domain ? String(r.domain) : null, domain_ok: Boolean(Number(r.domain_ok)),
     contact: json<StoreContact>(r.contact, {}),
     tax: { ...emptyTax(), ...json<Partial<StoreTax>>(r.tax, {}) },
     testimonials: { ...emptyTestimonials(), ...json<Partial<StoreTestimonials>>(r.testimonials, {}) },
@@ -219,6 +225,7 @@ export function hydrateProduct(r: Record<string, unknown>): Product {
     images: json<string[]>(r.images, []), options: json(r.options, []), variants: json(r.variants, []),
     featured: Boolean(Number(r.featured)), created_at: String(r.created_at),
     gst_rate: r.gst_rate == null ? null : Number(r.gst_rate), hsn: r.hsn == null ? null : String(r.hsn), low_stock: r.low_stock == null ? null : Number(r.low_stock),
+    related: json<unknown[]>(r.related, []).map(Number).filter((n) => Number.isInteger(n) && n > 0),
   };
 }
 
@@ -236,8 +243,24 @@ export async function getStoreForUser(userId: number) {
   const r = await queryOne<Record<string, unknown>>("SELECT * FROM stores WHERE user_id=?", [userId]);
   return r ? hydrateStore(r) : null;
 }
+/**
+ * On the seller's own domain the proxy rewrites to /catalog/~handle/…, so "~" means
+ * "links start at /". On vishnuit.co.in the path is /catalog/@handle/… as before.
+ */
+export const onOwnDomain = (raw: string) => decodeURIComponent(raw).startsWith("~");
+export const storeBase = (raw: string, handle: string) => (onOwnDomain(raw) ? "" : `/catalog/@${handle}`);
+/** Full address of a store page, for canonical links, share previews and the sitemap. */
+export const storeAbsUrl = (s: Pick<Store, "handle" | "domain" | "domain_ok">, path = "") => (s.domain && s.domain_ok ? `https://${s.domain}${path || "/"}` : `${siteUrl()}/catalog/@${s.handle}${path}`);
+
+/** Which store owns this host? (www. is treated the same as the bare domain.) */
+export async function handleForDomain(host: string) {
+  const d = host.toLowerCase().split(":")[0].replace(/^www\./, "");
+  const r = await queryOne<{ handle: string }>("SELECT handle FROM stores WHERE (domain=? OR domain=?) AND status='active'", [d, `www.${d}`]);
+  return r?.handle ?? null;
+}
+
 export const getStoreByHandle = cache(async (raw: string) => {
-  const handle = decodeURIComponent(raw).replace(/^@/, "").toLowerCase();
+  const handle = decodeURIComponent(raw).replace(/^[@~]/, "").toLowerCase();
   if (!HANDLE_RE.test(handle)) return null;
   const cfg = await getCatalogConfig();
   if (!cfg.features.enabled || !cfg.features.storefronts) return null;

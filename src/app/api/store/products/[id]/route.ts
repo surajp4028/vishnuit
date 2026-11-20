@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { exec, query, queryOne } from "@/lib/server/db";
 import { hydrateProduct } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
-import { parseProduct } from "@/lib/server/product-input";
+import { ownIds, parseProduct } from "@/lib/server/product-input";
 import { mergeIntoLibrary } from "@/lib/server/attributes";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,8 +23,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if ("error" in p) return Response.json({ error: p.error }, { status: 422 });
     const d = p.data;
     await exec(
-      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, low_stock=?, images=?, options=?, variants=?, status=?, featured=? WHERE id=? AND store_id=?",
-      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), d.status, d.featured, id, store.id],
+      "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, low_stock=?, images=?, options=?, variants=?, related=?, status=?, featured=? WHERE id=? AND store_id=?",
+      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related.filter((r) => r !== id))), d.status, d.featured, id, store.id],
     );
     await mergeIntoLibrary(store.id, p.data.options).catch(() => {});
   }

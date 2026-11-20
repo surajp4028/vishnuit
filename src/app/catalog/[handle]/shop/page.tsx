@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getStoreByHandle, getStoreCategories, getStoreProducts, type Product } from "@/lib/server/catalog";
+import { getStoreByHandle, getStoreCategories, getStoreProducts, type Product, storeBase } from "@/lib/server/catalog";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ShopFilters, type Applied, type Facets } from "@/components/catalog/shop-filters";
 import { flattenTree, withChildren } from "@/lib/category-tree";
@@ -24,7 +24,7 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   const [{ handle }, sp] = await Promise.all([params, searchParams]);
   const s = await getStoreByHandle(handle);
   if (!s) notFound();
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(handle, s.handle);
   const [cats, all] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, q: sp.q })]);
   const cat = cats.find((c) => c.slug === sp.c);
   const catIds = cat ? withChildren(cats, cat.id) : [];
@@ -68,7 +68,7 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   const title = sp.q ? `“${sp.q}”` : cat ? cat.name : "All products";
   return (
     <section className="mx-auto max-w-7xl px-3 pt-5 sm:px-6 sm:pt-8">
-      <nav className="text-xs text-muted"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parent && <> / <Link href={`${base}/shop?c=${parent.slug}`} className="hover:text-foreground">{parent.name}</Link></>}{cat && <> / <span className="text-foreground">{cat.name}</span></>}</nav>
+      <nav className="text-xs text-muted"><Link href={base || "/"} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parent && <> / <Link href={`${base}/shop?c=${parent.slug}`} className="hover:text-foreground">{parent.name}</Link></>}{cat && <> / <span className="text-foreground">{cat.name}</span></>}</nav>
       <div className="mt-2 flex items-end justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-4xl">{sp.q ? <span className="text-muted">Results for </span> : null}{title}</h1>
         <p className="shrink-0 pb-1 text-sm text-muted">{products.length} item{products.length === 1 ? "" : "s"}</p>

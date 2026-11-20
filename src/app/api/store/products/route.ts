@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { exec, query, queryOne } from "@/lib/server/db";
 import { effectivePlan, getCatalogConfig, hydrateProduct, productLimit, slugify } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
-import { parseProduct } from "@/lib/server/product-input";
+import { ownIds, parseProduct } from "@/lib/server/product-input";
 import { mergeIntoLibrary } from "@/lib/server/attributes";
 
 export async function POST(req: Request) {
@@ -21,8 +21,8 @@ export async function POST(req: Request) {
   let slug = slugify(d.name);
   if (await queryOne("SELECT id FROM store_products WHERE store_id=? AND slug=?", [store.id, slug])) slug = `${slug}-${Date.now().toString(36).slice(-5)}`;
   const r = await exec(
-    "INSERT INTO store_products (store_id, category_id, name, slug, description, price, compare_price, gst_rate, hsn, sku, stock, low_stock, images, options, variants, status, featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-    [store.id, d.category_id, d.name, slug, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), d.status, d.featured],
+    "INSERT INTO store_products (store_id, category_id, name, slug, description, price, compare_price, gst_rate, hsn, sku, stock, low_stock, images, options, variants, related, status, featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    [store.id, d.category_id, d.name, slug, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related)), d.status, d.featured],
   );
   await mergeIntoLibrary(store.id, d.options).catch(() => {});
   revalidatePath(`/catalog/@${store.handle}`, "layout");

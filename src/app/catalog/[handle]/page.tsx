@@ -5,15 +5,16 @@ import { Testimonials } from "@/components/catalog/testimonials";
 import { HeroCarousel } from "@/components/catalog/hero-carousel";
 import { withChildren } from "@/lib/category-tree";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
-import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl } from "@/lib/server/catalog";
+import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl, storeBase } from "@/lib/server/catalog";
 import { ProductCard } from "@/components/catalog/product-card";
 
 export const revalidate = 120;
 
 export default async function StoreHome({ params }: { params: Promise<{ handle: string }> }) {
-  const s = await getStoreByHandle((await params).handle);
+  const raw = (await params).handle;
+  const s = await getStoreByHandle(raw);
   if (!s) notFound();
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(raw, s.handle);
   const [cats, products] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, limit: 40 })]);
   const featured = products.filter((p) => p.featured).slice(0, 10);
   const latest = (products.filter((p) => !p.featured).length >= 4 ? products.filter((p) => !p.featured) : products).slice(0, 8);

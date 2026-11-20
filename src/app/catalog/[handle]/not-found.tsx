@@ -4,7 +4,9 @@ import { usePathname } from "next/navigation";
 
 /** Shown inside the store's own header/footer when a product or page doesn't exist. */
 export default function StoreNotFound() {
-  const base = (usePathname() ?? "").split("/").slice(0, 3).join("/");
+  const p = usePathname() ?? "";
+  // On vishnuit.co.in the store lives under /catalog/@handle; on its own domain it starts at "/".
+  const base = p.startsWith("/catalog/") ? p.split("/").slice(0, 3).join("/") : "";
   return (
     <section className="mx-auto max-w-xl px-5 py-20 text-center sm:py-28">
       <p className="font-display text-[7rem] leading-none font-extrabold tracking-tighter text-foreground/10">404</p>

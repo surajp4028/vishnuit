@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { queryOne } from "@/lib/server/db";
-import { siteUrl } from "@/lib/site";
+import { query, queryOne } from "@/lib/server/db";
 import { ChevronDown, Store as StoreIcon } from "lucide-react";
-import { PAGE_KEYS, PAGE_TITLES, getStoreByHandle, getStoreCategories, getStoreProducts, hydrateProduct, imgUrl } from "@/lib/server/catalog";
+import { PAGE_KEYS, PAGE_TITLES, getStoreByHandle, getStoreCategories, getStoreProducts, hydrateProduct, imgUrl, storeBase, storeAbsUrl } from "@/lib/server/catalog";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
 import { ProductBuy, ProductGallery } from "@/components/catalog/product-buy";
 import { StickyColumn } from "@/components/catalog/sticky-column";
 import { ProductCard } from "@/components/catalog/product-card";
+import { RelatedCarousel } from "@/components/catalog/related-carousel";
+import type { Product } from "@/lib/server/catalog";
 
 export const revalidate = 120;
 
@@ -19,13 +20,31 @@ async function load(handle: string, slug: string) {
   return r ? { s, p: hydrateProduct(r) } : null;
 }
 
+/**
+ * "You may also like": the seller's picks first (in their order). If they picked fewer than 4,
+ * 4 more are added automatically — same category first, then the rest of the store.
+ */
+async function relatedFor(storeId: number, p: Product) {
+  const picked = p.related.length
+    ? (await query<Record<string, unknown>>(`SELECT * FROM store_products WHERE store_id=? AND status='active' AND id IN (${p.related.map(() => "?").join(",")})`, [storeId, ...p.related])).map(hydrateProduct)
+    : [];
+  const out = p.related.map((id) => picked.find((x) => x.id === id)).filter((x): x is Product => !!x && x.id !== p.id);
+  if (out.length >= 4) return out;
+  const seen = new Set([p.id, ...out.map((x) => x.id)]);
+  const fill: Product[] = [];
+  const take = (list: Product[]) => { for (const x of list) if (fill.length < 4 && !seen.has(x.id)) { fill.push(x); seen.add(x.id); } };
+  if (p.category_id) take(await getStoreProducts(storeId, { activeOnly: true, categoryId: p.category_id, limit: 20 }));
+  if (fill.length < 4) take(await getStoreProducts(storeId, { activeOnly: true, limit: 30 }));
+  return [...out, ...fill];
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ handle: string; slug: string }> }): Promise<Metadata> {
   const { handle, slug } = await params;
   const d = await load(handle, slug);
   if (!d) return {};
   const price = `₹${d.p.price.toLocaleString("en-IN")}`;
   const description = `${price}${d.p.compare_price && d.p.compare_price > d.p.price ? ` (${Math.round((1 - d.p.price / d.p.compare_price) * 100)}% OFF)` : ""} · ${(d.p.description || `Shop ${d.p.name} at ${d.s.name}`).slice(0, 140)}`;
-  const url = `/catalog/@${d.s.handle}/p/${d.p.slug}`;
+  const url = storeAbsUrl(d.s, `/p/${d.p.slug}`);
   return { title: d.p.name, description, openGraph: { title: `${d.p.name} — ${price}`, description, url, siteName: d.s.name }, twitter: { card: "summary_large_image", title: `${d.p.name} — ${price}`, description }, alternates: { canonical: url } };
 }
 
@@ -34,10 +53,9 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const d = await load(handle, slug);
   if (!d) notFound();
   const { s, p } = d;
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(handle, s.handle);
   const images = p.images.map((k) => imgUrl(k)!);
-  const [cats, relatedAll] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, categoryId: p.category_id ?? undefined, limit: 13 })]);
-  const related = relatedAll.filter((x) => x.id !== p.id).slice(0, 8);
+  const [cats, related] = await Promise.all([getStoreCategories(s.id), relatedFor(s.id, p)]);
   const cat = cats.find((c) => c.id === p.category_id);
   const parentCat = cat?.parent_id ? cats.find((c) => c.id === cat.parent_id) : undefined;
   const off = p.compare_price && p.compare_price > p.price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
@@ -50,14 +68,14 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const ld = {
     "@context": "https://schema.org", "@type": "Product", name: p.name, image: images, description: p.description || undefined, sku: p.sku || undefined,
     brand: { "@type": "Brand", name: s.name }, category: cat?.name,
-    offers: { "@type": "Offer", priceCurrency: "INR", price: p.price, availability: `https://schema.org/${inStock ? "InStock" : "OutOfStock"}`, url: `${siteUrl()}${base}/p/${p.slug}`, seller: { "@type": "Organization", name: s.name } },
+    offers: { "@type": "Offer", priceCurrency: "INR", price: p.price, availability: `https://schema.org/${inStock ? "InStock" : "OutOfStock"}`, url: storeAbsUrl(s, `/p/${p.slug}`), seller: { "@type": "Organization", name: s.name } },
   };
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <section className="mx-auto max-w-7xl pt-0 sm:px-6 md:pt-8">
-        <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parentCat && <> / <Link href={`${base}/shop?c=${parentCat.slug}`} className="hover:text-foreground">{parentCat.name}</Link></>}{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
+        <nav className="hidden pb-5 text-xs text-muted md:block"><Link href={base || "/"} className="hover:text-foreground">Home</Link> / <Link href={`${base}/shop`} className="hover:text-foreground">Shop</Link>{parentCat && <> / <Link href={`${base}/shop?c=${parentCat.slug}`} className="hover:text-foreground">{parentCat.name}</Link></>}{cat && <> / <Link href={`${base}/shop?c=${cat.slug}`} className="hover:text-foreground">{cat.name}</Link></>} / <span className="text-foreground">{p.name}</span></nav>
         <div className="grid gap-6 md:grid-cols-[1.35fr_1fr] md:gap-10 lg:gap-14">
           <StickyColumn><ProductGallery images={images} name={p.name} badge={off >= 10 ? `${off}% OFF` : null} /></StickyColumn>
           <StickyColumn className="px-4 md:px-0">
@@ -109,7 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
       {related.length > 0 && (
         <section className="mx-auto mt-16 max-w-7xl px-3 sm:mt-24 sm:px-6">
           <div className="flex items-end justify-between"><div><p className="text-[11px] font-bold tracking-[4px] text-muted">MORE TO LOVE</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">You may also like</h2></div><Link href={cat ? `${base}/shop?c=${cat.slug}` : `${base}/shop`} className="text-[13px] font-semibold text-muted hover:text-foreground">View all</Link></div>
-          <div className="mt-6 flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:gap-x-5 sm:gap-y-8 sm:overflow-visible lg:grid-cols-4">{related.map((r) => <div key={r.id} className="w-[44vw] shrink-0 snap-start sm:w-auto"><ProductCard p={r} base={base} /></div>)}</div>
+          <RelatedCarousel>{related.map((r) => <ProductCard key={r.id} p={r} base={base} />)}</RelatedCarousel>
         </section>
       )}
     </>

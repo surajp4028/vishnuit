@@ -8,7 +8,7 @@ export function StoreAuthShell({ store, base, logo, title, subtitle, children }:
       <div className="grid overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[1fr_1.1fr]">
         <div className="relative isolate hidden flex-col justify-between bg-[#0b0d12] p-10 text-white md:flex">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_20%_0%,rgba(212,160,23,.22),transparent_55%),radial-gradient(ellipse_at_90%_100%,rgba(59,130,246,.2),transparent_55%)]" />
-          <Link href={base} className="flex items-center gap-3">
+          <Link href={base || "/"} className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {logo ? <img src={logo} alt={store} className="h-10 w-auto max-w-[150px] rounded-lg bg-white p-1 object-contain" /> : <span className="font-display text-2xl font-extrabold">{store}</span>}
           </Link>

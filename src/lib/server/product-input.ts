@@ -1,6 +1,7 @@
 import "server-only";
 import { num, str } from "./store-auth";
 import { isCatalogKey } from "./s3";
+import { query } from "./db";
 
 
 
@@ -42,7 +43,16 @@ export function parseProduct(b: Record<string, unknown>, storeCode: string, cate
       status: b.status === "draft" ? "draft" : "active",
       featured: b.featured ? 1 : 0,
       gst_rate: gstIn, hsn,
+      related: [...new Set((Array.isArray(b.related) ? b.related : []).map(Number).filter((n) => Number.isInteger(n) && n > 0))].slice(0, 12),
       low_stock: b.low_stock === "" || b.low_stock == null ? null : Math.min(9999, Math.max(0, Math.floor(Number(b.low_stock) || 0))),
     },
   } as const;
 }
+
+/** Keep only related ids that are products of this store. */
+export async function ownIds(storeId: number, ids: number[]) {
+  if (!ids.length) return [];
+  const ok = new Set((await query<{ id: number }>(`SELECT id FROM store_products WHERE store_id=? AND id IN (${ids.map(() => "?").join(",")})`, [storeId, ...ids])).map((r) => r.id));
+  return ids.filter((i) => ok.has(i));
+}
+

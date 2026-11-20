@@ -70,8 +70,8 @@ const safeNext = (n: string | null, fallback = "/account") => (n && n.startsWith
 export function LoginForm({ base, google }: { base?: string; google?: boolean } = {}) {
   const sp = useSearchParams();
   const router = useRouter();
-  const next = safeNext(sp.get("next"), base ?? "/account");
-  const registerHref = base ? `${base}/register?next=${encodeURIComponent(next)}` : `/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const next = safeNext(sp.get("next"), base == null ? "/account" : base || "/");
+  const registerHref = base != null ? `${base}/register?next=${encodeURIComponent(next)}` : `/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`;
   const [mode, setMode] = useState<"password" | "otp">("password");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -143,7 +143,7 @@ export function LoginForm({ base, google }: { base?: string; google?: boolean } 
 export function RegisterForm({ base, google }: { base?: string; google?: boolean } = {}) {
   const sp = useSearchParams();
   const router = useRouter();
-  const next = safeNext(sp.get("next"), base ?? "/account");
+  const next = safeNext(sp.get("next"), base == null ? "/account" : base || "/");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [exists, setExists] = useState(false);
@@ -168,7 +168,7 @@ export function RegisterForm({ base, google }: { base?: string; google?: boolean
       {exists && <Link href="/forgot-password" className="block text-center text-sm font-semibold text-accent hover:underline">Set / reset my password →</Link>}
       <button disabled={busy} className={btn}>{busy ? <Loader2 className="size-4 animate-spin" /> : <>Create account <ArrowRight className="size-4" /></>}</button>
       <p className="flex items-center justify-center gap-1.5 text-xs text-muted"><ShieldCheck className="size-3.5 text-emerald-500" /> Your details are private and never shared.</p>
-      <p className="text-center text-sm text-muted">Already have an account? <Link href={base ? `${base}/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold text-foreground hover:underline">Log in</Link></p>
+      <p className="text-center text-sm text-muted">Already have an account? <Link href={base != null ? `${base}/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold text-foreground hover:underline">Log in</Link></p>
     </form>
   );
 }

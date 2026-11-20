@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CreditCard, ExternalLink, FileText, Home, LayoutGrid, LogOut, Tags, MoreHorizontal, Package, Palette, Settings, ShoppingBag, UserRound, X } from "lucide-react";
+import { BarChart3, CreditCard, ExternalLink, Globe, FileText, Home, LayoutGrid, LogOut, Tags, MoreHorizontal, Package, Palette, Settings, ShoppingBag, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -15,13 +15,14 @@ const NAV = [
   { href: "/seller/orders", label: "Orders", icon: ShoppingBag, badge: true },
   { href: "/seller/sales", label: "Sales & reports", icon: BarChart3 },
   { href: "/seller/storefront", label: "Storefront", icon: Palette },
+  { href: "/seller/domain", label: "Domain", icon: Globe },
   { href: "/seller/invoices", label: "Invoices", icon: FileText },
   { href: "/seller/billing", label: "Plan & billing", icon: CreditCard },
   { href: "/seller/settings", label: "Settings", icon: Settings },
 ];
 const BOTTOM = ["/seller", "/seller/products", "/seller/orders", "/seller/sales"];
 
-type Props = { store: { name: string; handle: string; uid: string; logo: string | null; planName: string }; user: { name: string; avatar: string | null }; newOrders: number; children: React.ReactNode };
+type Props = { store: { name: string; handle: string; domain?: string | null; uid: string; logo: string | null; planName: string }; user: { name: string; avatar: string | null }; newOrders: number; children: React.ReactNode };
 
 /** The seller's Vishnu ID (same as their account UID) — tap to copy, handy when talking to support. */
 function UidChip({ uid, className = "" }: { uid: string; className?: string }) {
@@ -40,7 +41,7 @@ export function SellerShell({ store, user, newOrders, children }: Props) {
   const [more, setMore] = useState(false);
   useEffect(() => setMore(false), [path]);
   const active = (h: string) => (h === "/seller" ? path === "/seller" : path?.startsWith(h));
-  const storeUrl = `/catalog/@${store.handle}`;
+  const storeUrl = store.domain ? `https://${store.domain}` : `/catalog/@${store.handle}`;
   async function logout() {
     await fetch("/api/account/logout", { method: "POST" });
     window.location.href = "/";

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { FileText, Package, Truck } from "lucide-react";
 import { query } from "@/lib/server/db";
-import { getStoreByHandle } from "@/lib/server/catalog";
+import { getStoreByHandle, storeBase } from "@/lib/server/catalog";
 import { getUser } from "@/lib/server/users";
 import { orderInvoicePath } from "@/lib/server/invoice";
 import { ORDER_COLOR, ORDER_FLOW, ORDER_LABEL, PAY_COLOR, PAY_LABEL } from "@/lib/order-status";
@@ -19,9 +19,10 @@ const day = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "2-dig
 
 /** The shopper's orders from THIS store, inside the store's own look. */
 export default async function StoreAccount({ params }: { params: Promise<{ handle: string }> }) {
-  const s = await getStoreByHandle((await params).handle);
+  const raw = (await params).handle;
+  const s = await getStoreByHandle(raw);
   if (!s) notFound();
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(raw, s.handle);
   const u = await getUser();
   if (!u) redirect(`${base}/login?next=${encodeURIComponent(`${base}/account`)}`);
   const rows = await query<Record<string, unknown>>("SELECT order_no, items, subtotal, status, status_log, tracking, pay_method, pay_status, created_at FROM store_orders WHERE store_id=? AND customer_id=? ORDER BY id DESC LIMIT 100", [s.id, u.id]);

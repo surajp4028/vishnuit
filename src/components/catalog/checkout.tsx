@@ -59,7 +59,7 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
         <h1 className="mt-6 font-display text-3xl font-extrabold">Order placed!</h1>
         <p className="mt-2 text-muted">Order <b className="text-foreground">#{done.orderNo}</b> · {rupee(done.subtotal)}</p>
         <p className="mt-4 text-sm text-muted">{storeName} will confirm your order shortly{method === "upi" ? " after checking your UPI payment" : ""}. Keep your phone handy.</p>
-        <Link href={base} className="mt-8 inline-block rounded-pill bg-foreground px-7 py-3.5 text-sm font-bold text-background">Continue shopping</Link>
+        <Link href={base || "/"} className="mt-8 inline-block rounded-pill bg-foreground px-7 py-3.5 text-sm font-bold text-background">Continue shopping</Link>
       </div>
     );
 

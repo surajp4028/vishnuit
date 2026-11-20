@@ -12,7 +12,7 @@ export type P = {
   id: number; category_id: number | null; name: string; slug: string; description: string | null; price: number; compare_price: number | null;
   sku: string | null; stock: number | null; images: string[]; options: { name: string; values: string[]; swatches?: Record<string, string> }[];
   variants: Variant[]; status: "active" | "draft"; featured: boolean;
-  gst_rate?: number | null; hsn?: string | null; low_stock?: number | null;
+  gst_rate?: number | null; hsn?: string | null; low_stock?: number | null; related?: number[];
 };
 export type C = { id: number; name: string; slug: string; parent_id?: number | null; sort?: number };
 
@@ -212,6 +212,7 @@ export function ProductsPanel({ products, setProducts, categories, setCategories
           categories={categories}
           setCategories={setCategories}
           attributes={attrs}
+          all={products}
           onClose={() => { setEdit(null); setDupFrom(null); }}
           onSaved={onSaved}
           onDeleted={(id) => { setProducts(products.filter((x) => x.id !== id)); setEdit(null); }}
@@ -223,7 +224,7 @@ export function ProductsPanel({ products, setProducts, categories, setCategories
 
 type Opt = { name: string; values: string[]; swatches: Record<string, string> };
 
-function ProductEditor({ initial, copyFrom, categories, setCategories, attributes, onClose, onSaved, onDeleted }: { initial: P | null; copyFrom: P | null; categories: C[]; setCategories: (c: C[]) => void; attributes: Attr[]; onClose: () => void; onSaved: (p: P) => void; onDeleted: (id: number) => void }) {
+function ProductEditor({ initial, copyFrom, categories, setCategories, attributes, all, onClose, onSaved, onDeleted }: { initial: P | null; copyFrom: P | null; categories: C[]; setCategories: (c: C[]) => void; attributes: Attr[]; all: P[]; onClose: () => void; onSaved: (p: P) => void; onDeleted: (id: number) => void }) {
   const src = initial ?? copyFrom;
   const [f, setF] = useState(() => ({
     name: initial ? initial.name : copyFrom ? `${copyFrom.name} (copy)` : "",
@@ -232,6 +233,7 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
     stock: src?.stock == null ? "" : String(src.stock), low_stock: src?.low_stock == null ? "" : String(src.low_stock),
     category_id: src?.category_id ?? null as number | null, images: src?.images ?? [], status: initial?.status ?? "active", featured: initial?.featured ?? false,
     options: (src?.options ?? []).map((o) => ({ name: o.name, values: [...o.values], swatches: o.swatches ?? {} })) as Opt[],
+    related: (src?.related ?? []) as number[],
     variants: (src?.variants ?? []).map((v) => ({ ...v, sku: initial ? v.sku ?? null : null })) as Variant[],
   }));
   const [busy, setBusy] = useState(false);
@@ -406,6 +408,11 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
             </Field>
           </div>
 
+          <div className={section}>
+            {h("Related products", "Shown under “You may also like”. If you pick fewer than 4, we add 4 more from the same category.")}
+            <RelatedPicker value={f.related} onChange={(v) => set("related", v)} all={all.filter((x) => x.id !== initial?.id)} />
+          </div>
+
           <div className="space-y-2.5">
             <Toggle on={f.status === "active"} onChange={(v) => set("status", v ? "active" : "draft")} label="Show in store" sub="Turn off to hide without deleting" />
             <Toggle on={f.featured} onChange={(v) => set("featured", v)} label="Feature on home page" />
@@ -416,6 +423,45 @@ function ProductEditor({ initial, copyFrom, categories, setCategories, attribute
           <button onClick={save} disabled={busy} className={cn(btnDark, "w-full py-3.5")}>{busy ? <Loader2 className="size-4 animate-spin" /> : initial ? "Save changes" : copyFrom ? "Create copy" : "Add product"}</button>
         </footer>
       </div>
+    </div>
+  );
+}
+
+/** Pick up to 12 other products of the store to show as related. */
+function RelatedPicker({ value, onChange, all }: { value: number[]; onChange: (v: number[]) => void; all: P[] }) {
+  const [q, setQ] = useState("");
+  const picked = value.map((id) => all.find((p) => p.id === id)).filter((p): p is P => !!p);
+  const hits = q.trim() ? all.filter((p) => !value.includes(p.id) && (p.name + " " + (p.sku ?? "")).toLowerCase().includes(q.trim().toLowerCase())).slice(0, 6) : [];
+  const thumb = (p: P) => (p.images[0] ? <img src={imgUrl(p.images[0])!} alt="" className="size-10 shrink-0 rounded-lg object-cover" /> : <span className="size-10 shrink-0 rounded-lg bg-foreground/5" />);
+  return (
+    <div className="space-y-3">
+      {picked.length > 0 && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {picked.map((p) => (
+            <div key={p.id} className="flex items-center gap-2.5 rounded-2xl border border-border p-1.5 pr-2">
+              {thumb(p)}
+              <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{p.name}</span><span className="text-[11px] text-muted">{inr(p.price)}</span></span>
+              <button type="button" onClick={() => onChange(value.filter((i) => i !== p.id))} aria-label={`Remove ${p.name}`} className="grid size-8 place-items-center rounded-full text-muted hover:bg-foreground/5 hover:text-foreground"><X className="size-4" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+      {value.length < 12 && (
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={all.length ? "Search your products to add…" : "Add more products first"} disabled={!all.length} className={cn(input, "pl-10")} />
+          {hits.length > 0 && (
+            <div className="absolute inset-x-0 top-full z-10 mt-1.5 overflow-hidden rounded-2xl border border-border bg-background shadow-xl">
+              {hits.map((p) => (
+                <button type="button" key={p.id} onClick={() => { onChange([...value, p.id]); setQ(""); }} className="flex w-full items-center gap-2.5 px-2 py-1.5 text-left hover:bg-foreground/5">
+                  {thumb(p)}<span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{p.name}</span><span className="text-xs text-muted">{inr(p.price)}</span><Plus className="size-4 text-muted" />
+                </button>
+              ))}
+            </div>
+          )}
+          {q.trim() && !hits.length && <p className="mt-1.5 text-xs text-muted">No product matches “{q}”.</p>}
+        </div>
+      )}
     </div>
   );
 }

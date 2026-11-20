@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { getStoreByHandle, imgUrl } from "@/lib/server/catalog";
+import { getStoreByHandle, imgUrl, storeBase } from "@/lib/server/catalog";
 import { HIGHLIGHT_ICON_MAP } from "@/components/catalog/highlight-icons";
 
 export const metadata: Metadata = { title: "About" };
@@ -10,9 +10,10 @@ export const revalidate = 120;
 
 /** Our story — layout adapts to 0, 1 or 2 photos the merchant adds in Seller → Storefront. */
 export default async function About({ params }: { params: Promise<{ handle: string }> }) {
-  const s = await getStoreByHandle((await params).handle);
+  const raw = (await params).handle;
+  const s = await getStoreByHandle(raw);
   if (!s) notFound();
-  const base = `/catalog/@${s.handle}`;
+  const base = storeBase(raw, s.handle);
   const imgs = s.storefront.about.images.map((k) => imgUrl(k)).filter(Boolean) as string[];
   const heading = s.storefront.about.heading || s.tagline || `The story of ${s.name}`;
   const paras = (s.about || "We're a small, passionate team bringing you pieces we truly love. Every order is packed with care — thank you for supporting us!").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
