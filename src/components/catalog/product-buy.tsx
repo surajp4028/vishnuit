@@ -21,16 +21,16 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
   return (
     <div>
       {/* phone: swipe */}
-      <div className="relative md:hidden">
-        <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto bg-foreground/[.04] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative px-3 pt-2 md:hidden">
+        <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto rounded-2xl bg-foreground/[.04] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {images.map((src, k) => <img key={k} src={src} alt={k === 0 ? name : ""} className="size-full shrink-0 snap-center object-cover" />)}
         </div>
-        {badge && <span className="pointer-events-none absolute top-4 left-4 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
+        {badge && <span className="pointer-events-none absolute top-5 left-6 rounded-md bg-[#ff3f6c] px-2.5 py-1 text-[11px] font-extrabold tracking-wider text-white">{badge}</span>}
         {images.length > 1 && (
           <>
-            <span className="pointer-events-none absolute right-4 bottom-4 rounded-pill bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
-            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
+            <span className="pointer-events-none absolute right-6 bottom-3 rounded-pill bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">{i + 1} / {images.length}</span>
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center gap-1.5">{images.map((_, k) => <span key={k} className={cn("h-1.5 rounded-full bg-white shadow transition-all", k === i ? "w-5" : "w-1.5 opacity-60")} />)}</div>
           </>
         )}
       </div>

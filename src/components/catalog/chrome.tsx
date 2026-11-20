@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
@@ -71,10 +72,11 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
         </div>
       )}
 
-      {menu && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setMenu(false)}>
+      {/* Rendered into <body>: the header's backdrop-blur would otherwise clip a fixed drawer to the header's height. */}
+      {menu && mounted && createPortal((
+        <div className="fixed inset-0 z-[95] md:hidden" onClick={() => setMenu(false)}>
           <div className="absolute inset-0 bg-black/40" />
-          <aside className="absolute inset-y-0 left-0 w-[82%] max-w-xs bg-background p-5" onClick={(e) => e.stopPropagation()}>
+          <aside className="absolute inset-y-0 left-0 h-dvh w-[82%] max-w-xs overflow-y-auto bg-background p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><span className="truncate font-display text-lg font-extrabold">{name}</span><button onClick={() => setMenu(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full"><X className="size-5" /></button></div>
             <nav className="mt-6 space-y-1">
               {links.map(([h, l]) => <Link key={l} href={base + h} className="block rounded-xl px-3 py-3 text-[15px] font-semibold hover:bg-foreground/5">{l}</Link>)}
@@ -91,7 +93,7 @@ export function StoreHeader({ base, name, logo, categories }: { base: string; na
             </>}
           </aside>
         </div>
-      )}
+      ), document.body)}
     </header>
   );
 }
