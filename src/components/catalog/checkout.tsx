@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { rupee, useCart } from "./cart";
 import { loadRazorpay } from "@/components/site/plan-checkout";
 import { GST_STATES } from "@/lib/gst-states";
+import { PhoneVerify } from "@/components/account/phone-verify";
 
 const field = "w-full rounded-xl border border-border bg-background px-3.5 py-3 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-foreground/60 focus:ring-4 focus:ring-foreground/5";
 const box = "rounded-2xl border border-border bg-card p-4 sm:p-5";
@@ -87,8 +88,9 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
     pay.upi && { k: "upi" as const, icon: Smartphone, t: "UPI transfer", d: pay.vpa || "Scan QR & share UTR" },
     pay.cod && { k: "cod" as const, icon: Banknote, t: "Cash on delivery", d: "Pay when it arrives" },
   ].filter(Boolean) as { k: "cod" | "upi" | "razorpay"; icon: typeof Banknote; t: string; d: string }[];
-  const blocked = Boolean(rules.closed) || short > 0;
-  const cta = busy ? <Loader2 className="size-4 animate-spin" /> : rules.closed ? <>Store is closed</> : short > 0 ? <>Add {rupee(short)} more</> : <><Lock className="size-4" /> {method === "razorpay" ? "Pay" : "Place order"} · {rupee(grand)}</>;
+  const needPhone = Boolean(me && !me.phone);
+  const blocked = Boolean(rules.closed) || short > 0 || needPhone;
+  const cta = busy ? <Loader2 className="size-4 animate-spin" /> : rules.closed ? <>Store is closed</> : short > 0 ? <>Add {rupee(short)} more</> : needPhone ? <>Verify mobile to continue</> : <><Lock className="size-4" /> {method === "razorpay" ? "Pay" : "Place order"} · {rupee(grand)}</>;
 
   return (
     <form id="checkout" onSubmit={place} className="mx-auto max-w-6xl px-3 pt-5 pb-32 sm:px-6 sm:pt-8 lg:pb-10">
@@ -129,7 +131,13 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
             <div className="flex items-center justify-between">{step(2, "Delivery address")}{me === null && <Link href={`${base}/login?next=${encodeURIComponent(`${base}/cart`)}`} className="text-xs font-bold text-muted underline underline-offset-4">Have an account? Log in</Link>}</div>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               <input key={`n${me?.name ?? ""}`} name="name" required defaultValue={me?.name ?? ""} placeholder="Full name" autoComplete="name" className={field} />
-              <input key={`p${me?.phone ?? ""}`} name="phone" required defaultValue={me?.phone?.replace(/^\+?91/, "") ?? ""} inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
+              {me && !me.phone ? (
+                <div className="sm:col-span-2">
+                  <PhoneVerify title="Verify your mobile number" hint="For delivery updates. It's saved to your account." onDone={(p) => setMe({ ...me, phone: p })} />
+                </div>
+              ) : (
+                <input key={`p${me?.phone ?? ""}`} name="phone" required defaultValue={me?.phone?.replace(/^\+?91/, "") ?? ""} inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
+              )}
               <select name="state" required defaultValue="" className={cn(field, "sm:col-span-2")}><option value="" disabled>State</option>{GST_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
               <textarea name="address" required rows={2} placeholder="House no, street, area, city, PIN code" autoComplete="street-address" className={cn(field, "resize-none sm:col-span-2")} />
               <input key={`e${me?.email ?? ""}`} name="email" type="email" defaultValue={me?.email ?? ""} placeholder="Email for order updates (optional)" autoComplete="email" className={cn(field, "sm:col-span-2")} />

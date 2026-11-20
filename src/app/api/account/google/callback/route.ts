@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
+import { after } from "next/server";
+import sharp from "sharp";
+import { payeePath, putObject, s3Configured } from "@/lib/server/s3";
 import { exec, queryOne } from "@/lib/server/db";
 import { findOrCreateUser, startSession, type User } from "@/lib/server/users";
 
-type IdToken = { iss: string; aud: string; sub: string; email?: string; email_verified?: boolean; name?: string; exp: number };
+type IdToken = { iss: string; aud: string; sub: string; email?: string; email_verified?: boolean; name?: string; picture?: string; exp: number };
 
 /**
  * Google sends the user back here. We swap the code for tokens directly with Google (server-to-server),
@@ -43,5 +46,21 @@ export async function GET(req: Request) {
   }
   if ((u as User & { status?: string }).status === "blocked") return fail("blocked");
   await startSession(u);
+  // First Google login without a profile photo → save their Google photo as the DP (in the background).
+  const pic = claims.picture;
+  const owner = u;
+  if (!owner.avatar_key && pic && /^https:\/\/[\w.-]+\.googleusercontent\.com\//.test(pic) && s3Configured()) {
+    after(async () => {
+      try {
+        const r = await fetch(pic.replace(/=s\d+(-c)?$/, "=s400-c"));
+        if (!r.ok) return;
+        const img = await sharp(Buffer.from(await r.arrayBuffer())).resize(400, 400, { fit: "cover" }).webp({ quality: 85 }).toBuffer();
+        const key = await putObject(payeePath(owner.uid, `avatar-google-${Date.now()}.webp`), img, "image/webp");
+        await exec("UPDATE users SET avatar_key=? WHERE id=? AND avatar_key IS NULL", [key, owner.id]);
+      } catch (e) {
+        console.error("[google] avatar:", (e as Error).message);
+      }
+    });
+  }
   return Response.redirect(new URL(saved.next, url.origin), 302);
 }

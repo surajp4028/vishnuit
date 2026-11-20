@@ -21,5 +21,5 @@ export default async function CreateStorePage() {
   if (store) redirect("/seller");
   if (!conf.features.newStores) return paused("New stores are opening soon", "We're not accepting new stores right now. Please check back soon.");
   const base = (u.name || u.email?.split("@")[0] || "store").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 20);
-  return <CreateStore suggested={base.length >= 3 ? base : `store${u.uid.slice(-4)}`} />;
+  return <CreateStore suggested={base.length >= 3 ? base : `store${u.uid.slice(-4)}`} hasPhone={Boolean(u.phone)} />;
 }

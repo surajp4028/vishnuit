@@ -6,7 +6,7 @@ import { rateLimit } from "@/lib/server/auth";
 import { decryptSecret, effectivePlan, getCatalogConfig, getStoreByHandle, hydrateProduct, quoteOrder } from "@/lib/server/catalog";
 import { GST_STATES, stateName } from "@/lib/gst-states";
 import { createOrder } from "@/lib/server/razorpay";
-import { findOrCreateUser, normEmail, normPhone } from "@/lib/server/users";
+import { findOrCreateUser, getUser, normEmail, normPhone } from "@/lib/server/users";
 import { sendMail } from "@/lib/server/mail";
 import { siteUrl } from "@/lib/site";
 import { str } from "@/lib/server/store-auth";
@@ -84,7 +84,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   const subtotal = quote.total;
 
   // Customers get a silent account so they can later log in and see their orders (and open their own store).
-  const customer = await findOrCreateUser({ name, phone, email, source: "store" });
+  // Logged-in shoppers keep the order in their own account; guests get a silent account by phone.
+  const customer = (await getUser()) ?? (await findOrCreateUser({ name, phone, email, source: "store" }));
   const orderNo = `${store.code.slice(-4)}${Date.now().toString(36).toUpperCase().slice(-5)}${randomInt(10, 99)}`;
   // Online payment goes straight to the merchant's own Razorpay account.
   let rzp: { id: string; amount: number; currency: string } | null = null;

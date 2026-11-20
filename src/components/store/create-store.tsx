@@ -3,15 +3,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Loader2, Store } from "lucide-react";
 import { api, btnDark, card, Field, input } from "./ui";
+import { PhoneVerify } from "@/components/account/phone-verify";
 
 /** Enroll screen: pick a store name and link vishnuit.co.in/catalog/@handle */
-export function CreateStore({ suggested }: { suggested: string }) {
+export function CreateStore({ suggested, hasPhone }: { suggested: string; hasPhone: boolean }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [handle, setHandle] = useState(suggested);
   const [check, setCheck] = useState<{ ok: boolean; error?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [phoneOk, setPhoneOk] = useState(hasPhone);
 
   useEffect(() => {
     if (handle.length < 3) { setCheck(null); return; }
@@ -42,8 +44,9 @@ export function CreateStore({ suggested }: { suggested: string }) {
             </div>
           </Field>
         </div>
+        {!hasPhone && <PhoneVerify className="mt-5" title="Your mobile number" hint="Needed for order alerts and your store's WhatsApp button. We'll send an OTP." onDone={() => setPhoneOk(true)} />}
         {err && <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-2.5 text-sm text-red-500">{err}</p>}
-        <button disabled={busy || !check?.ok || name.trim().length < 2} className={`${btnDark} mt-7 w-full py-3.5`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <>Create my store <ArrowRight className="size-4" /></>}</button>
+        <button disabled={busy || !check?.ok || name.trim().length < 2 || !phoneOk} className={`${btnDark} mt-7 w-full py-3.5`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <>Create my store <ArrowRight className="size-4" /></>}</button>
       </form>
     </section>
   );
