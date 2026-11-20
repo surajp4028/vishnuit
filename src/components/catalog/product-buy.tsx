@@ -69,6 +69,17 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
   const soldOut = stock === 0 || allOut;
   const off = p.compare_price && p.compare_price > price ? Math.round((1 - price / p.compare_price) * 100) : 0;
 
+  // Price a value would give: the cheapest variant with that value that also fits what is already picked in the other options.
+  function priceFor(oi: number, v: string): number | null {
+    const hits = p.variants.filter((x) => {
+      const parts = x.key.split(" / ");
+      return parts[oi] === v && needs.every((o, j) => j === oi || !sel[o.name] || parts[j] === sel[o.name]);
+    });
+    return hits.length ? Math.min(...hits.map((x) => x.price ?? p.price)) : null;
+  }
+  // Only label the buttons when the price actually changes between values of an option.
+  const showPrices = needs.map((o, oi) => new Set(o.values.map((v) => priceFor(oi, v)).filter((n) => n != null)).size > 1);
+
   // Show the sticky phone bar once the main buttons scroll out of view.
   useEffect(() => {
     const el = ctaRef.current;
@@ -98,7 +109,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
       </div>
       <p className="mt-0.5 text-xs font-medium text-emerald-600">Inclusive of all taxes</p>
 
-      {needs.map((o) => (
+      {needs.map((o, oi) => (
         <div key={o.name} className="mt-7">
           <div className="flex items-center justify-between"><p className="text-[13px] font-bold tracking-[1.5px] uppercase">{isColourOption(o.name) ? "Colour" : `Select ${o.name}`}</p>{sel[o.name] && <p className="text-xs text-muted">Selected: <b className="text-foreground">{sel[o.name]}</b></p>}</div>
           {isColourOption(o.name) ? (
@@ -114,6 +125,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
                       {out && <span className="absolute inset-x-1 top-1/2 h-px -rotate-45 bg-foreground/60" />}
                     </span>
                     <span className={cn("max-w-16 truncate text-[11px] font-semibold", on ? "text-foreground" : "text-muted")}>{v}</span>
+                    {showPrices[oi] && priceFor(oi, v) != null && <span className="-mt-1 text-[10px] font-medium text-muted">{rupee(priceFor(oi, v)!)}</span>}
                   </button>
                 );
               })}
@@ -124,9 +136,13 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
               // With one option we know exactly which variant a value maps to, so sold-out sizes can be greyed out.
               const out = needs.length === 1 && p.variants.find((x) => x.key === v)?.stock === 0;
               const on = sel[o.name] === v;
+              const vp = showPrices[oi] ? priceFor(oi, v) : null;
               return (
                 <button key={v} disabled={out} onClick={() => { setSel((s) => ({ ...s, [o.name]: v })); setErr(""); }}
-                  className={cn("relative grid h-12 min-w-12 place-items-center rounded-pill border px-4 text-sm font-bold transition", on ? "border-[#ff3f6c] text-[#ff3f6c] ring-1 ring-[#ff3f6c]" : "border-border hover:border-foreground", out && "cursor-not-allowed text-muted opacity-50 after:absolute after:inset-x-2 after:top-1/2 after:h-px after:-rotate-[20deg] after:bg-muted")}>{v}</button>
+                  className={cn("relative flex min-w-12 flex-col items-center justify-center rounded-pill border px-4 font-bold transition", vp != null ? "h-14 gap-0.5" : "h-12", on ? "border-[#ff3f6c] text-[#ff3f6c] ring-1 ring-[#ff3f6c]" : "border-border hover:border-foreground", out && "cursor-not-allowed text-muted opacity-50 after:absolute after:inset-x-2 after:top-1/2 after:h-px after:-rotate-[20deg] after:bg-muted")}>
+                  <span className="text-sm leading-none">{v}</span>
+                  {vp != null && <span className={cn("text-[10.5px] leading-none font-medium", on ? "text-[#ff3f6c]" : "text-muted")}>{rupee(vp)}</span>}
+                </button>
               );
             })}
           </div>
