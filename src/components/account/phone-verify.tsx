@@ -44,3 +44,38 @@ export function PhoneVerify({ onDone, title = "Verify your mobile number", hint 
     </div>
   );
 }
+
+/** Change the account email: a code goes to the NEW address; it's saved only after verification. */
+export function EmailChange({ onDone, onCancel }: { onDone: (email: string) => void; onCancel: () => void }) {
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const call = async (body: Record<string, string>) => {
+    setBusy(true); setErr("");
+    const r = await fetch("/api/account/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (!r.ok) { setErr(j.error || "Something went wrong."); return null; }
+    return j as { user?: { email: string } };
+  };
+  const field = "w-full rounded-xl border border-border bg-background px-3.5 py-3 text-[15px] outline-none focus:border-foreground/50";
+  return (
+    <div className="rounded-2xl border border-border bg-foreground/[.02] p-4">
+      <p className="text-sm font-bold">Change email</p>
+      <p className="mt-0.5 text-xs text-muted">We&apos;ll send a code to the new address. Your email changes only after you confirm it.</p>
+      <input value={email} disabled={sent} onChange={(e) => setEmail(e.target.value.trim())} type="email" placeholder="New email" className={cn(field, "mt-3")} />
+      {sent && <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" className={cn(field, "mt-2 text-center font-bold tracking-[.5em]")} />}
+      {err && <p className="mt-2 text-xs font-semibold text-red-500">{err}</p>}
+      <div className="mt-3 flex gap-2">
+        {!sent ? (
+          <button type="button" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)} onClick={async () => { if (await call({ action: "send", email })) setSent(true); }} className="flex flex-1 items-center justify-center rounded-xl bg-foreground py-2.5 text-sm font-bold text-background disabled:opacity-40">{busy ? <Loader2 className="size-4 animate-spin" /> : "Send code"}</button>
+        ) : (
+          <button type="button" disabled={busy || code.length !== 6} onClick={async () => { const r = await call({ action: "verify", email, code }); if (r) onDone(r.user?.email ?? email); }} className="flex flex-1 items-center justify-center rounded-xl bg-foreground py-2.5 text-sm font-bold text-background disabled:opacity-40">{busy ? <Loader2 className="size-4 animate-spin" /> : "Confirm"}</button>
+        )}
+        <button type="button" onClick={onCancel} className="rounded-xl border border-border px-3 text-xs font-semibold text-muted">Cancel</button>
+      </div>
+    </div>
+  );
+}

@@ -7,6 +7,7 @@ import { exec, queryOne } from "./db";
 export type User = {
   id: number; uid: string; name: string; email: string | null; phone: string | null;
   password_hash: string | null; avatar_key: string | null; company: string | null; session_ver: number; created_at: string;
+  google_sub?: string | null;
 };
 
 const COOKIE = "vit_user";
@@ -119,6 +120,7 @@ export const publicUser = (u: User) => ({
   uid: u.uid, name: u.name, email: u.email, phone: u.phone, company: u.company,
   avatar: u.avatar_key ? `/api/account/avatar/${u.uid}?v=${encodeURIComponent(u.avatar_key.split("/").pop() ?? "")}` : null,
   hasPassword: Boolean(u.password_hash),
+  google: Boolean(u.google_sub),
 });
 export type PublicUser = ReturnType<typeof publicUser>;
 

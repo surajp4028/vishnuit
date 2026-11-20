@@ -5,14 +5,14 @@ import { ArrowRight, ShoppingBag, Camera, CheckCircle2, Clock, FileText, LayoutD
 import Link from "next/link";
 import { cn, formatINR } from "@/lib/utils";
 import { field } from "./auth-forms";
-import { PhoneVerify } from "./phone-verify";
+import { EmailChange, PhoneVerify } from "./phone-verify";
 import { ORDER_COLOR, ORDER_FLOW, ORDER_LABEL, PAY_COLOR, PAY_LABEL } from "@/lib/order-status";
 
 export type AccountPayment = {
   plan_id: number | null; plan_name: string; amount: number; status: string; method: string | null;
   rzp_order_id: string; rzp_payment_id: string | null; created_at: string; paid_at: string | null;
 };
-type U = { uid: string; name: string; email: string | null; phone: string | null; company: string | null; avatar: string | null; hasPassword: boolean };
+type U = { uid: string; name: string; email: string | null; phone: string | null; company: string | null; avatar: string | null; hasPassword: boolean; google?: boolean };
 type Tab = "overview" | "orders" | "payments" | "profile";
 export type MyOrder = { order_no: string; store: string; handle: string; subtotal: number; status: string; pay_method: string; pay_status: string; created_at: string; items: { name: string; variant: string | null; qty: number }[]; invoice: string; status_log?: { s: string; at: string }[]; tracking?: { courier: string; number: string; url: string } | null };
 
@@ -214,6 +214,7 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
     if (r.ok) { f.reset(); onChange({ ...user, hasPassword: true }); setPwMsg({ ok: true, t: "Password saved. Other devices were signed out." }); } else setPwMsg({ ok: false, t: j.error || "Could not save password." });
   }
   const [editPhone, setEditPhone] = useState(false);
+  const [editEmail, setEditEmail] = useState(false);
   const Note = ({ m }: { m: { ok: boolean; t: string } | null }) => (m ? <p className={cn("text-sm font-medium", m.ok ? "text-emerald-600" : "text-red-500")}>{m.t}</p> : null);
 
   return (
@@ -230,7 +231,21 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
           </div>
         </div>
         <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Full name</span><input name="name" defaultValue={user.name} required className={field} /></label>
-        <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Email</span><input name="email" type="email" defaultValue={user.email ?? ""} className={field} /></label>
+        <div>
+          <span className="mb-1.5 block text-xs font-medium text-muted">Email</span>
+          {editEmail ? (
+            <EmailChange onDone={(e) => { onChange({ ...user, email: e }); setEditEmail(false); }} onCancel={() => setEditEmail(false)} />
+          ) : (
+            <div className="flex items-center gap-2">
+              <input value={user.email ?? "—"} disabled className={cn(field, "opacity-70")} />
+              {user.google ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-semibold text-muted" title="Signed in with Google — the email comes from your Google account"><svg viewBox="0 0 48 48" className="size-3.5" aria-hidden><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Linked with Google</span>
+              ) : (
+                <button type="button" onClick={() => setEditEmail(true)} className="shrink-0 rounded-full border border-border px-4 py-2.5 text-sm font-semibold hover:border-accent">{user.email ? "Change" : "Add"}</button>
+              )}
+            </div>
+          )}
+        </div>
         <div>
           <span className="mb-1.5 block text-xs font-medium text-muted">Mobile (login with OTP)</span>
           {user.phone && !editPhone ? (
@@ -253,7 +268,7 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
 
       <form onSubmit={savePw} className="h-fit space-y-4 rounded-3xl border border-border bg-card p-5 sm:p-6">
         <h3 className="font-display text-lg font-bold">{user.hasPassword ? "Change password" : "Set a password"}</h3>
-        {!user.hasPassword && <p className="text-sm text-muted">You signed in with OTP or paid as a guest. Set a password to also log in with your email.</p>}
+        {!user.hasPassword && <p className="text-sm text-muted">{user.google ? "You sign in with Google. Optionally set a password to also log in with your email." : "You signed in with OTP or paid as a guest. Set a password to also log in with your email."}</p>}
         {user.hasPassword && <input name="current" type="password" required placeholder="Current password" autoComplete="current-password" className={field} />}
         <input name="password" type="password" required minLength={8} placeholder="New password (8+ characters)" autoComplete="new-password" className={field} />
         <Note m={pwMsg} />
