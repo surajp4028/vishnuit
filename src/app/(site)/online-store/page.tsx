@@ -84,7 +84,7 @@ export default async function OnlineStorePage() {
             {STORE_FEATURES.map((f, i) => (
               <Reveal key={f.t} delay={i * 0.05} className="h-full">
                 <div className="group h-full rounded-3xl border border-border bg-card p-7 transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_60px_-30px_rgba(37,99,235,.45)]">
-                  <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent-2 text-white shadow-md transition group-hover:scale-110"><f.icon className="size-5" /></span>
+                  <span className="grid size-12 place-items-center rounded-2xl bg-accent text-white shadow-[0_10px_24px_-10px_rgba(37,99,235,.7)] transition group-hover:scale-110"><f.icon className="size-5" /></span>
                   <p className="mt-5 font-display text-lg font-bold">{f.t}</p>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.d}</p>
                 </div>

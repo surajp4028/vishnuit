@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Banknote, Check, FileText, Link2, Package, Share2, ShoppingBag, Smartphone, Sparkles, Store, Truck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Banknote, Check, FileText, Link2, Lock, Package, Share2, ShoppingBag, Smartphone, Sparkles, Store, Truck } from "lucide-react";
 import { FlipWords } from "@/components/ui/flip-words";
 import { Reveal } from "@/components/reveal";
 
@@ -107,17 +107,20 @@ export function StoreTeaser() {
   return (
     <section id="online-store" className="container-x scroll-mt-24 pt-14 pb-2 md:pt-20 md:pb-4">
       <Reveal>
-        <div className="relative isolate grid items-center gap-8 overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-[#f6f8ff] via-white to-[#fff8e8] p-6 sm:gap-10 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:p-12 dark:from-card dark:via-card dark:to-card">
-          <div className="pointer-events-none absolute -top-24 -left-24 -z-10 size-80 rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.14),transparent)]" />
-          <div className="pointer-events-none absolute -right-24 -bottom-32 -z-10 size-96 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.18),transparent)]" />
-          <div>
+        <div className="relative isolate grid items-center gap-8 overflow-hidden rounded-[2rem] border border-accent/15 bg-[#eef3ff] p-6 sm:gap-10 sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:p-12 dark:border-border dark:bg-card">
+          <div className="pointer-events-none absolute -top-32 -right-32 -z-10 size-[28rem] rounded-full bg-[radial-gradient(closest-side,rgba(37,99,235,.16),transparent)]" />
+          <div className="min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[10.5px] font-bold tracking-[3px] text-accent"><Sparkles className="size-3.5" /> NEW · VISHNU STORES</span>
             <h2 className="mt-5 font-display text-3xl leading-[1.08] font-extrabold tracking-tight sm:text-[2.5rem]">
               Launch your online store for <span className="block min-h-[1.15em] sm:inline sm:min-h-0"><FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" /></span>
             </h2>
-            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted">Your own catalogue link, COD & UPI orders, GST invoices and delivery tracking — set up from your phone in 5 minutes.</p>
+            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted">Your own catalogue link — or your own domain — with COD & UPI orders, GST invoices and delivery tracking. Set up from your phone in 5 minutes.</p>
+            <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-accent/20 bg-white/80 py-1.5 pr-4 pl-1.5 text-[13px] shadow-sm dark:bg-background">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><Lock className="size-3.5" /></span>
+              <span className="truncate"><b className="font-mono">yourbrand.com</b> <span className="text-muted">— connect your own domain</span></span>
+            </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-foreground/70">
-              {["Free plan", "0% commission", "No coding"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
+              {["Free plan", "0% commission", "Own domain", "No coding"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
             </div>
             <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
               <Link href="/online-store" className="group inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background">Explore Online Store <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
