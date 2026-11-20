@@ -53,8 +53,8 @@ export function PhoneFrame({ src, alt, className = "" }: { src: string; alt: str
 export function StoreMockup({ size = "lg" }: { size?: "md" | "lg" }) {
   return (
     <div className={`relative mx-auto w-full ${size === "lg" ? "max-w-[640px] pb-14" : "max-w-[520px] pb-10"}`}>
-      <LaptopFrame src="/stores/desktop-home.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[88%]" />
-      <PhoneFrame src="/stores/phone-product.webp" alt="Product page on a phone" className={`absolute bottom-0 left-0 ${size === "lg" ? "w-[30%]" : "w-[29%]"}`} />
+      <LaptopFrame src="/stores/desktop-home-v2.webp" alt="A store built with Vishnu Stores on a laptop" className="ml-auto w-[88%]" />
+      <PhoneFrame src="/stores/phone-product-v2.webp" alt="Product page on a phone" className={`absolute bottom-0 left-0 ${size === "lg" ? "w-[30%]" : "w-[29%]"}`} />
       <div className="absolute -top-4 left-[14%] flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white/95 px-3.5 py-2.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,.35)] backdrop-blur motion-safe:animate-[float_6s_ease-in-out_infinite]">
         <span className="grid size-8 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><ShoppingBag className="size-4" /></span>
         <span><span className="block text-[12px] font-bold text-slate-900">New order · ₹2,499</span><span className="block text-[11px] text-slate-500">Cash on delivery</span></span>

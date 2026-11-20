@@ -61,7 +61,7 @@ export default async function OnlineStorePage() {
           <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">Your shoppers buy on phones. So does your store.</h2>
         </div>
         <div className="mt-14 grid items-end gap-8 sm:grid-cols-3 sm:gap-6">
-          {[["/stores/phone-home.webp", "Beautiful home page", "Banners, offers bar, categories and bestsellers."], ["/stores/phone-product.webp", "Product pages that sell", "Photo gallery, sizes, % OFF and sticky Buy now."], ["/stores/phone-seller.webp", "Orders in your pocket", "Confirm, pack, ship and deliver with one tap."]].map(([src, t, d], i) => (
+          {[["/stores/phone-home-v2.webp", "Beautiful home page", "Banners, offers bar, categories and bestsellers."], ["/stores/phone-product-v2.webp", "Product pages that sell", "Photo gallery, sizes, % OFF and sticky Buy now."], ["/stores/phone-seller-v2.webp", "Orders in your pocket", "Confirm, pack, ship and deliver with one tap."]].map(([src, t, d], i) => (
             <Reveal key={src} delay={i * 0.08}>
               <PhoneFrame src={src} alt={t} className={`mx-auto w-[220px] ${i === 1 ? "sm:-translate-y-8" : ""}`} />
               <p className="mt-6 text-center font-display text-lg font-bold">{t}</p>
@@ -108,7 +108,7 @@ export default async function OnlineStorePage() {
             ); })}
           </ul>
         </Reveal>
-        <Reveal delay={0.1}><LaptopFrame src="/stores/desktop-seller.webp" alt="Vishnu Stores seller dashboard" /></Reveal>
+        <Reveal delay={0.1}><LaptopFrame src="/stores/desktop-seller-v2.webp" alt="Vishnu Stores seller dashboard" /></Reveal>
       </section>
 
       {/* steps */}
