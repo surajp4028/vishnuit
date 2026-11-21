@@ -3,14 +3,15 @@ import { exec, queryOne } from "./db";
 import { sendMail } from "./mail";
 import { getSettings } from "./content";
 import { formatINR } from "@/lib/utils";
-import { invoiceNumber, invoicePath } from "./invoice";
+import { invoiceNumber, invoicePath, nextInvoiceNo } from "./invoice";
 import { renderInvoicePdf } from "./invoice-pdf";
 import { payeePath, putObject, s3Configured } from "./s3";
 import { activateSubscription } from "./plan-billing";
 import { getCatalogConfig } from "./catalog";
 import { siteUrl } from "@/lib/site";
+import { stateName } from "@/lib/gst-states";
 
-type Payment = { id: number; user_id: number | null; plan_id: number | null; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; paid_at: string | null; created_at: string; kind?: string; meta?: unknown };
+type Payment = { invoice_no?: string | null; id: number; user_id: number | null; plan_id: number | null; plan_name: string; amount: number; name: string; email: string; phone: string; company: string; rzp_order_id: string; rzp_payment_id: string | null; method: string | null; status: string; paid_at: string | null; created_at: string; kind?: string; meta?: unknown };
 
 /** Render the invoice PDF and keep a copy in S3 under the payer's folder: vishnu/payee/<UID>/invoices/<no>.pdf */
 export async function saveInvoicePdf(orderId: string) {
@@ -21,23 +22,62 @@ export async function saveInvoicePdf(orderId: string) {
   if (!u) return null;
   const s = await getSettings();
   const date = new Date(p.paid_at ?? p.created_at);
-  const number = invoiceNumber(p.id, date);
-  const cfg = await getCatalogConfig();
-  const m = (typeof p.meta === "string" ? JSON.parse(p.meta) : p.meta) as { unit?: number; years?: number; base?: number; discount?: number; coupon?: string | null; taxable?: number; gstRate?: number; gst?: number } | null;
+  const number = p.invoice_no || invoiceNumber(p.id, date);
+  const v = await vitInvoiceParts(p);
   const pdf = await renderInvoicePdf({
     number, paid: true,
-    sellerGstin: cfg.sellerGstin || null,
-    tax: m && m.gst != null ? { qty: m.years ?? 1, unit: m.unit ?? m.base ?? 0, base: m.base ?? 0, discount: m.discount ?? 0, coupon: m.coupon ?? null, taxable: m.taxable ?? 0, rate: m.gstRate ?? 18, gst: m.gst } : null,
+    sellerGstin: v.sellerGstin,
+    tax: v.tax,
+    pos: v.pos,
     date: date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }),
     seller: { name: s.branding.siteName, address: s.contact.address, phone: s.contact.phone, email: s.contact.email, web: "www.vishnuit.co.in" },
-    buyer: { name: p.name, company: p.company, email: p.email, phone: p.phone },
-    item: p.plan_id ? `${p.plan_name} plan - website development` : p.plan_name,
+    buyer: { name: p.name, company: v.buyer.company ?? p.company, email: p.email, phone: p.phone, gstin: v.buyer.gstin, address: v.buyer.address },
+    item: v.item,
     amount: Number(p.amount),
     payment: { method: p.method, paymentId: p.rzp_payment_id, orderId },
   });
   const key = await putObject(payeePath(u.uid, `invoices/${number.replace(/\//g, "-")}.pdf`), pdf, "application/pdf");
   await exec("UPDATE payments SET invoice_key=? WHERE id=?", [key, p.id]);
   return key;
+}
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * GST details for a Vishnu IT invoice (plan purchase or Pay Now):
+ * place of supply = the buyer's GSTIN state if they have one (B2B), else our own state (B2C, Sec 12(2)(b) IGST Act);
+ * same state → CGST + SGST (CGST rounded, SGST = rest), else IGST. Pay Now amounts are GST-inclusive.
+ * SAC 998315 for the online-store software plans, 998314 for website/design services.
+ */
+export async function vitInvoiceParts(p: Pick<Payment, "kind" | "meta" | "amount" | "plan_id" | "plan_name" | "company">) {
+  const cfg = await getCatalogConfig();
+  const sellerGstin = cfg.sellerGstin || null;
+  const home = (sellerGstin ?? "").slice(0, 2) || "07";
+  const m = (typeof p.meta === "string" ? JSON.parse(p.meta) : p.meta) as { store_id?: number; unit?: number; years?: number; base?: number; discount?: number; coupon?: string | null; taxable?: number; gstRate?: number; gst?: number } | null;
+  // Plan purchases: the buyer is the seller's business — take its GSTIN / legal name / address from the store.
+  const st = m?.store_id ? await queryOne<{ tax: unknown; contact: unknown }>("SELECT tax, contact FROM stores WHERE id=?", [m.store_id]) : null;
+  const tax = st ? ((typeof st.tax === "string" ? JSON.parse(st.tax) : st.tax) as { gstin?: string; legalName?: string } | null) : null;
+  const contact = st ? ((typeof st.contact === "string" ? JSON.parse(st.contact) : st.contact) as { address?: string } | null) : null;
+  const buyerGstin = tax?.gstin || null;
+  const posCode = buyerGstin ? buyerGstin.slice(0, 2) : home;
+  const pos = `${stateName(posCode)} (${posCode})`;
+  const igst = posCode !== home;
+  const split = (taxable: number, rate: number, gst: number) => (igst ? { igst: true } : { igst: false, cgst: r2((taxable * rate) / 200), sgst: r2(gst - r2((taxable * rate) / 200)) });
+  const amount = Number(p.amount);
+  let t: NonNullable<Parameters<typeof renderInvoicePdf>[0]["tax"]> = null as never;
+  if (m && m.gst != null) {
+    const rate = m.gstRate ?? 18, taxable = m.taxable ?? 0, gst = m.gst;
+    t = { qty: m.years ?? 1, unit: m.unit ?? m.base ?? 0, base: m.base ?? 0, discount: m.discount ?? 0, coupon: m.coupon ?? null, taxable, rate, gst, sac: "998315", ...split(taxable, rate, gst) };
+  } else if (sellerGstin && amount > 0) {
+    // Pay Now / custom amounts: treated as GST-inclusive at 18%.
+    const rate = 18, taxable = r2(amount / 1.18), gst = r2(amount - taxable);
+    t = { qty: 1, unit: taxable, unitLabel: "service", base: taxable, discount: 0, coupon: null, taxable, rate, gst, sac: "998314", ...split(taxable, rate, gst) };
+  }
+  return {
+    sellerGstin, pos, tax: t ?? null,
+    buyer: { gstin: buyerGstin, company: tax?.legalName || null, address: contact?.address || null },
+    item: p.plan_id ? `${p.plan_name} plan - website development` : p.plan_name,
+  };
 }
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -49,6 +89,8 @@ export async function markPaid(orderId: string, paymentId: string, method: strin
     [paymentId, signature, method, orderId],
   );
   if (r.affectedRows === 0) return; // already processed
+  // Invoice number only for PAID payments, so failed/abandoned checkouts never leave gaps in the series.
+  await exec("UPDATE payments SET invoice_no=? WHERE rzp_order_id=? AND invoice_no IS NULL", [await nextInvoiceNo("vit", "VIT"), orderId]).catch((e) => console.error("[invoice] number:", (e as Error).message));
   const p = await queryOne<Payment>("SELECT * FROM payments WHERE rzp_order_id=?", [orderId]);
   if (!p) return;
   // Catalog plan purchases switch the store plan on right away.

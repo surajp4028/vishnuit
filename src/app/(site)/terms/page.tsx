@@ -19,6 +19,10 @@ export default async function Terms() {
         <p>On full payment, ownership of final deliverables transfers to the client. We may showcase completed work in our portfolio unless agreed otherwise.</p>
         <h2>Limitation of liability</h2>
         <p>We are not liable for indirect or consequential losses. Our total liability is limited to the fees paid for the relevant project.</p>
+        <h2>Vishnu Stores (seller marketplace)</h2>
+        <p>Stores at vishnuit.co.in/catalog/@store-name, or on a seller&apos;s own domain, are run by independent sellers. The seller is responsible for their products, prices, GST invoices, delivery, returns and refunds, and their legal name, address and grievance contact are shown in each store&apos;s footer. {branding.siteName} provides the technology platform. If a seller doesn&apos;t resolve your complaint, contact our <a href="/privacy-policy#grievance">Grievance Officer</a>.</p>
+        <h2>Privacy</h2>
+        <p>How we handle personal data is explained in our <a href="/privacy-policy">Privacy Policy</a>.</p>
         <h2>Contact</h2>
         <p>Questions? Email <a href={`mailto:${contact.email}`}>{contact.email}</a> or call {contact.phone}.</p>
       </div>

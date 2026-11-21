@@ -6,6 +6,16 @@ import { siteUrl } from "@/lib/site";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+/** Emails per run (the rest are picked up by the next run — reminder_sent_at keeps it idempotent). */
+const BATCH = 60;
+const CONCURRENCY = 5;
+
+/** Run `fn` over `items` with at most `n` in flight. */
+async function pool<T>(items: T[], n: number, fn: (item: T) => Promise<void>) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]); }));
+}
+
 const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 type Row = { id: number; name: string; handle: string; plan: PlanKey; plan_expires_at: string; reminder_sent_at: string | null; email: string | null; owner: string };
 
@@ -25,16 +35,16 @@ export async function GET(req: Request) {
 
   const soon = await query<Row>(
     `SELECT s.id, s.name, s.handle, s.plan, s.plan_expires_at, s.reminder_sent_at, u.email, u.name owner FROM stores s JOIN users u ON u.id=s.user_id
-     WHERE s.plan<>'free' AND s.plan_expires_at BETWEEN NOW() AND NOW() + INTERVAL 30 DAY AND s.reminder_sent_at IS NULL LIMIT 500`,
+     WHERE s.plan<>'free' AND s.plan_expires_at BETWEEN NOW() AND NOW() + INTERVAL 30 DAY AND s.reminder_sent_at IS NULL ORDER BY s.plan_expires_at LIMIT ${BATCH}`,
   );
   const ended = await query<Row>(
     `SELECT s.id, s.name, s.handle, s.plan, s.plan_expires_at, s.reminder_sent_at, u.email, u.name owner FROM stores s JOIN users u ON u.id=s.user_id
      WHERE s.plan<>'free' AND s.plan_expires_at < NOW() AND s.plan_expires_at > NOW() - INTERVAL ${GRACE_DAYS} DAY
-       AND (s.reminder_sent_at IS NULL OR s.reminder_sent_at < s.plan_expires_at) LIMIT 500`,
+       AND (s.reminder_sent_at IS NULL OR s.reminder_sent_at < s.plan_expires_at) ORDER BY s.plan_expires_at LIMIT ${BATCH}`,
   );
   let sent = 0;
   const fmt = (d: string | Date) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-  for (const r of soon) {
+  const sendSoon = async (r: Row) => {
     if (r.email) {
       const ok = await sendMail({
         to: r.email,
@@ -45,8 +55,8 @@ export async function GET(req: Request) {
       if (ok.ok) sent++;
     }
     await exec("UPDATE stores SET reminder_sent_at=NOW() WHERE id=?", [r.id]);
-  }
-  for (const r of ended) {
+  };
+  const sendEnded = async (r: Row) => {
     if (r.email) {
       const until = new Date(new Date(r.plan_expires_at).getTime() + GRACE_DAYS * 86400000);
       const ok = await sendMail({
@@ -58,6 +68,15 @@ export async function GET(req: Request) {
       if (ok.ok) sent++;
     }
     await exec("UPDATE stores SET reminder_sent_at=NOW() WHERE id=?", [r.id]);
+  };
+  // At most BATCH emails per run, 5 at a time, so the run finishes well inside maxDuration.
+  // Alternate the two lists so a long "ending soon" backlog can't starve the "ended" emails.
+  const jobs: (() => Promise<void>)[] = [];
+  for (let k = 0; jobs.length < BATCH && (k < soon.length || k < ended.length); k++) {
+    if (k < soon.length) jobs.push(() => sendSoon(soon[k]));
+    if (k < ended.length && jobs.length < BATCH) jobs.push(() => sendEnded(ended[k]));
   }
-  return Response.json({ ok: true, endingSoon: soon.length, ended: ended.length, emailsSent: sent });
+  let failed = 0;
+  await pool(jobs, CONCURRENCY, (job) => job().catch((e) => { failed++; console.error("[cron/plan-reminders]", (e as Error).message); }));
+  return Response.json({ ok: true, endingSoon: soon.length, ended: ended.length, processed: jobs.length - failed, failed, emailsSent: sent, more: soon.length + ended.length > jobs.length });
 }

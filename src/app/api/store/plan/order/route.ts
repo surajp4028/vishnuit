@@ -6,7 +6,7 @@ import { quotePlan } from "@/lib/server/plan-billing";
 
 /** Starts a Razorpay payment for a catalog plan. The plan switches on in markPaid() once Razorpay confirms. */
 export async function POST(req: Request) {
-  const a = await requireStoreApi();
+  const a = await requireStoreApi(req);
   if (a instanceof Response) return a;
   if (!rzpConfigured()) return Response.json({ error: "Online payments are not configured yet." }, { status: 503 });
   if (!rateLimit(`planorder:${a.user.id}`, 10)) return Response.json({ error: "Too many attempts. Please wait a few minutes." }, { status: 429 });

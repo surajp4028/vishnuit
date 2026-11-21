@@ -12,21 +12,36 @@ const OUR_HOSTS = new Set(["localhost", "127.0.0.1", "vishnuit.co.in", hostOf(pr
 const isOurHost = (h: string) => OUR_HOSTS.has(h) || h.endsWith(".vercel.app") || h.endsWith(".localhost");
 
 // Small in-memory cache of host → store handle, so most requests skip the lookup.
-const cache = new Map<string, { handle: string | null; at: number }>();
-const TTL = 60_000;
+// Only real answers are cached: found for 60s, "not connected" for 10s. Failures are never cached.
+const cache = new Map<string, { handle: string | null; until: number }>();
+const FOUND_TTL = 60_000;
+const MISS_TTL = 10_000;
+const CACHE_MAX = 500;
+/** Lookup couldn't be answered (timeout, network error, 503) — different from "not connected". */
+const UNAVAILABLE = Symbol("unavailable");
 
-async function lookup(req: NextRequest, host: string) {
+async function lookup(req: NextRequest, host: string): Promise<string | null | typeof UNAVAILABLE> {
   const hit = cache.get(host);
-  if (hit && Date.now() - hit.at < TTL) return hit.handle;
+  if (hit && Date.now() < hit.until) return hit.handle;
+  if (hit) cache.delete(host);
   // In dev the made-up test host doesn't resolve, so ask the local server directly.
   const origin = process.env.NODE_ENV === "development" ? `http://127.0.0.1:${req.nextUrl.port || 3000}` : req.nextUrl.origin;
-  const handle = await fetch(`${origin}/api/catalog/domain?host=${encodeURIComponent(host)}`)
-    .then((r) => (r.ok ? (r.json() as Promise<{ handle: string | null }>) : { handle: null }))
-    .then((j) => j.handle)
-    .catch(() => null);
-  cache.set(host, { handle, at: Date.now() });
+  let handle: string | null;
+  try {
+    const r = await fetch(`${origin}/api/catalog/domain?host=${encodeURIComponent(host)}`, { signal: AbortSignal.timeout(3000) });
+    if (r.status !== 200) return UNAVAILABLE;
+    const j = (await r.json()) as { handle?: unknown };
+    handle = typeof j.handle === "string" && j.handle ? j.handle : null;
+  } catch {
+    return UNAVAILABLE;
+  }
+  // Map keeps insertion order → drop the oldest entries when full.
+  while (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value as string);
+  cache.set(host, { handle, until: Date.now() + (handle ? FOUND_TTL : MISS_TTL) });
   return handle;
 }
+
+const UNAVAILABLE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Temporarily unavailable</title></head><body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;color:#0a0f1f;font-family:Inter,Arial,sans-serif;text-align:center;padding:16px"><div><h1 style="font-size:20px;margin:0 0 8px">Store is temporarily unavailable</h1><p style="margin:0 0 20px;color:#556">Please refresh in a moment.</p><a href="" style="background:#0a0f1f;color:#fff;text-decoration:none;padding:10px 20px;border-radius:999px;font-weight:600">Refresh</a></div></body></html>`;
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -49,6 +64,9 @@ export async function proxy(req: NextRequest) {
   // Public files (images, icons) are served as-is; sitemap.xml and robots.txt belong to the store.
   if (/\.[a-z0-9]+$/i.test(pathname) && pathname !== "/sitemap.xml" && pathname !== "/robots.txt") return NextResponse.next();
   const handle = await lookup(req, bare);
+  if (handle === UNAVAILABLE) {
+    return new NextResponse(UNAVAILABLE_PAGE, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "5" } });
+  }
   if (!handle) return new NextResponse("This domain is not connected to a store.", { status: 404, headers: { "Content-Type": "text/plain" } });
   if (pathname === "/sitemap.xml") { const url = req.nextUrl.clone(); url.pathname = `/api/catalog/@${handle}/sitemap`; return NextResponse.rewrite(url); }
   if (pathname === "/robots.txt") {

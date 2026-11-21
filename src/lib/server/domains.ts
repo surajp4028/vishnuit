@@ -59,6 +59,7 @@ async function vercel<T>(path: string, init: RequestInit = {}): Promise<{ ok: bo
     ...init,
     headers: { Authorization: `Bearer ${process.env.VERCEL_API_TOKEN}`, "Content-Type": "application/json", ...(init.headers ?? {}) },
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(8000),
   });
   return { ok: r.ok, status: r.status, data: (await r.json().catch(() => ({}))) as never };
 }
@@ -163,12 +164,6 @@ export async function disconnectDomain(store: DomainStore) {
  * So a shopper on pandey.com is sent to vishnuit.co.in for Google, and after it succeeds we
  * hand the login back with a one-time code (2 minutes) that only that store's domain can redeem.
  */
-const MAIN = () => (process.env.NEXT_PUBLIC_SITE_URL || "https://www.vishnuit.co.in").replace(/\/$/, "");
-export const mainSiteUrl = MAIN;
-export function isMainHost(host: string) {
-  const h = host.toLowerCase().split(":")[0].replace(/^www\./, "");
-  const main = new URL(MAIN()).hostname.replace(/^www\./, "");
-  return h === main || h === "vishnuit.co.in" || h === "localhost" || h === "127.0.0.1" || h.endsWith(".vercel.app");
-}
+export { isMainHost, mainSiteUrl } from "./hosts";
 /** Scheme + host to send the shopper back to (http only for local test hosts). */
 export const storeOrigin = (host: string) => `${process.env.NODE_ENV === "development" ? "http" : "https"}://${host}`;

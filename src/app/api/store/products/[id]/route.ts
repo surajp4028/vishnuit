@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { exec, query, queryOne } from "@/lib/server/db";
 import { hydrateProduct } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
-import { ownIds, parseProduct } from "@/lib/server/product-input";
+import { ownIds, ownVideo, parseProduct } from "@/lib/server/product-input";
 import { mergeIntoLibrary } from "@/lib/server/attributes";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -22,9 +22,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const p = parseProduct(body, store.code, cats);
     if ("error" in p) return Response.json({ error: p.error }, { status: 422 });
     const d = p.data;
+    const video = await ownVideo(store.id, d.video); // ignore keys that weren't uploaded through the library
     await exec(
       "UPDATE store_products SET category_id=?, name=?, description=?, price=?, compare_price=?, gst_rate=?, hsn=?, sku=?, stock=?, low_stock=?, images=?, video=?, options=?, variants=?, related=?, status=?, featured=? WHERE id=? AND store_id=?",
-      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), d.video, JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related.filter((r) => r !== id))), d.status, d.featured, id, store.id],
+      [d.category_id, d.name, d.description, d.price, d.compare_price, d.gst_rate, d.hsn, d.sku, d.stock, d.low_stock, JSON.stringify(d.images), video, JSON.stringify(d.options), JSON.stringify(d.variants), JSON.stringify(await ownIds(store.id, d.related.filter((r) => r !== id))), d.status, d.featured, id, store.id],
     );
     await mergeIntoLibrary(store.id, p.data.options).catch(() => {});
   }

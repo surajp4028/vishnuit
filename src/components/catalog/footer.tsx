@@ -3,6 +3,9 @@ import Image from "next/image";
 import { ArrowUpRight, Banknote, CreditCard, Mail, MapPin, Phone, ShieldCheck, Smartphone } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaPinterestP, FaWhatsapp, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { PAGE_KEYS, PAGE_TITLES, type Store } from "@/lib/server/catalog";
+import { ConsentReset } from "@/components/consent-banner";
+
+const PLATFORM = "https://www.vishnuit.co.in";
 
 /** Only real web links (older stores may have "#" or a bare handle saved). */
 const okUrl = (v?: string | null): v is string => !!v && /^https?:\/\/[^\s/]+\.[^\s]+/i.test(v);
@@ -16,6 +19,11 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
   const policies = PAGE_KEYS.filter((k) => store.pages[k]?.on);
   const year = new Date().getFullYear();
   const mark = store.name.trim().split(/\s+/).slice(0, 2).join(" ");
+  // Seller disclosure (Consumer Protection (E-Commerce) Rules, 2020): legal name, GSTIN, address, contact, grievance.
+  const legal = store.tax?.legalName?.trim() || store.name;
+  const gstin = store.tax?.gstin?.trim();
+  const grievance = c.email || c.phone;
+  const hasPixels = Boolean(store.storefront?.pixels?.meta || store.storefront?.pixels?.ga);
   const pay = [
     store.payments.cod && { icon: Banknote, t: "Cash on delivery" },
     (store.payments.upi.on || store.payments.razorpay.on) && { icon: Smartphone, t: "UPI" },
@@ -107,6 +115,27 @@ export function StoreFooter({ store, base, logo, categories = [] }: { store: Sto
         <span className="inline-block bg-gradient-to-b from-white/[.16] to-white/[.02] bg-clip-text font-display leading-none font-extrabold tracking-tight whitespace-nowrap text-transparent uppercase" style={{ fontSize: `min(15vw, ${(128 / Math.max(mark.length, 4)).toFixed(2)}vw, 10rem)` }}>
           {mark}
         </span>
+      </div>
+
+      {/* seller details + grievance — small print */}
+      <div className="border-t border-white/[.07]">
+        <div className="mx-auto max-w-6xl px-5 py-5 text-[11.5px] leading-relaxed text-white/40 sm:px-8">
+          <p>
+            <span className="text-white/55">Sold by {legal}</span>
+            {gstin && <> · GSTIN <span className="font-mono tracking-wide">{gstin}</span></>}
+            {c.address && <> · {c.address.replace(/\s*\n\s*/g, ", ")}</>}
+          </p>
+          <p className="mt-1">
+            {c.email && <>Email <a href={`mailto:${c.email}`} className="break-all underline-offset-4 hover:text-white/80 hover:underline">{c.email}</a></>}
+            {c.email && c.phone && " · "}
+            {c.phone && <>Phone <a href={`tel:${c.phone}`} className="underline-offset-4 hover:text-white/80 hover:underline">{c.phone}</a></>}
+            {grievance && <>{(c.email || c.phone) && " · "}Grievance: <a href={c.email ? `mailto:${c.email}` : `tel:${c.phone}`} className="underline-offset-4 hover:text-white/80 hover:underline">{grievance}</a></>}
+          </p>
+          <p className="mt-1">
+            Platform: Vishnu IT Solutions, Delhi · <a href={`${PLATFORM}/privacy-policy#grievance`} target="_blank" rel="noopener" className="underline-offset-4 hover:text-white/80 hover:underline">Platform grievance officer</a> · <a href={`${PLATFORM}/privacy-policy`} target="_blank" rel="noopener" className="underline-offset-4 hover:text-white/80 hover:underline">Privacy</a>
+            {hasPixels && <> · <ConsentReset className="underline-offset-4 hover:text-white/80 hover:underline" /></>}
+          </p>
+        </div>
       </div>
 
       {/* bottom bar */}

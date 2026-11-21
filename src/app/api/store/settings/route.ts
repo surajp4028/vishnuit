@@ -101,6 +101,7 @@ export async function PATCH(req: Request) {
       shipping: (() => { const x = (f.shipping ?? {}) as Record<string, unknown>; const n = (v: unknown) => Math.min(1_000_000, Math.max(0, Math.round((Number(v) || 0) * 100) / 100)); return { cod: n(x.cod), upi: n(x.upi), razorpay: n(x.razorpay), freeAbove: n(x.freeAbove), minOrder: n(x.minOrder), perItem: x.perItem !== false }; })(),
       closed: (() => { const x = (f.closed ?? {}) as Record<string, unknown>; return { on: Boolean(x.on), message: str(x.message, 200) }; })(),
       favicon: f.favicon && ownKey(f.favicon) ? String(f.favicon) : null,
+      wa: (() => { const w = (f.wa ?? {}) as { on?: unknown; number?: unknown }; const d = String(w.number ?? "").replace(/\D/g, ""); const n = d.length === 10 ? `91${d}` : d.length === 12 && d.startsWith("91") ? d : ""; return { on: w.on !== false, number: n }; })(),
       pixels: (() => { const x = (f.pixels ?? {}) as Record<string, unknown>; return { meta: str(x.meta, 20).replace(/\D/g, ""), ga: str(x.ga, 20).toUpperCase() }; })(),
       about: (() => { const a = (f.about ?? {}) as { images?: unknown; heading?: unknown; home?: unknown }; return { images: (Array.isArray(a.images) ? a.images : []).filter((k) => k && ownKey(k)).slice(0, 2).map(String), heading: str(a.heading, 120), home: a.home !== false }; })(),
     };

@@ -69,6 +69,12 @@ for (const sql of [
   "ALTER TABLE store_products ADD COLUMN video VARCHAR(255) NULL AFTER images",
   "ALTER TABLE store_orders ADD COLUMN buyer_gstin VARCHAR(15) NULL AFTER state",
   "ALTER TABLE store_orders ADD COLUMN buyer_company VARCHAR(160) NULL AFTER buyer_gstin",
+  "CREATE TABLE IF NOT EXISTS invoice_seq (scope VARCHAR(40) NOT NULL, fy VARCHAR(7) NOT NULL, n INT NOT NULL DEFAULT 0, PRIMARY KEY (scope, fy)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "ALTER TABLE store_orders ADD COLUMN invoice_no VARCHAR(20) NULL AFTER order_no",
+  "ALTER TABLE store_orders ADD COLUMN seller JSON NULL AFTER buyer_company",
+  "ALTER TABLE store_orders ADD COLUMN credit_note_no VARCHAR(20) NULL AFTER invoice_no",
+  "ALTER TABLE store_orders ADD COLUMN credit_note_at DATETIME NULL AFTER credit_note_no",
+  "ALTER TABLE payments ADD COLUMN invoice_no VARCHAR(20) NULL AFTER rzp_order_id",
 ]) {
   try { await conn.query(sql); console.log("✓ migrated:", sql.slice(0, 60)); }
   catch (e) { if (!["ER_DUP_FIELDNAME", "ER_DUP_KEYNAME"].includes((e as { code?: string }).code ?? "")) throw e; }

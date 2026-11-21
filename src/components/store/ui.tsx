@@ -8,8 +8,8 @@ export const card = "rounded-[1.6rem] border border-border bg-card";
 export const btnDark = "inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background transition active:scale-[.98] disabled:opacity-50";
 export const btnLight = "inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold transition active:scale-[.98] disabled:opacity-50";
 
-export async function api<T = Record<string, unknown>>(url: string, method: string, body?: unknown) {
-  const r = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
+export async function api<T = Record<string, unknown>>(url: string, method: string, body?: unknown, headers?: Record<string, string>) {
+  const r = await fetch(url, { method, headers: { ...(body ? { "Content-Type": "application/json" } : {}), ...(headers ?? {}) }, body: body ? JSON.stringify(body) : undefined });
   const j = (await r.json().catch(() => ({}))) as T & { error?: string; code?: string };
   return { ok: r.ok, data: j };
 }
@@ -37,7 +37,33 @@ export async function uploadVideo(file: File, onProgress?: (pct: number) => void
 }
 
 /** Upload one image; onProgress gets 0–100 while the file is sent (then 100 while it's processed). */
-export function uploadImage(file: File, kind: "product" | "logo" | "banner" | "qr", onProgress?: (pct: number) => void): Promise<{ key: string; url: string }> {
+export async function uploadImage(input: File, kind: "product" | "logo" | "banner" | "qr", onProgress?: (pct: number) => void): Promise<{ key: string; url: string }> {
+  // Vercel refuses request bodies over 4.5 MB, so big photos are downscaled in the browser first
+  // (the server resizes again anyway). GIF/SVG are sent as-is but must already be small enough.
+  const SHRINK_OVER = 3.5 * 1024 * 1024, MAX_SEND = 4.4 * 1024 * 1024, MAX_SIDE = 2400;
+  const TOO_BIG = "Image too large — please use a photo under 4 MB";
+  let file = input;
+  if (!/^image\/(gif|svg\+xml)$/.test(input.type)) {
+    try {
+      const bmp = await createImageBitmap(input, { imageOrientation: "from-image" });
+      const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+      if (input.size > SHRINK_OVER || scale < 1) {
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(bmp.width * scale));
+        c.height = Math.max(1, Math.round(bmp.height * scale));
+        c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+        const toBlob = (type: string) => new Promise<Blob | null>((r) => c.toBlob(r, type, 0.85));
+        let blob = await toBlob("image/webp");
+        // Browsers without WebP encoding silently return PNG — use JPEG then.
+        if (!blob || blob.type !== "image/webp") blob = await toBlob("image/jpeg");
+        if (blob) file = new File([blob], input.name.replace(/\.[^.]+$/, "") + (blob.type === "image/webp" ? ".webp" : ".jpg"), { type: blob.type });
+      }
+      bmp.close();
+    } catch {
+      // Can't decode here (e.g. HEIC on some browsers) — send the original if it fits.
+    }
+  }
+  if (file.size > MAX_SEND) throw new Error(TOO_BIG);
   return new Promise((resolve, reject) => {
     const fd = new FormData();
     fd.append("file", file);
@@ -49,7 +75,7 @@ export function uploadImage(file: File, kind: "product" | "logo" | "banner" | "q
       let j: { key?: string; url?: string; error?: string } = {};
       try { j = JSON.parse(x.responseText); } catch {}
       if (x.status >= 200 && x.status < 300 && j.key) { onProgress?.(100); resolve({ key: j.key, url: j.url! }); }
-      else reject(new Error(j.error || "Upload failed"));
+      else reject(new Error(j.error || (x.status === 413 ? TOO_BIG : "Upload failed")));
     };
     x.onerror = () => reject(new Error("Network error — check your connection."));
     x.send(fd);

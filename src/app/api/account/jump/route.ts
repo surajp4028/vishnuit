@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/safe-next";
 import { randomBytes } from "node:crypto";
 import { getStoreForUser } from "@/lib/server/catalog";
 import { createToken, getUser } from "@/lib/server/users";
@@ -12,7 +13,7 @@ import { isMainHost, mainSiteUrl, storeOrigin } from "@/lib/server/domains";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const nextRaw = url.searchParams.get("next") || "/seller";
-  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("\\") ? nextRaw : "/seller";
+  const next = safeNextPath(nextRaw, "/seller");
   const here = (req.headers.get("host") ?? url.host).toLowerCase();
   const u = await getUser();
   if (!u) return Response.redirect(`${url.protocol}//${here}/login?next=${encodeURIComponent(next)}`, 302);
@@ -20,6 +21,13 @@ export async function GET(req: Request) {
   let target: string | null = null; // host[:port] to land on
   let origin = "";
   if (url.searchParams.get("to") === "main") {
+    // From a store's own domain, only that store's owner may carry the login over to vishnuit.co.in
+    // (a shopper's session on a seller-controlled domain must never become a main-site session).
+    const own = await getStoreForUser(u.id);
+    const hereBare = here.split(":")[0].replace(/^www\./, "");
+    if (!isMainHost(here) && (!own?.domain || !own.domain_ok || own.domain.replace(/^www\./, "") !== hereBare)) {
+      return Response.redirect(`${mainSiteUrl()}/login`, 302);
+    }
     const m = new URL(mainSiteUrl());
     target = m.host; origin = m.origin;
   } else {

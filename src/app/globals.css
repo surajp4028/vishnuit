@@ -164,3 +164,13 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { [class*="animate-[slideInRight"], [class*="animate-[fadeIn"] { animation: none !important; } }
+
+/* Above-the-fold entrance done in CSS, so headings are visible before (or without) JavaScript. */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .6s cubic-bezier(.22,1,.36,1) both; }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+
+/* iOS Safari zooms the page when a field under 16px gets focus — keep fields at 16px there only. */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea { font-size: max(16px, 1em) !important; }
+}

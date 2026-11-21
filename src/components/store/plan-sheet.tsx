@@ -16,7 +16,8 @@ type Quote = { planName: string; years: number; unit: number; base: number; disc
  * inline: render as a card on a page (the payment page for stores on their own domain) instead of a popup.
  * returnUrl: after the payment succeeds or fails, send the seller back here (?payment=success|failed).
  */
-export function PlanSheet({ plans, current, storePlan, expiresAt, onClose, inline, returnUrl }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; storePlan?: PlanKey; expiresAt?: string | null; onClose: () => void; inline?: boolean; returnUrl?: string }) {
+export function PlanSheet({ plans, current, storePlan, expiresAt, onClose, inline, returnUrl, payToken }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; storePlan?: PlanKey; expiresAt?: string | null; onClose: () => void; inline?: boolean; returnUrl?: string; payToken?: string }) {
+  const auth = payToken ? { "x-pay-token": payToken } : undefined;
   const back = (result: "success" | "failed") => { if (returnUrl) window.location.href = `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}payment=${result}`; };
   const paid = (["starter", "growth", "premium"] as PlanKey[]);
   const [plan, setPlan] = useState<PlanKey>(current === "free" ? "growth" : current);
@@ -31,7 +32,7 @@ export function PlanSheet({ plans, current, storePlan, expiresAt, onClose, inlin
   useEffect(() => {
     let off = false;
     (async () => {
-      const r = await api<{ quote: Quote; error?: string }>("/api/store/plan/quote", "POST", { plan, years, coupon: applied });
+      const r = await api<{ quote: Quote; error?: string }>("/api/store/plan/quote", "POST", { plan, years, coupon: applied }, auth);
       if (off) return;
       if (r.ok) { setQuote(r.data.quote); setErr(""); }
       else { setErr(r.data.error || "Could not price this plan."); if (applied) setApplied(""); }
@@ -41,7 +42,7 @@ export function PlanSheet({ plans, current, storePlan, expiresAt, onClose, inlin
 
   async function pay() {
     setErr(""); setBusy(true);
-    const [ok, r] = await Promise.all([loadRazorpay(), api<{ orderId: string; amount: number; currency: string; keyId: string; label: string; prefill: Record<string, string> }>("/api/store/plan/order", "POST", { plan, years, coupon: applied })]);
+    const [ok, r] = await Promise.all([loadRazorpay(), api<{ orderId: string; amount: number; currency: string; keyId: string; label: string; prefill: Record<string, string> }>("/api/store/plan/order", "POST", { plan, years, coupon: applied }, auth)]);
     if (!r.ok) { setBusy(false); return setErr(r.data.error || "Could not start payment."); }
     if (!ok || !window.Razorpay) { setBusy(false); return setErr("Could not load the payment window."); }
     const o = r.data;

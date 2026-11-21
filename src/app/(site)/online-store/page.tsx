@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Online Store Builder for Indian Sellers — Vishnu Stores",
   description: "Create your own online store in 5 minutes: catalogue link, COD & UPI orders, GST invoices, delivery tracking and WhatsApp-ready product links. Free plan, 0% commission.",
   alternates: { canonical: "/online-store" },
+  openGraph: { title: "Your own online store in 5 minutes — Vishnu Stores", description: "Free plan, 0% commission. COD & UPI orders, GST invoices, your own domain.", url: "/online-store", type: "website" },
 };
 export const revalidate = 300;
 
@@ -37,7 +38,7 @@ export default async function OnlineStorePage() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(15,23,42,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.05)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
         <div className="pointer-events-none absolute -top-40 right-0 -z-10 size-[36rem] rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.16),transparent)]" />
         <div className="container-x grid items-center gap-14 lg:grid-cols-[1fr_1.15fr]">
-          <Reveal>
+          <div className="rise">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3.5 py-1.5 text-[11px] font-bold tracking-[3px] text-accent"><Sparkles className="size-3.5" /> VISHNU STORES</span>
             <h1 className="mt-6 font-display text-[2.6rem] leading-[1.03] font-extrabold tracking-tight sm:text-6xl">
               Sell online with your own store for <span className="block min-h-[1.1em] lg:inline lg:min-h-0"><FlipWords words={["fashion", "jewellery", "home décor", "plants", "your brand"]} className="!px-0 !text-accent" /></span>
@@ -52,8 +53,8 @@ export default async function OnlineStorePage() {
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/70">
               {["Free forever plan", "0% commission", "Live in 5 minutes"].map((x) => <span key={x} className="flex items-center gap-1.5"><Check className="size-4 text-emerald-500" />{x}</span>)}
             </div>
-          </Reveal>
-          <Reveal delay={0.12}><StoreMockup size="lg" /></Reveal>
+          </div>
+          <div className="rise" style={{ animationDelay: ".12s" }}><StoreMockup size="lg" /></div>
         </div>
       </section>
 

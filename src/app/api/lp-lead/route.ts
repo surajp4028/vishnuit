@@ -68,7 +68,8 @@ export async function POST(req: Request) {
     if (id) await exec("UPDATE leads SET emailed=?, notes=? WHERE id=?", [mail.ok ? 1 : 0, [sheet.ok ? "Synced to Google Sheet" : `Sheet sync failed: ${sheet.error ?? ""}`, mail.ok ? "" : `Email failed: ${mail.error ?? ""}`].filter(Boolean).join(" · ").slice(0, 500), id]).catch(() => {});
     const lpSlug = lead.page.replace(/^\//, "").split(/[?#]/)[0] || "";
     const pixel = await resolveLpPixel(lpSlug || null);
-    await sendMetaLead({ pixel, lp: lpSlug, eventId, url: `https://${host}${lead.page}`, email: lead.email, phone: lead.phone, name: lead.name, city: lead.city, ip, ua: h.get("user-agent") ?? undefined, fbp: cookies._fbp, fbc: cookies._fbc, service: lead.service });
+    // Hashed email/phone go to Meta only if the visitor accepted tracking (consent banner → vit_consent=granted).
+    if (cookies.vit_consent === "granted") await sendMetaLead({ pixel, lp: lpSlug, eventId, url: `https://${host}${lead.page}`, email: lead.email, phone: lead.phone, name: lead.name, city: lead.city, ip, ua: h.get("user-agent") ?? undefined, fbp: cookies._fbp, fbc: cookies._fbc, service: lead.service });
   });
 
   return Response.json({ ok: true, id, eventId });

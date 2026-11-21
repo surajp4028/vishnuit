@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, BarChart3, BookOpen, Check, ChevronDown, Moon, Palette, Loader2, MapPin, Megaphone, Images, Plus, Settings2, Sparkles, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BarChart3, BookOpen, Check, ChevronDown, Moon, Palette, Loader2, MapPin, Megaphone, Images, Plus, MessageCircle, Settings2, Sparkles, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, btnDark, card, Field, ImagePick, imgUrl, input, Toggle } from "@/components/store/ui";
 import { HIGHLIGHT_ICON_MAP, type HighlightIconKey } from "@/components/catalog/highlight-icons";
@@ -17,6 +17,7 @@ export type Front = {
   closed: { on: boolean; message: string };
   pixels: { meta: string; ga: string };
   favicon: string | null;
+  wa?: { on: boolean; number: string };
 };
 
 
@@ -112,6 +113,17 @@ export function StorefrontEditor({ initial, address, handle, reviews, initialTab
       {tab === "design" && (
         <Section icon={Images} title="Browser tab icon (favicon)" sub="The small square icon in the browser tab and bookmarks. Empty = your logo is used.">
           <div className="w-28"><ImagePick value={f.favicon} onChange={(k) => set({ favicon: k })} kind="logo" label="Square icon, 512×512" /></div>
+        </Section>
+      )}
+
+      {tab === "more" && (
+        <Section icon={MessageCircle} title="WhatsApp button" sub="The green chat button at the bottom corner of your store.">
+          <Toggle on={f.wa?.on !== false} onChange={(v) => set({ wa: { on: v, number: f.wa?.number ?? "" } })} label="Show the WhatsApp button" sub={f.wa?.on !== false ? "Shoppers can message you from any page" : "Hidden on your store"} />
+          {f.wa?.on !== false && (
+            <Field label="WhatsApp number for the button" hint="Leave empty to use the WhatsApp number in Settings → Profile. 10-digit Indian mobile.">
+              <input value={(f.wa?.number ?? "").replace(/^91/, "")} onChange={(e) => set({ wa: { on: true, number: e.target.value.replace(/\D/g, "").slice(0, 10) } })} inputMode="tel" placeholder="e.g. 9876543210" className={input} />
+            </Field>
+          )}
         </Section>
       )}
 

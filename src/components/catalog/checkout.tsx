@@ -17,13 +17,29 @@ type Rules = { cod: number; upi: number; razorpay: number; freeAbove: number; mi
 const GSTIN_RE = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 export function Checkout({ handle, base, storeName, pay, rules }: { handle: string; base: string; storeName: string; pay: { cod: boolean; upi: boolean; vpa: string; qr: string | null; razorpay: boolean }; rules: Rules }) {
-  const { lines, total, setQty, remove, clear, ready } = useCart();
+  const { lines, total, setQty, remove, clear, ready, syncPrices } = useCart();
   const [method, setMethod] = useState<"cod" | "upi" | "razorpay">(pay.razorpay ? "razorpay" : pay.cod ? "cod" : "upi");
   const [busy, setBusy] = useState(false);
   const [gstOpen, setGstOpen] = useState(false);
   const [gstin, setGstin] = useState("");
   const [stateSel, setStateSel] = useState("");
   const gstValid = GSTIN_RE.test(gstin);
+  // Server quote: today's prices, stock, delivery and GST (incl. GST on delivery) — the exact amount the order will charge.
+  type SQ = { total: number; shipping: number; gst: number; inclusive: boolean; items: number };
+  const [sq, setSq] = useState<SQ | null>(null);
+  const [sqErr, setSqErr] = useState("");
+  const cartKey = JSON.stringify(lines.map((l) => [l.id, l.variant, l.qty]));
+  useEffect(() => {
+    if (!ready || !lines.length) return;
+    let off = false;
+    const t = setTimeout(async () => {
+      const r = await fetch(`/api/catalog/@${handle}/quote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: lines.map((l) => ({ id: l.id, variant: l.variant ?? undefined, qty: l.qty })), state: stateSel, method }) }).catch(() => null);
+      const j = r ? await r.json().catch(() => ({})) : {};
+      if (off) return;
+      if (r?.ok && j.quote) { setSq(j.quote); setSqErr(""); syncPrices(j.prices ?? []); } else { setSq(null); setSqErr(j.error || ""); }
+    }, 250);
+    return () => { off = true; clearTimeout(t); };
+  }, [cartKey, stateSel, method, ready, handle]); // eslint-disable-line react-hooks/exhaustive-deps
   const [err, setErr] = useState("");
   const [done, setDone] = useState<{ orderNo: string; subtotal: number } | null>(null);
   const [me, setMe] = useState<{ name: string; phone: string | null; email: string | null } | null | undefined>(undefined);
@@ -87,11 +103,11 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
   // Same rule as the server: free above the limit, else rate × quantity (or once per order if the seller chose that).
   const qtyAll = lines.reduce((n, l) => n + l.qty, 0);
   const rateFor = (m: "cod" | "upi" | "razorpay") => (rules.freeAbove > 0 && total >= rules.freeAbove ? 0 : (rules[m] || 0) * (rules.perItem === false ? 1 : Math.max(1, qtyAll)));
-  const shipping = rateFor(method);
+  const shipping = sq ? sq.shipping : rateFor(method);
   // GST is per product (falls back to the store rate). It only changes the total when prices exclude GST.
-  const gstExtra = rules.gstOn && !rules.inclusive ? Math.round(lines.reduce((n, l) => n + l.price * l.qty * (l.gst ?? rules.gstRate), 0)) / 100 : 0;
+  const gstExtra = sq ? (sq.inclusive ? 0 : sq.gst) : rules.gstOn && !rules.inclusive ? Math.round(lines.reduce((n, l) => n + l.price * l.qty * (l.gst ?? rules.gstRate), 0)) / 100 : 0;
   const anyDelivery = rules.cod > 0 || rules.upi > 0 || rules.razorpay > 0;
-  const grand = Math.round((total + gstExtra + shipping) * 100) / 100;
+  const grand = sq ? sq.total : Math.round((total + gstExtra + shipping) * 100) / 100;
   const short = rules.minOrder > 0 && total < rules.minOrder ? rules.minOrder - total : 0;
   const upiLink = pay.vpa ? `upi://pay?pa=${encodeURIComponent(pay.vpa)}&pn=${encodeURIComponent(storeName)}&am=${grand.toFixed(2)}&cu=INR` : null;
   const toFree = anyDelivery && rules.freeAbove > 0 && total < rules.freeAbove ? rules.freeAbove - total : 0;
@@ -143,15 +159,21 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
             <div className="flex items-center justify-between">{step(2, "Delivery address")}{me === null && <Link href={`${base}/login?next=${encodeURIComponent(`${base}/cart`)}`} className="text-xs font-bold text-muted underline underline-offset-4">Have an account? Log in</Link>}</div>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               <input key={`n${me?.name ?? ""}`} name="name" required defaultValue={me?.name ?? ""} placeholder="Full name" autoComplete="name" className={field} />
-              {me && !me.phone ? (
+              {/* On a store's own domain (base "") we never change the account's phone — just take it for this order. */}
+              {me && !me.phone && base !== "" ? (
                 <div className="sm:col-span-2">
                   <PhoneVerify title="Verify your mobile number" hint="For delivery updates. It's saved to your account." onDone={(p) => setMe({ ...me, phone: p })} />
                 </div>
               ) : (
                 <input key={`p${me?.phone ?? ""}`} name="phone" required defaultValue={me?.phone?.replace(/^\+?91/, "") ?? ""} inputMode="tel" maxLength={13} placeholder="Mobile number" autoComplete="tel" className={field} />
               )}
-              <select name="state" required value={stateSel} onChange={(e) => setStateSel(e.target.value)} disabled={gstValid} className={cn(field, "sm:col-span-2 disabled:opacity-70")}><option value="" disabled>State</option>{GST_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
-              <textarea name="address" required rows={2} placeholder="House no, street, area, city, PIN code" autoComplete="street-address" className={cn(field, "resize-none sm:col-span-2")} />
+              <input name="line1" required minLength={5} maxLength={250} placeholder="House / flat no., building, street, area" autoComplete="address-line1" className={cn(field, "sm:col-span-2")} />
+              <input name="landmark" maxLength={120} placeholder="Landmark (optional)" autoComplete="address-line2" className={cn(field, "sm:col-span-2")} />
+              <div className="grid grid-cols-[2fr_3fr] gap-2.5 sm:col-span-2">
+                <input name="pincode" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} title="6-digit PIN code" placeholder="PIN code" autoComplete="postal-code" onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 6); }} className={field} />
+                <input name="city" required minLength={2} maxLength={80} placeholder="City / town" autoComplete="address-level2" className={field} />
+              </div>
+              <select name="state" required value={stateSel} onChange={(e) => setStateSel(e.target.value)} className={cn(field, "sm:col-span-2")}><option value="" disabled>State</option>{GST_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
               <input key={`e${me?.email ?? ""}`} name="email" type="email" defaultValue={me?.email ?? ""} placeholder="Email for order updates (optional)" autoComplete="email" className={cn(field, "sm:col-span-2")} />
               {/* Optional business GST details — printed on the buyer's tax invoice. */}
               <div className="sm:col-span-2">
@@ -159,9 +181,9 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
                   <button type="button" onClick={() => setGstOpen(true)} className="text-[13px] font-semibold text-foreground/80 underline underline-offset-4">+ Add GST number for a business invoice (optional)</button>
                 ) : (
                   <div className="grid gap-2.5 rounded-xl border border-dashed border-border p-3 sm:grid-cols-2">
-                    <input name="gstin" value={gstin} onChange={(e) => { const v = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 15); setGstin(v); if (GSTIN_RE.test(v)) setStateSel(v.slice(0, 2)); }} placeholder="GSTIN e.g. 07ABCDE1234F1Z5" autoCapitalize="characters" className={cn(field, "font-mono tracking-wide")} />
+                    <input name="gstin" value={gstin} onChange={(e) => { const v = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 15); setGstin(v); if (GSTIN_RE.test(v) && !stateSel) setStateSel(v.slice(0, 2)); }} placeholder="GSTIN e.g. 07ABCDE1234F1Z5" autoCapitalize="characters" className={cn(field, "font-mono tracking-wide")} />
                     <input name="company" placeholder="Business name (as on GST)" autoComplete="organization" className={field} />
-                    <p className={cn("text-[11.5px] sm:col-span-2", gstin && !gstValid ? "text-[#ff3f6c]" : "text-muted")}>{gstin && !gstValid ? "GSTIN has 15 characters — check it, or clear it to skip." : gstValid ? `✓ Invoice will carry this GSTIN · state set to ${GST_STATES.find(([c]) => c === gstin.slice(0, 2))?.[1] ?? ""}` : "Your GSTIN and business name will be printed on the tax invoice."}</p>
+                    <p className={cn("text-[11.5px] sm:col-span-2", gstin && !gstValid ? "text-[#ff3f6c]" : "text-muted")}>{gstin && !gstValid ? "GSTIN has 15 characters — check it, or clear it to skip." : gstValid ? "✓ Your GSTIN and business name will be printed on the tax invoice." : "Your GSTIN and business name will be printed on the tax invoice."}</p>
                     <button type="button" onClick={() => { setGstin(""); setGstOpen(false); }} className="justify-self-start text-xs font-semibold text-muted underline sm:col-span-2">Remove GST details</button>
                   </div>
                 )}
@@ -206,7 +228,7 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
             {toFree > 0 && <p className="mt-3 rounded-xl bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-700">Add {rupee(toFree)} more for FREE delivery</p>}
             {short > 0 && <p className="mt-3 rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-xs font-semibold text-amber-700">Minimum order is {rupee(rules.minOrder)}.</p>}
             {rules.closed && <p className="mt-3 rounded-xl bg-red-500/10 px-3.5 py-2.5 text-sm text-red-500">{rules.closed}</p>}
-            {err && <p className="mt-3 rounded-xl bg-red-500/10 px-3.5 py-2.5 text-sm text-red-500">{err}</p>}
+            {(err || sqErr) && <p className="mt-3 rounded-xl bg-red-500/10 px-3.5 py-2.5 text-sm text-red-500">{err || sqErr}</p>}
             <button disabled={busy || blocked} className="mt-4 hidden w-full items-center justify-center gap-2 rounded-xl bg-foreground py-4 text-sm font-extrabold tracking-wide text-background uppercase disabled:opacity-60 lg:flex">{cta}</button>
             <p className="mt-3 text-center text-[11px] text-muted">By placing the order you agree to the store&apos;s terms.</p>
           </div>
@@ -215,7 +237,7 @@ export function Checkout({ handle, base, storeName, pay, rules }: { handle: stri
 
       {/* phone / tablet sticky pay bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-2.5 pb-[max(.7rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
-        {err && <p className="mb-2 line-clamp-2 text-xs font-semibold text-red-500">{err}</p>}
+        {(err || sqErr) && <p className="mb-2 line-clamp-2 text-xs font-semibold text-red-500">{err || sqErr}</p>}
         <div className="flex items-center gap-3">
           <div className="pl-1"><p className="text-[11px] text-muted">{count} item{count > 1 ? "s" : ""}{shipping ? " + shipping" : ""}</p><p className="font-display text-lg leading-tight font-extrabold">{rupee(grand)}</p></div>
           <button disabled={busy || blocked} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-foreground text-[13px] font-extrabold tracking-wide text-background uppercase disabled:opacity-60">{cta}</button>

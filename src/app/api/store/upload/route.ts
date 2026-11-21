@@ -5,6 +5,7 @@ import { catalogKey, imgUrl } from "@/lib/server/catalog";
 import { requireStoreApi } from "@/lib/server/store-auth";
 import { storageProblem } from "@/lib/server/storage";
 
+const MAX_BYTES = 4.4 * 1024 * 1024;
 const KINDS = { product: 1600, logo: 600, banner: 2000, qr: 900, category: 900 } as const;
 
 /** Upload an image for the store → resized WebP in S3 at catalog/<CODE>/<kind>/… */
@@ -17,7 +18,8 @@ export async function POST(req: Request) {
   const kind = String(form?.get("kind") ?? "product") as keyof typeof KINDS;
   if (!(kind in KINDS)) return Response.json({ error: "Bad upload type." }, { status: 422 });
   if (!(file instanceof File) || !file.type.startsWith("image/")) return Response.json({ error: "Choose an image." }, { status: 422 });
-  if (file.size > 12 * 1024 * 1024) return Response.json({ error: "Image must be under 12 MB." }, { status: 422 });
+  // Vercel rejects request bodies over 4.5 MB before they reach us; the browser downscales big photos first.
+  if (file.size > MAX_BYTES) return Response.json({ error: "Image too large — please use a photo under 4 MB." }, { status: 413 });
   try {
     const { data: out, info } = await sharp(Buffer.from(await file.arrayBuffer()))
       .rotate()

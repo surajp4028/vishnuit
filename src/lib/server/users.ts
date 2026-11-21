@@ -3,6 +3,7 @@ import { createHmac, randomBytes, randomInt, scryptSync, timingSafeEqual } from 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { exec, queryOne } from "./db";
+import { currentSite } from "./hosts";
 
 export type User = {
   id: number; uid: string; name: string; email: string | null; phone: string | null;
@@ -83,8 +84,13 @@ export async function findOrCreateUser(input: { name?: string; email?: string | 
 }
 
 /* ---------- session ---------- */
+/**
+ * Sessions are bound to the site they were made on ("main" = vishnuit.co.in, or a store's own domain).
+ * A cookie issued on a seller's domain is useless anywhere else — so a seller who controls their
+ * domain's DNS can't take a shopper's login and use it on vishnuit.co.in or another store.
+ */
 export async function startSession(u: Pick<User, "id" | "session_ver">) {
-  const payload = Buffer.from(JSON.stringify({ i: u.id, v: u.session_ver, x: Date.now() + MAX_AGE * 1000 })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ i: u.id, v: u.session_ver, x: Date.now() + MAX_AGE * 1000, h: await currentSite() })).toString("base64url");
   (await cookies()).set(COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: MAX_AGE,
   });
@@ -101,8 +107,10 @@ export async function getUser(): Promise<User | null> {
   const want = sign(payload);
   if (sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
   try {
-    const d = JSON.parse(Buffer.from(payload, "base64url").toString()) as { i: number; v: number; x: number };
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString()) as { i: number; v: number; x: number; h?: string };
     if (d.x < Date.now()) return null;
+    // Old cookies (no site) count as main-site sessions.
+    if ((d.h ?? "main") !== (await currentSite())) return null;
     const u = await queryOne<User>("SELECT * FROM users WHERE id=? AND status='active'", [d.i]);
     return u && u.session_ver === d.v ? u : null;
   } catch {

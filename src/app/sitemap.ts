@@ -3,7 +3,7 @@ import { getPosts, getProjects, getServices } from "@/lib/server/content";
 import { LANDING_PAGES } from "@/data/landing-pages";
 import { siteUrl } from "@/lib/site";
 import { query } from "@/lib/server/db";
-import { getCatalogConfig } from "@/lib/server/catalog";
+import { getCatalogConfig, isTestStore } from "@/lib/server/catalog";
 
 const SITE = siteUrl();
 export const revalidate = 3600;
@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [services, projects, posts] = await Promise.all([getServices(), getProjects(), getPosts()]);
   const now = new Date();
   // Live catalog stores (each also has its own /catalog/@handle/sitemap.xml with every product).
-  const stores = (await getCatalogConfig()).features.storefronts ? await query<{ handle: string }>("SELECT handle FROM stores WHERE status='active'").catch(() => []) : [];
+  const stores = (await getCatalogConfig()).features.storefronts ? (await query<{ handle: string }>("SELECT s.handle FROM stores s WHERE s.status='active' AND EXISTS (SELECT 1 FROM store_products p WHERE p.store_id=s.id AND p.status='active')").catch(() => [])).filter((st) => !isTestStore(st.handle)) : [];
   return [
     ...["", "/about", "/services", "/portfolio", "/pricing", "/blog", "/contact", "/online-store"].map((p) => ({ url: `${SITE}${p}`, lastModified: now, priority: p ? 0.8 : 1 })),
     ...LANDING_PAGES.map((l) => ({ url: `${SITE}/${l.slug}`, lastModified: now, priority: 0.9 })),

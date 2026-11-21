@@ -21,7 +21,12 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
   if (!o) notFound();
   const sr = await queryOne<Record<string, unknown>>("SELECT * FROM stores WHERE id=?", [o.store_id]);
   if (!sr) notFound();
-  const s = hydrateStore(sr);
+  const live = hydrateStore(sr);
+  // Seller details as they were when the order was placed (newer orders); older orders fall back to today's settings.
+  const snap = (o.seller ? (typeof o.seller === "string" ? JSON.parse(o.seller) : o.seller) : null) as { name: string; legalName: string; gstin: string; address: string; phone: string; email: string; hsn: string; rate: number; inclusive: boolean } | null;
+  const s = snap ? { ...live, name: snap.name || live.name, tax: { ...live.tax, gstin: snap.gstin, legalName: snap.legalName, hsn: snap.hsn, rate: snap.rate, inclusive: snap.inclusive }, contact: { ...live.contact, address: snap.address, phone: snap.phone, email: snap.email } } : live;
+  const invoiceNo = o.invoice_no ? String(o.invoice_no) : `${live.tax.invoicePrefix}-${orderNo}`;
+  const cancelled = o.status === "cancelled" || o.status === "returned";
   const items = (typeof o.items === "string" ? JSON.parse(o.items) : o.items) as Item[];
   // `subtotal` is what the shopper paid. New orders carry the exact breakdown taken at checkout;
   // older ones are treated as GST-inclusive so the invoice never shows more than was charged.
@@ -34,18 +39,18 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
   const showHsn = Boolean(s.tax.hsn) || items.some((i) => i.hsn);
   const showRate = rates.length > 0;
   const paid = o.pay_status === "paid" || o.pay_status === "verified";
-  const date = new Date(String(o.created_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  const date = new Date(String(o.created_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
   const logo = imgUrl(s.logo_key);
 
   const method = o.pay_method === "cod" ? "Cash on delivery" : o.pay_method === "razorpay" ? "Online (Razorpay)" : "UPI";
-  const stamp = paid ? "PAID" : o.pay_method === "cod" ? "CASH ON DELIVERY" : "PAYMENT PENDING";
+  const stamp = cancelled ? "CANCELLED" : paid ? "PAID" : o.pay_method === "cod" ? "CASH ON DELIVERY" : "PAYMENT PENDING";
   const ink = "text-[#0a0f1f]", mute = "text-[#5b6475]";
 
   // Same look as the Vishnu IT invoices: thin brand line, big INVOICE, boxed stamp, BILLED TO / PAYMENT, green total when paid.
   return (
     <main className="min-h-dvh bg-[#f3f5f9] px-3 py-6 text-[#0a0f1f] sm:px-4 sm:py-8 print:bg-white print:p-0">
       <style>{`@page{size:A4;margin:12mm} @media print{.no-print{display:none!important} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`}</style>
-      <div className="no-print mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3"><p className={`text-sm ${mute}`}>Invoice {s.tax.invoicePrefix}-{orderNo}</p><PrintButton /></div>
+      <div className="no-print mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3"><p className={`text-sm ${mute}`}>Invoice {invoiceNo}</p><PrintButton /></div>
       <article className="mx-auto max-w-3xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_-40px_rgba(10,15,31,.35)] print:max-w-none print:rounded-none print:shadow-none">
         {/* thin brand line: blue → purple → green (same on every invoice, web and PDF) */}
         <div className="h-1 bg-[linear-gradient(90deg,#3b82f6_0%,#8b5cf6_50%,#10b981_100%)]" />
@@ -61,9 +66,10 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
             </div>
             <div className="text-right">
               <p className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{rates.length ? "TAX INVOICE" : "INVOICE"}</p>
-              <p className="mt-2 text-sm">No. <b>{s.tax.invoicePrefix}-{orderNo}</b></p>
+              <p className="mt-2 text-sm">No. <b>{invoiceNo}</b></p>
               <p className="text-sm">Date <b>{date}</b></p>
-              <span className={`mt-3 inline-block rounded-full border-[1.5px] px-5 py-1 text-[11px] font-extrabold tracking-[3px] ${paid ? "border-[#057857] bg-[#057857]/[.06] text-[#057857]" : "border-[#d4a017] bg-[#d4a017]/[.06] text-[#a67c00]"}`}>{stamp}</span>
+              {rates.length > 0 && <p className="text-[13px] text-[#5b6475]">Reverse charge: <b className="text-[#0a0f1f]">No</b></p>}
+              <span className={`mt-3 inline-block rounded-full border-[1.5px] px-5 py-1 text-[11px] font-extrabold tracking-[3px] ${cancelled ? "border-red-600 bg-red-600/[.06] text-red-600" : paid ? "border-[#057857] bg-[#057857]/[.06] text-[#057857]" : "border-[#d4a017] bg-[#d4a017]/[.06] text-[#a67c00]"}`}>{stamp}</span>
             </div>
           </header>
 
@@ -112,15 +118,20 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
                 <div key={g.rate} className="flex justify-between"><span>IGST @ {g.rate}%</span><span>{money(g.gst)}</span></div>
               ) : (
                 <div key={g.rate} className="space-y-1.5">
-                  <div className="flex justify-between"><span>CGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
-                  <div className="flex justify-between"><span>SGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
+                  <div className="flex justify-between"><span>CGST @ {g.rate / 2}%</span><span>{money(g.cgst ?? Math.round(g.gst * 50) / 100)}</span></div>
+                  <div className="flex justify-between"><span>SGST @ {g.rate / 2}%</span><span>{money(g.sgst ?? Math.round((g.gst - Math.round(g.gst * 50) / 100) * 100) / 100)}</span></div>
                 </div>
               ))}
-              {tx.shipping > 0 && <div className="flex justify-between"><span>Shipping</span><span>{money(tx.shipping)}</span></div>}
+              {tx.shipping > 0 && <div className="flex justify-between"><span>Delivery{q?.shipTaxed && rates.length ? " (in taxable value)" : ""}</span><span>{money(tx.shipping)}</span></div>}
               <div className="mt-2 flex justify-between rounded-xl bg-[#0a0f1f] px-4 py-3 text-base font-bold text-white"><span>{paid ? "Amount paid" : "Total due"}</span><span>{money(tx.total)}</span></div>
             </div>
           </div>
 
+          {cancelled && (
+            <p className="mt-8 rounded-xl border border-red-600/30 bg-red-600/[.05] px-4 py-3 text-sm text-red-700">
+              This invoice is cancelled.{o.credit_note_no ? <> Credit note <b>{String(o.credit_note_no)}</b>{o.credit_note_at ? ` dated ${new Date(String(o.credit_note_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}` : ""} reverses the full value{rates.length ? " and tax" : ""} of this invoice.</> : null}
+            </p>
+          )}
           <footer className={`mt-12 border-t border-[#e6e9f0] pt-5 text-[12px] leading-relaxed ${mute}`}>
             <p>Thank you for shopping with {s.name}! This is a computer-generated invoice and does not require a signature.</p>
             <p className="mt-0.5">Sold by {s.tax.legalName || s.name}{s.contact.email ? `. Questions? ${s.contact.email}` : ""}{s.contact.phone ? `  |  ${s.contact.phone}` : ""}  ·  Store powered by Vishnu IT Solutions</p>

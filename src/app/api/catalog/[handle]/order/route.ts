@@ -5,13 +5,14 @@ import { query, transaction } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
 import { decryptSecret, effectivePlan, getCatalogConfig, getStoreByHandle, hydrateProduct, quoteOrder } from "@/lib/server/catalog";
 import { GST_STATES, stateName } from "@/lib/gst-states";
+import { priceCart } from "@/lib/server/cart-pricing";
+import { nextInvoiceNo } from "@/lib/server/invoice";
 import { createOrder } from "@/lib/server/razorpay";
 import { findOrCreateUser, getUser, normEmail, normPhone } from "@/lib/server/users";
 import { sendMail } from "@/lib/server/mail";
 import { siteUrl } from "@/lib/site";
 import { str } from "@/lib/server/store-auth";
 
-type Line = { id: number; variant?: string; qty: number };
 class StockError extends Error {}
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
@@ -27,14 +28,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   const name = str(b.name, 120);
   const phone = normPhone(b.phone);
   const email = b.email ? normEmail(b.email) : null;
-  const address = str(b.address, 600);
+  // Address comes as separate fields (line, landmark, city, PIN); older clients may still send one "address" box.
+  const pincode = String(b.pincode ?? "").replace(/\D/g, "");
+  const city = str(b.city, 80);
+  const line1 = str(b.line1, 250);
+  const landmark = str(b.landmark, 120);
+  const split = b.line1 != null || b.pincode != null || b.city != null;
+  const address = split ? `${line1}${landmark ? `, Near ${landmark}` : ""}\n${city} - ${pincode}` : str(b.address, 600);
   // Business buyers can add their GSTIN (optional) — it goes on their tax invoice, and its state decides CGST+SGST vs IGST.
   const gstinRaw = String(b.gstin ?? "").trim().toUpperCase();
   const gstin = gstinRaw || null;
   if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return Response.json({ error: "GSTIN looks wrong — it has 15 characters, e.g. 07ABCDE1234F1Z5. Leave it empty if you don't have one." }, { status: 422 });
   if (gstin && !GST_STATES.some(([c]) => c === gstin.slice(0, 2))) return Response.json({ error: "GSTIN state code isn't valid." }, { status: 422 });
   const company = gstin ? String(b.company ?? "").trim().slice(0, 160) || null : null;
-  const state = gstin ? gstin.slice(0, 2) : GST_STATES.some(([c]) => c === b.state) ? String(b.state) : null;
+  // Place of supply for goods = where delivery ends (Sec 10(1)(a) IGST Act) — the delivery state, not the GSTIN's state.
+  const state = GST_STATES.some(([c]) => c === b.state) ? String(b.state) : null;
   const method = b.pay_method === "upi" ? "upi" : b.pay_method === "cod" ? "cod" : b.pay_method === "razorpay" ? "razorpay" : null;
   const rzpSecret = decryptSecret(store.payments.razorpay.secret_enc);
   const rzpOn = store.payments.razorpay.on && !!store.payments.razorpay.key_id && !!rzpSecret && (await getCatalogConfig()).plans[effectivePlan(store)].razorpay;
@@ -42,45 +50,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
   if (name.length < 2) return Response.json({ error: "Enter your name." }, { status: 422 });
   if (!phone) return Response.json({ error: "Enter a valid 10-digit mobile number." }, { status: 422 });
   if (b.email && !email) return Response.json({ error: "Enter a valid email or leave it empty." }, { status: 422 });
+  if (split && line1.length < 5) return Response.json({ error: "Enter your house / flat no. and street." }, { status: 422 });
+  if (split && city.length < 2) return Response.json({ error: "Enter your city or town." }, { status: 422 });
+  if (split && !/^[1-9]\d{5}$/.test(pincode)) return Response.json({ error: "Enter a valid 6-digit PIN code." }, { status: 422 });
   if (address.length < 10) return Response.json({ error: "Enter your full delivery address." }, { status: 422 });
   if (!state) return Response.json({ error: "Choose your state." }, { status: 422 });
   if (!method || (method === "cod" && !store.payments.cod) || (method === "upi" && !store.payments.upi.on) || (method === "razorpay" && !rzpOn)) return Response.json({ error: "Choose an available payment method." }, { status: 422 });
   if (method === "upi" && !/^[A-Za-z0-9]{8,30}$/.test(utr)) return Response.json({ error: "Enter the UTR / transaction ID from your UPI app (12 digits usually)." }, { status: 422 });
 
-  // Merge duplicate lines (same product + option) so stock is checked on the real quantity.
-  const merged = new Map<string, Line>();
-  for (const l of Array.isArray(b.items) ? (b.items as Line[]) : []) {
-    const id = Number(l?.id);
-    const qty = Math.floor(Number(l?.qty));
-    if (!Number.isInteger(id) || !(qty >= 1)) continue;
-    const k = `${id}|${l.variant ?? ""}`;
-    const prev = merged.get(k);
-    merged.set(k, { id, variant: l.variant, qty: Math.min(99, (prev?.qty ?? 0) + qty) });
-  }
-  const lines = [...merged.values()].slice(0, 50);
-  if (!lines.length) return Response.json({ error: "Your cart is empty." }, { status: 422 });
-  const ids = [...new Set(lines.map((l) => Number(l.id)))];
-  const rows = (await query<Record<string, unknown>>(`SELECT * FROM store_products WHERE store_id=? AND status='active' AND id IN (${ids.map(() => "?").join(",")})`, [store.id, ...ids])).map(hydrateProduct);
-
-  const items: { id: number; name: string; variant: string | null; price: number; qty: number; gst_rate: number | null; hsn: string | null }[] = [];
-  for (const l of lines) {
-    const p = rows.find((r) => r.id === Number(l.id));
-    if (!p) return Response.json({ error: "Some items are no longer available. Please refresh your cart." }, { status: 409 });
-    const qty = l.qty;
-    let price = p.price;
-    let variant: string | null = null;
-    if (p.variants.length) {
-      const v = p.variants.find((x) => x.key === l.variant);
-      if (!v) return Response.json({ error: `Choose an option for ${p.name}.` }, { status: 422 });
-      if (v.stock != null && v.stock < qty) return Response.json({ error: `Only ${v.stock} left of ${p.name} (${v.key}).` }, { status: 409 });
-      variant = v.key;
-      price = v.price ?? p.price;
-    } else if (p.stock != null && p.stock < qty) {
-      return Response.json({ error: `Only ${p.stock} left of ${p.name}.` }, { status: 409 });
-    }
-    items.push({ id: p.id, name: p.name, variant, price, qty, gst_rate: p.gst_rate, hsn: p.hsn });
-  }
-  const itemsTotal = Math.round(items.reduce((n, i) => n + i.price * i.qty, 0) * 100) / 100;
+  // Prices, options and stock come from the database (same function as checkout's live quote).
+  const priced = await priceCart(store, b.items);
+  if ("error" in priced) return Response.json({ error: priced.error }, { status: priced.status });
+  const { items, itemsTotal } = priced;
+  const ids = [...new Set(items.map((i) => i.id))];
   const minOrder = store.storefront.shipping.minOrder;
   if (minOrder > 0 && itemsTotal < minOrder) return Response.json({ error: `Minimum order is ₹${minOrder.toLocaleString("en-IN")}. Add a little more to your bag.` }, { status: 422 });
   if (!(itemsTotal > 0)) return Response.json({ error: "Your cart is empty." }, { status: 422 });
@@ -125,9 +107,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
         await c.execute("UPDATE store_products SET stock=stock-? WHERE id=?", [take, p.id]);
       }
     }
+    // Consecutive invoice number for this store & financial year, plus a copy of the seller's details as they are today,
+    // so the invoice never changes if the seller later edits their GSTIN, address or prefix.
+    const invoiceNo = await nextInvoiceNo(`store:${store.id}`, store.tax.invoicePrefix, new Date(), c);
+    const seller = { name: store.name, legalName: store.tax.legalName, gstin: store.tax.gstin, address: store.contact.address ?? "", phone: store.contact.phone ?? "", email: store.contact.email ?? "", hsn: store.tax.hsn, rate: store.tax.rate, inclusive: store.tax.inclusive };
     await c.execute(
-      "INSERT INTO store_orders (store_id, order_no, customer_id, name, phone, email, address, state, buyer_gstin, buyer_company, items, items_total, shipping, tax, subtotal, pay_method, utr, rzp_order_id, pay_status, status_log) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      [store.id, orderNo, customer.id, name, phone, email, `${address}\n${stateName(state)}`, state, gstin, company, JSON.stringify(items), itemsTotal, quote.shipping, JSON.stringify(quote), subtotal, method, method === "upi" ? utr : null, rzp?.id ?? null, "pending", JSON.stringify([{ s: "new", at: new Date().toISOString() }])],
+      "INSERT INTO store_orders (store_id, order_no, invoice_no, customer_id, name, phone, email, address, state, buyer_gstin, buyer_company, seller, items, items_total, shipping, tax, subtotal, pay_method, utr, rzp_order_id, pay_status, status_log) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [store.id, orderNo, invoiceNo, customer.id, name, phone, email, `${address}\n${stateName(state)}`, state, gstin, company, JSON.stringify(seller), JSON.stringify(items), itemsTotal, quote.shipping, JSON.stringify(quote), subtotal, method, method === "upi" ? utr : null, rzp?.id ?? null, "pending", JSON.stringify([{ s: "new", at: new Date().toISOString() }])],
     );
   }).catch((e) => { if (e instanceof StockError) stockErr = e.message; else throw e; });
   if (stockErr) return Response.json({ error: stockErr }, { status: 409 });

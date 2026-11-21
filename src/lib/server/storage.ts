@@ -17,8 +17,18 @@ async function fillMissingSizes(storeId: number) {
   }));
 }
 
+/** Video uploads that never finished step 2: keep the file (as a real video) if it arrived, else drop the row. */
+async function settlePending(storeId: number) {
+  const rows = await query<{ id: number; s3_key: string }>("SELECT id, s3_key FROM store_media WHERE store_id=? AND kind='video-pending' AND created_at < NOW() - INTERVAL 1 HOUR LIMIT 20", [storeId]);
+  await Promise.all(rows.map(async (r) => {
+    const n = await objectSize(r.s3_key);
+    if (n == null) await exec("DELETE FROM store_media WHERE id=?", [r.id]);
+    else await exec("UPDATE store_media SET kind='video', bytes=? WHERE id=?", [n, r.id]);
+  }));
+}
+
 export async function storageUsage(store: Pick<Store, "id" | "plan" | "plan_expires_at">) {
-  await fillMissingSizes(store.id).catch(() => {});
+  await Promise.all([fillMissingSizes(store.id), settlePending(store.id)]).catch(() => {});
   const r = await queryOne<{ used: number | null; files: number }>("SELECT SUM(COALESCE(bytes,0)) used, COUNT(*) files FROM store_media WHERE store_id=?", [store.id]);
   const { plans } = await getCatalogConfig();
   const limit = storageLimit(store, plans);

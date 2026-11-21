@@ -281,6 +281,46 @@ function Profile({ user, onChange }: { user: U; onChange: (u: U) => void }) {
         <Note m={pwMsg} />
         <button disabled={busy === "pw"} className="w-full rounded-full bg-foreground py-3 text-sm font-bold text-background disabled:opacity-60">{busy === "pw" ? "Saving…" : "Save password"}</button>
       </form>
+
+      <DeleteAccount />
+    </div>
+  );
+}
+
+/** Right to erasure (DPDP Act 2023): typed confirmation, then the account is anonymised. Invoices are kept by law. */
+function DeleteAccount() {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function go(e: React.FormEvent) {
+    e.preventDefault();
+    if (text !== "DELETE") return;
+    setBusy(true); setErr("");
+    const r = await fetch("/api/account/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: text }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { window.location.href = "/?account=deleted"; return; }
+    setBusy(false); setErr(j.error || "Could not delete your account.");
+  }
+  return (
+    <div className="rounded-3xl border border-red-500/25 bg-card p-5 sm:p-6 md:col-span-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="font-display text-lg font-bold">Delete my account</h3>
+          <p className="mt-1 max-w-xl text-sm text-muted">Removes your name, email, mobile, photo and logins, and signs you out everywhere. Invoices and payment records are kept as the law requires, without your contact details. Open orders must be delivered or cancelled first. This can&apos;t be undone.</p>
+        </div>
+        {!open && <button type="button" onClick={() => setOpen(true)} className="shrink-0 rounded-full border border-red-500/40 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-500/5">Delete account</button>}
+      </div>
+      {open && (
+        <form onSubmit={go} className="mt-4 space-y-3">
+          <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted">Type <b className="font-mono text-foreground">DELETE</b> to confirm</span><input value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" autoCapitalize="characters" spellCheck={false} className={field} /></label>
+          {err && <p className="text-sm font-medium text-red-500">{err}</p>}
+          <div className="flex flex-wrap gap-2">
+            <button disabled={busy || text !== "DELETE"} className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">{busy ? "Deleting…" : "Permanently delete my account"}</button>
+            <button type="button" onClick={() => { setOpen(false); setText(""); setErr(""); }} className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold">Cancel</button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

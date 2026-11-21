@@ -1,3 +1,4 @@
+import { mainSiteOnly } from "@/lib/server/hosts";
 import { randomInt } from "node:crypto";
 import { headers } from "next/headers";
 import { exec, queryOne } from "@/lib/server/db";
@@ -11,6 +12,8 @@ import { consumeToken, createToken, getUser, normEmail, publicUser } from "@/lib
  *  { action: "send", email } · { action: "verify", email, code }
  */
 export async function POST(req: Request) {
+  const notHere = await mainSiteOnly(); // account changes only on vishnuit.co.in, never from a store's own domain
+  if (notHere) return notHere;
   const u = await getUser();
   if (!u) return Response.json({ error: "Please log in." }, { status: 401 });
   if (u.google_sub) return Response.json({ error: "This account is linked with Google, so its email can't be changed here." }, { status: 403 });

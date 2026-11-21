@@ -27,7 +27,8 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   const base = storeBase(handle, s.handle);
   const [cats, all] = await Promise.all([getStoreCategories(s.id), getStoreProducts(s.id, { activeOnly: true, q: sp.q })]);
   // One or several categories (?c=mens&c=women) — a product matches if it's in any of them (or their sub-categories).
-  const chosen = (Array.isArray(sp.c) ? sp.c : sp.c ? [sp.c] : []).map((slug) => cats.find((c) => c.slug === slug)).filter((c): c is NonNullable<typeof c> => !!c);
+  const asked = Array.isArray(sp.c) ? sp.c : sp.c ? [sp.c] : [];
+  const chosen = asked.map((slug) => cats.find((c) => c.slug === slug)).filter((c): c is NonNullable<typeof c> => !!c);
   const cat = chosen.length === 1 ? chosen[0] : undefined;
   const catIds = chosen.flatMap((c) => withChildren(cats, c.id));
   const parent = cat?.parent_id ? cats.find((c) => c.id === cat.parent_id) : undefined;
@@ -57,7 +58,7 @@ export default async function Shop({ params, searchParams }: { params: Promise<{
   const byOpt = new Map<string, string[]>();
   for (const x of f) { const [n, ...v] = x.split(":"); byOpt.set(n, [...(byOpt.get(n) ?? []), v.join(":")]); }
   let products = all.filter((p) =>
-    (!chosen.length || (p.category_id != null && catIds.includes(p.category_id))) &&
+    (!asked.length || (p.category_id != null && catIds.includes(p.category_id))) &&
     (!min || p.price >= min) && (!max || p.price <= max) &&
     (sp.stock !== "1" || inStock(p)) &&
     [...byOpt].every(([n, vs]) => vs.some((v) => hasValue(p, n, v))),

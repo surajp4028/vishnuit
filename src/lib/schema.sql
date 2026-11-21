@@ -285,3 +285,11 @@ CREATE TABLE IF NOT EXISTS store_media (
   UNIQUE KEY uniq_key (s3_key),
   INDEX (store_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Consecutive invoice numbers per series and Indian financial year (GST Rule 46(b)).
+CREATE TABLE IF NOT EXISTS invoice_seq (
+  scope VARCHAR(40) NOT NULL,
+  fy VARCHAR(7) NOT NULL,
+  n INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (scope, fy)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

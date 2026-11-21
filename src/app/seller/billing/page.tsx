@@ -18,7 +18,7 @@ export default async function SellerBilling({ searchParams }: { searchParams: Pr
   // On the store's own domain the page stays here, but paying happens on vishnuit.co.in's payment page
   // (Razorpay only accepts our registered website); it sends the seller back here with ?payment=success|failed.
   const host = ((await headers()).get("host") ?? "").toLowerCase();
-  const payUrl = host && !isMainHost(host) ? `/api/account/jump?to=main&next=${encodeURIComponent(`/catalog/payment/${store.code}`)}` : undefined;
+  const payUrl = host && !isMainHost(host) ? "/api/store/pay-link" : undefined;
   const eff = effectivePlan(store);
   const plan = cfg.plans[eff];
   const exp = store.plan_expires_at ? new Date(store.plan_expires_at) : null;

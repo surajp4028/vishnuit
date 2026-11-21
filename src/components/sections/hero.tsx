@@ -42,7 +42,7 @@ export function Hero(p: Props) {
 
       <div className="container-x">
         <div className="mx-auto max-w-4xl text-center">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="rise">
             <Link
               href="/contact"
               className="group mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card/70 py-1 pr-3 pl-1 text-xs shadow-sm backdrop-blur transition hover:border-accent/40 sm:text-sm"
@@ -51,36 +51,21 @@ export function Hero(p: Props) {
               <span className="truncate text-muted group-hover:text-foreground">{p.announcement || p.badge}</span>
               <ArrowRight className="size-3.5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5" />
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-7 font-display text-[2.6rem] leading-[1.02] font-extrabold tracking-[-0.035em] text-balance sm:text-6xl md:text-7xl lg:text-[5.4rem]"
-          >
+          <h1 className="rise mt-7 font-display text-[2.6rem] leading-[1.02] font-extrabold tracking-[-0.035em] text-balance sm:text-6xl md:text-7xl lg:text-[5.4rem]" style={{ animationDelay: "0.08s" }}>
             {p.title}
             <br />
             <span className="relative inline-block min-h-[1.1em]">
               <FlipWords words={p.words} className="!px-0 font-serif font-normal italic text-gradient" />
             </span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="mx-auto mt-6 max-w-2xl text-base text-pretty text-muted sm:text-lg md:text-xl"
-          >
+          <p className="rise mx-auto mt-6 max-w-2xl text-base text-pretty text-muted sm:text-lg md:text-xl" style={{ animationDelay: "0.18s" }}>
             {p.subtitle}
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          >
+          <div className="rise mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "0.26s" }}>
             <Link
               href="/contact"
               className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-foreground px-7 py-3.5 text-sm font-semibold text-background shadow-[0_10px_40px_-10px_rgba(29,78,216,0.55)] transition hover:scale-[1.02] sm:w-auto"
@@ -95,14 +80,9 @@ export function Hero(p: Props) {
             >
               <Play className="size-3.5 fill-current" /> {p.secondaryCta}
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          >
+          <div className="rise mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "0.34s" }}>
             <div className="flex -space-x-2.5">
               {p.avatars.slice(0, 5).map((a, i) => (
                 <Image key={a} src={a} alt="" width={36} height={36} className="size-9 rounded-full border-2 border-background object-cover" style={{ zIndex: 10 - i }} />
@@ -115,7 +95,7 @@ export function Hero(p: Props) {
               </div>
               <p className="text-muted">Trusted by 120+ brands across India & abroad</p>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Showcase */}

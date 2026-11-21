@@ -7,6 +7,9 @@ const s3 = () =>
   (client ??= new S3Client({
     region: process.env.AWS_REGION || "ap-south-1",
     credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID || "", secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "" },
+    // Fail fast instead of hanging a serverless function when S3 is slow/unreachable.
+    // (Options form of NodeHttpHandler — avoids depending on @smithy/node-http-handler directly.)
+    requestHandler: { connectionTimeout: 3000, requestTimeout: 15000 },
   }));
 
 export const s3Configured = () => Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET);
@@ -33,9 +36,10 @@ export async function putObject(key: string, body: Buffer | Uint8Array, contentT
  * skipping our server's request-size limit. The browser must send exactly `headers`.
  * Needs a CORS rule on the bucket that allows PUT from the site's origins.
  */
-export async function signedPutUrl(key: string, contentType: string, seconds = 600) {
+export async function signedPutUrl(key: string, contentType: string, size: number, seconds = 600) {
   const headers = { "Content-Type": contentType, "x-amz-server-side-encryption": "AES256" };
-  const url = await getSignedUrl(s3(), new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType, ServerSideEncryption: "AES256" }), { expiresIn: seconds, signableHeaders: new Set(["content-type", "x-amz-server-side-encryption"]) });
+  // The exact byte size is part of the signature, so S3 refuses any body that isn't the size we approved.
+  const url = await getSignedUrl(s3(), new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType, ContentLength: size, ServerSideEncryption: "AES256" }), { expiresIn: seconds, signableHeaders: new Set(["content-type", "content-length", "x-amz-server-side-encryption"]) });
   return { url, headers };
 }
 

@@ -62,7 +62,7 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
             : "border-white/40 bg-white/60 backdrop-blur-md dark:border-white/5 dark:bg-[#0b0f1a]/60",
         )}
       >
-        <Link href="/" aria-label={`${name} — home`} className="relative ml-1 h-11 w-[124px] shrink-0">
+        <Link href="/" aria-label={`${name} — home`} className="relative ml-1 h-11 w-[108px] shrink min-[380px]:w-[124px]">
           <Image src={logoLight} alt={name} fill priority sizes="124px" className="object-contain object-left dark:hidden" />
           <Image src={logoDark} alt={name} fill priority sizes="124px" className="hidden object-contain object-left dark:block" />
         </Link>
@@ -87,8 +87,9 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
           ))}
         </ul>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* On very narrow phones the theme switch lives in the side panel so ☰ never falls off-screen. */}
+          <span className="hidden min-[380px]:contents"><ThemeToggle /></span>
           <UserMenu />
           {payNow && (payNow.desktop || payNow.mobile) && <PayNowButton desktop={payNow.desktop} mobile={payNow.mobile} />}
           <Link
@@ -269,8 +270,9 @@ export function Navbar({ logoLight, logoDark, name, services, ctaHref = "/contac
                 </motion.div>
               </div>
 
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 26 }} className="relative border-t border-border bg-background/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
-                <Link href={ctaHref} onClick={() => setOpen(false)} className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background transition active:scale-[.98]">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 26 }} className="relative flex items-center gap-3 border-t border-border bg-background/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
+                <span className="min-[380px]:hidden"><ThemeToggle /></span>
+                <Link href={ctaHref} onClick={() => setOpen(false)} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-semibold text-background transition active:scale-[.98]">
                   Get a free quote <ArrowUpRight className="size-4" />
                 </Link>
               </motion.div>

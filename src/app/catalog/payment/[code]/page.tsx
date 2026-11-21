@@ -3,7 +3,8 @@ import Image from "next/image";
 import { ArrowLeft, Lock, ShieldCheck } from "lucide-react";
 import { queryOne } from "@/lib/server/db";
 import { effectivePlan, getCatalogConfig, getStoreForUser, imgUrl } from "@/lib/server/catalog";
-import { getUser } from "@/lib/server/users";
+import { getUser, type User } from "@/lib/server/users";
+import { readPayToken } from "@/lib/server/pay-token";
 import { storeOrigin } from "@/lib/server/domains";
 import { fmtBytes, storageUsage } from "@/lib/server/storage";
 import { fmtDate } from "@/lib/dates";
@@ -17,11 +18,14 @@ export const dynamic = "force-dynamic";
  * website, so the seller pays here (signed in by the one-time code from /api/account/jump), then goes
  * straight back to https://their-domain/seller/billing?payment=success|failed.
  */
-export default async function PlanPayment({ params }: { params: Promise<{ code: string }> }) {
-  const code = decodeURIComponent((await params).code).toUpperCase();
-  const u = await getUser();
+export default async function PlanPayment({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ s?: string }> }) {
+  const [{ code: raw }, { s: payToken }] = await Promise.all([params, searchParams]);
+  const code = decodeURIComponent(raw).toUpperCase();
+  // Who is paying: the signed pay link from the store's own domain (?s=…), or a normal login on vishnuit.co.in.
+  const pay = readPayToken(payToken);
+  const u = pay ? await queryOne<User>("SELECT * FROM users WHERE id=? AND status='active'", [pay.u]) : await getUser();
   const store = u ? await getStoreForUser(u.id) : null;
-  const owner = !!store && store.code === code;
+  const owner = !!store && store.code === code && (!pay || pay.s === store.id);
   // Where to send them back: their own domain if connected, else the normal seller panel.
   const target = owner ? store : await queryOne<{ domain: string | null; domain_ok: number }>("SELECT domain, domain_ok FROM stores WHERE code=?", [code]);
   const back = target?.domain && Number(target.domain_ok) ? `${storeOrigin(target.domain)}/seller/billing` : "/seller/billing";
@@ -31,7 +35,7 @@ export default async function PlanPayment({ params }: { params: Promise<{ code: 
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center justify-between">
           <a href={back} className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-foreground"><ArrowLeft className="size-4" /> Back to dashboard</a>
-          <span><Image src="/brand/vishnuit-vishnu-logo-black.png" alt="Vishnu IT Solutions" width={110} height={40} className="h-8 w-auto dark:hidden" /><Image src="/brand/vishnuit-vishnu-logo-white.png" alt="Vishnu IT Solutions" width={110} height={40} className="hidden h-8 w-auto dark:block" /></span>
+          <span>{/* file names: "-white" is the logo FOR white backgrounds, "-black" for dark ones */}<Image src="/brand/vishnuit-vishnu-logo-white.png" alt="Vishnu IT Solutions" width={110} height={40} className="h-9 w-auto dark:hidden" /><Image src="/brand/vishnuit-vishnu-logo-black.png" alt="Vishnu IT Solutions" width={110} height={40} className="hidden h-9 w-auto dark:block" /></span>
         </div>
         {children}
         <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><Lock className="size-3.5" /> Secure payment by Razorpay · GST invoice from Vishnu IT Solutions</p>
@@ -73,7 +77,7 @@ export default async function PlanPayment({ params }: { params: Promise<{ code: 
           <div><p className="text-[11px] font-bold tracking-[2px] text-white/45">STORAGE</p><p className="mt-1 font-semibold">{fmtBytes(usage.used)} / {fmtBytes(usage.limit)}</p></div>
         </div>
       </div>
-      <PlanPay plans={cfg.plans} current={eff} storePlan={store.plan} expiresAt={exp && exp.getTime() > Date.now() ? exp.toISOString() : null} returnUrl={back} />
+      <PlanPay plans={cfg.plans} current={eff} storePlan={store.plan} expiresAt={exp && exp.getTime() > Date.now() ? exp.toISOString() : null} returnUrl={back} payToken={pay ? payToken : undefined} />
     </>,
   );
 }

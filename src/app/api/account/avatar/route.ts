@@ -1,3 +1,4 @@
+import { mainSiteOnly } from "@/lib/server/hosts";
 import { exec } from "@/lib/server/db";
 import { payeePath, putObject, s3Configured } from "@/lib/server/s3";
 import { getUser } from "@/lib/server/users";
@@ -6,6 +7,8 @@ const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png",
 
 /** Upload a profile photo to S3: vishnu/payee/<UID>/avatar-<time>.<ext> */
 export async function POST(req: Request) {
+  const notHere = await mainSiteOnly(); // account changes only on vishnuit.co.in, never from a store's own domain
+  if (notHere) return notHere;
   const u = await getUser();
   if (!u) return Response.json({ error: "Please log in." }, { status: 401 });
   if (!s3Configured()) return Response.json({ error: "Uploads are not configured." }, { status: 503 });

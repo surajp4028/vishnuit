@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/safe-next";
 import { googleLoginOn } from "@/lib/server/content";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -15,7 +16,7 @@ export default async function StoreLogin({ params, searchParams }: { params: Pro
   const s = await getStoreByHandle(handle);
   if (!s) notFound();
   const base = storeBase(handle, s.handle);
-  if (await getUser()) redirect(next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : `${base}/account`);
+  if (await getUser()) redirect(safeNextPath(next, `${base}/account`));
   return (
     <StoreAuthShell store={s.name} base={base} logo={imgUrl(s.logo_key)} title="Welcome back" subtitle={`Log in to track your ${s.name} orders.`}>
       <Suspense><LoginForm base={base} google={await googleLoginOn()} /></Suspense>

@@ -6,11 +6,13 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 export type InvoiceData = {
   number: string; date: string; paid: boolean;
   seller: { name: string; address: string; phone: string; email: string; web: string };
-  buyer: { name: string; company?: string | null; email?: string | null; phone?: string | null };
+  buyer: { name: string; company?: string | null; email?: string | null; phone?: string | null; gstin?: string | null; address?: string | null };
+  /** Place of supply, e.g. "Delhi (07)". */
+  pos?: string | null;
   item: string; amount: number;
   sellerGstin?: string | null;
   /** GST breakdown (catalog plans). Without it the amount is shown as a single total. */
-  tax?: { qty: number; unit: number; base: number; discount: number; coupon: string | null; taxable: number; rate: number; gst: number } | null;
+  tax?: { qty: number; unit: number; unitLabel?: string; base: number; discount: number; coupon: string | null; taxable: number; rate: number; gst: number; sac?: string; igst?: boolean; cgst?: number; sgst?: number } | null;
   payment: { method?: string | null; paymentId?: string | null; orderId: string };
 };
 
@@ -57,7 +59,7 @@ export async function renderInvoicePdf(d: InvoiceData) {
   text(d.seller.web, L, 708, { color: C.mute, size: 9 });
   if (d.sellerGstin) text(`GSTIN: ${d.sellerGstin}`, L, 695, { color: C.mute, size: 9, font: bold });
 
-  text("INVOICE", R, 786, { font: bold, size: 24, right: true });
+  text(d.tax && d.sellerGstin ? "TAX INVOICE" : "INVOICE", R, 786, { font: bold, size: 24, right: true });
   text(`No. ${d.number}`, R, 766, { right: true, size: 10 });
   text(`Date ${d.date}`, R, 752, { right: true, size: 10 });
   const stamp = d.paid ? "PAID" : "PENDING";
@@ -69,7 +71,7 @@ export async function renderInvoicePdf(d: InvoiceData) {
 
   text("BILLED TO", L, 666, { font: bold, size: 8, color: C.mute });
   let y = 650;
-  for (const [t, b] of [[d.buyer.name, true], [d.buyer.company, false], [d.buyer.email, false], [d.buyer.phone, false]] as const) {
+  for (const [t, b] of [[d.buyer.company || d.buyer.name, true], [d.buyer.company ? d.buyer.name : null, false], [d.buyer.gstin ? `GSTIN: ${d.buyer.gstin}` : null, true], [d.buyer.address ? d.buyer.address.replace(/\s*\n\s*/g, ", ").slice(0, 70) : null, false], [d.buyer.email, false], [d.buyer.phone, false]] as const) {
     if (!t) continue;
     text(String(t), L, y, { font: b ? bold : reg, size: b ? 11 : 9.5, color: b ? C.ink : C.mute });
     y -= 14;
@@ -78,6 +80,8 @@ export async function renderInvoicePdf(d: InvoiceData) {
   text(`Method: ${(d.payment.method ?? "Razorpay").toUpperCase()}`, R, 650, { right: true, size: 9.5 });
   if (d.payment.paymentId) text(`Payment ID: ${d.payment.paymentId}`, R, 636, { right: true, size: 9.5 });
   text(`Order ID: ${d.payment.orderId}`, R, 622, { right: true, size: 9, color: C.mute });
+  if (d.pos) text(`Place of supply: ${d.pos}`, R, 606, { right: true, size: 9.5 });
+  if (d.tax && d.sellerGstin) text("Reverse charge: No", R, 592, { right: true, size: 9, color: C.mute });
 
   // table
   page.drawRectangle({ x: L, y: 560, width: R - L, height: 26, color: C.soft });
@@ -87,7 +91,7 @@ export async function renderInvoicePdf(d: InvoiceData) {
   const t = d.tax;
   const money = (n: number) => "INR " + new Intl.NumberFormat("en-IN", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(n);
   text(d.item.slice(0, 70), L + 12, 536, { font: bold, size: 10.5 });
-  if (t) text(`${money(t.unit)} x ${t.qty} year${t.qty > 1 ? "s" : ""}  |  SAC 998315`, L + 12, 522, { size: 8.5, color: C.mute });
+  if (t) text(`${money(t.unit)} x ${t.qty} ${t.unitLabel ?? `year${t.qty > 1 ? "s" : ""}`}  |  SAC ${t.sac ?? "998315"}`, L + 12, 522, { size: 8.5, color: C.mute });
   text(String(t?.qty ?? 1), 404, 536, { size: 10.5 });
   text(money(t ? t.base : d.amount), R - 12, 536, { font: bold, size: 10.5, right: true });
   page.drawLine({ start: { x: L, y: 508 }, end: { x: R, y: 508 }, thickness: 0.8, color: C.line });
@@ -98,7 +102,9 @@ export async function renderInvoicePdf(d: InvoiceData) {
     row("Subtotal", money(t.base));
     if (t.discount > 0) row(`Discount${t.coupon ? ` (${t.coupon})` : ""}`, `- ${money(t.discount)}`);
     row("Taxable value", money(t.taxable));
-    row(`GST @ ${t.rate}%`, money(t.gst));
+    if (t.igst) row(`IGST @ ${t.rate}%`, money(t.gst));
+    else if (t.cgst != null) { row(`CGST @ ${t.rate / 2}%`, money(t.cgst)); row(`SGST @ ${t.rate / 2}%`, money(t.sgst ?? t.gst - t.cgst)); }
+    else row(`GST @ ${t.rate}%`, money(t.gst));
   } else {
     row("Subtotal", money(d.amount));
   }

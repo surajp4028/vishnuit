@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/safe-next";
 import { queryOne } from "@/lib/server/db";
 import { consumeToken, startSession, type User } from "@/lib/server/users";
 
@@ -10,7 +11,7 @@ export async function GET(req: Request) {
   const host = (req.headers.get("host") ?? url.host).toLowerCase().split(":")[0];
   const origin = `${url.protocol}//${req.headers.get("host") ?? url.host}`;
   const nextRaw = url.searchParams.get("next") || "/";
-  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("\\") ? nextRaw : "/";
+  const next = safeNextPath(nextRaw, "/");
   const c = url.searchParams.get("c") ?? "";
   const t = c.length >= 20 ? await consumeToken("handoff", `${host}#${c.slice(0, 10)}`, c) : null;
   const u = t?.user_id ? await queryOne<User & { status?: string }>("SELECT * FROM users WHERE id=?", [t.user_id]) : null;

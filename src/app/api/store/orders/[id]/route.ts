@@ -1,3 +1,4 @@
+import { nextInvoiceNo } from "@/lib/server/invoice";
 import { after } from "next/server";
 import { exec, queryOne } from "@/lib/server/db";
 import { sendMail } from "@/lib/server/mail";
@@ -24,6 +25,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const log = parse<StatusLog>(o.status_log, []);
     log.push({ s: b.status, at: new Date().toISOString() });
     await exec("UPDATE store_orders SET status=?, status_log=? WHERE id=?", [b.status, JSON.stringify(log.slice(-30)), id]);
+    // Cancelled/returned after an invoice was issued → a credit note in its own consecutive series (Sec 34 CGST Act).
+    if (closed(b.status)) {
+      const cn = await queryOne<{ invoice_no: string | null; credit_note_no: string | null }>("SELECT invoice_no, credit_note_no FROM store_orders WHERE id=?", [id]);
+      if (cn?.invoice_no && !cn.credit_note_no) await exec("UPDATE store_orders SET credit_note_no=?, credit_note_at=NOW() WHERE id=? AND credit_note_no IS NULL", [await nextInvoiceNo(`cn:store:${a.store.id}`, "CN"), id]);
+    }
     // Tell the shopper about the steps that matter to them.
     const st = b.status;
     if (["confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"].includes(st)) {

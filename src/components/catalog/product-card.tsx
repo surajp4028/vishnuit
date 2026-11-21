@@ -20,7 +20,7 @@ export function ProductCard({ p, base, store }: { p: Product; base: string; stor
         {soldOut && <span className="absolute inset-x-3 bottom-3 rounded-lg bg-background/95 py-1.5 text-center text-[11px] font-bold tracking-wider">SOLD OUT</span>}
         {lowStock && <span className="absolute bottom-3 left-3 rounded-md bg-background/95 px-2 py-1 text-[10px] font-bold text-[#ff3f6c]">Only {left} left</span>}
         {p.video && <VideoBadge src={imgUrl(p.video)!} name={p.name} />}
-        {p.featured && !soldOut && <span className="absolute top-2.5 left-2.5 rounded-md bg-foreground/85 px-2 py-0.5 text-[10px] font-bold tracking-wider text-background">BESTSELLER</span>}
+        {p.featured && !soldOut && <span className="absolute top-2.5 left-2.5 rounded-md bg-foreground/85 px-2 py-0.5 text-[10px] font-bold tracking-wider text-background">FEATURED</span>}
       </div>
       <div className="mt-2.5 px-0.5">
         {store && <p className="truncate text-[11px] font-bold tracking-wide text-foreground/90 uppercase">{store}</p>}
@@ -37,7 +37,7 @@ export function ProductCard({ p, base, store }: { p: Product; base: string; stor
         })()}
         <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-[13.5px]">
           <b className="text-foreground">{rupee(p.price)}</b>
-          {p.compare_price ? <><span className="text-xs text-muted line-through">{rupee(p.compare_price)}</span><span className="text-xs font-semibold text-[#ff905a]">({off}% OFF)</span></> : null}
+          {p.compare_price ? <><span className="text-xs text-muted line-through">{rupee(p.compare_price)}</span><span className="text-xs font-semibold text-[#ff3f6c]">({off}% OFF)</span></> : null}
         </p>
       </div>
     </Link>

@@ -70,6 +70,8 @@ export type StoreFront = {
   closed: { on: boolean; message: string };
   pixels: { meta: string; ga: string };
   favicon: string | null;
+  /** Floating WhatsApp button: on/off and an optional number different from the store contact. */
+  wa: { on: boolean; number: string };
 };
 export const emptyFront = (): StoreFront => ({
   banners: [], interval: 5,
@@ -87,6 +89,7 @@ export const emptyFront = (): StoreFront => ({
   closed: { on: false, message: "" },
   pixels: { meta: "", ga: "" },
   favicon: null,
+  wa: { on: true, number: "" },
 });
 export type StorePayments = { cod: boolean; upi: { on: boolean; vpa: string; qr_key: string | null }; razorpay: { on: boolean; key_id: string; secret_enc: string | null } };
 export type Store = {
@@ -143,6 +146,7 @@ function hydrateFront(f: Partial<StoreFront>): StoreFront {
     closed: { on: Boolean(f.closed?.on), message: f.closed?.message ?? "" },
     pixels: { meta: f.pixels?.meta ?? "", ga: f.pixels?.ga ?? "" },
     favicon: typeof f.favicon === "string" ? f.favicon : null,
+    wa: { on: f.wa?.on !== false, number: typeof f.wa?.number === "string" ? f.wa.number : "" },
     about: { images: Array.isArray(f.about?.images) ? f.about.images.slice(0, 2) : [], heading: f.about?.heading ?? "", home: f.about?.home !== false },
   };
 }
@@ -261,9 +265,10 @@ export const storeBase = (raw: string, handle: string) => (onOwnDomain(raw) ? ""
 export const storeAbsUrl = (s: Pick<Store, "handle" | "domain" | "domain_ok">, path = "") => (s.domain && s.domain_ok ? `https://${s.domain}${path || "/"}` : `${siteUrl()}/catalog/@${s.handle}${path}`);
 
 /** Which store owns this host? (www. is treated the same as the bare domain.) */
-export async function handleForDomain(host: string) {
+export async function handleForDomain(host: string, verifiedOnly = false) {
   const d = host.toLowerCase().split(":")[0].replace(/^www\./, "");
-  const r = await queryOne<{ handle: string }>("SELECT handle FROM stores WHERE (domain=? OR domain=?) AND status='active'", [d, `www.${d}`]);
+  // verifiedOnly: for anything that sends a login there (Google relay) — the domain must be confirmed as pointing at us.
+  const r = await queryOne<{ handle: string }>(`SELECT handle FROM stores WHERE (domain=? OR domain=?) AND status='active'${verifiedOnly ? " AND domain_ok=1" : ""}`, [d, `www.${d}`]);
   return r?.handle ?? null;
 }
 
@@ -283,7 +288,11 @@ export async function getStoreProducts(storeId: number, opts: { activeOnly?: boo
   if (opts.activeOnly) where.push("status='active'");
   if (opts.categoryId) { where.push("category_id=?"); p.push(opts.categoryId); }
   if (opts.featured) where.push("featured=1");
-  if (opts.q?.trim()) { where.push("(name LIKE ? OR description LIKE ?)"); p.push(`%${opts.q.trim().slice(0, 60)}%`, `%${opts.q.trim().slice(0, 60)}%`); }
+  if (opts.q?.trim()) {
+    // Escape LIKE wildcards so "%" or "_" in a search is literal.
+    const like = `%${opts.q.trim().slice(0, 60).replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
+    where.push("(name LIKE ? OR description LIKE ?)"); p.push(like, like);
+  }
   const rows = await query<Record<string, unknown>>(`SELECT * FROM store_products WHERE ${where.join(" AND ")} ORDER BY featured DESC, id DESC LIMIT ${Math.min(opts.limit ?? 500, 1000)}`, p);
   return rows.map(hydrateProduct);
 }
@@ -341,10 +350,13 @@ export function storeForOwner(s: Store, plans: Record<PlanKey, PlanDef>) {
 export type OwnerStore = ReturnType<typeof storeForOwner>;
 
 export type PayMethod = "cod" | "upi" | "razorpay";
-export type TaxLine = { rate: number; taxable: number; gst: number };
+/** One GST rate in an order. ship = delivery charge included in this rate; cgst/sgst only for intra-state supplies. */
+export type TaxLine = { rate: number; taxable: number; gst: number; ship?: number; cgst?: number; sgst?: number };
 export type OrderQuote = {
   items: number; shipping: number; rate: number; inclusive: boolean; taxable: number; gst: number; igst: boolean; total: number;
   rates?: TaxLine[]; method?: PayMethod;
+  /** true when the delivery charge is included in taxable value (orders from 21 Nov 2026 on). */
+  shipTaxed?: boolean;
 };
 export const GST_RATES = [0, 3, 5, 12, 18, 28] as const;
 
@@ -359,29 +371,41 @@ export function shippingFor(items: number, qty: number, sh: StoreFront["shipping
 /**
  * What the shopper pays: items (+ GST when prices exclude it) + delivery for the chosen payment method.
  * GST is per item (product rate, else the store's rate); interstate (buyer state ≠ GSTIN state) → IGST, else CGST + SGST.
+ * Delivery charged by the seller is part of the value of the goods (Sec 15(2)(c) CGST Act), so it is taxed too:
+ * it's spread over the GST rates in the cart in proportion to their value and taxed at those rates.
+ * CGST is rounded to the paisa and SGST = GST − CGST, so the two halves always add up exactly.
  */
 export function quoteOrder(lines: { price: number; qty: number; gst_rate?: number | null }[], s: Pick<Store, "tax" | "storefront">, buyerState: string | null | undefined, method: PayMethod): OrderQuote {
   const r2 = (n: number) => Math.round(n * 100) / 100;
   const items = r2(lines.reduce((n, l) => n + l.price * l.qty, 0));
   const taxOn = Boolean(s.tax.gstin);
-  const groups = new Map<number, TaxLine>();
+  const shipping = shippingFor(items, lines.reduce((n, l) => n + l.qty, 0), s.storefront.shipping, method);
+  // Value per GST rate (gross, as entered by the seller).
+  const gross = new Map<number, number>();
   for (const l of lines) {
     const rate = taxOn ? (l.gst_rate ?? s.tax.rate) : 0;
-    const amt = l.price * l.qty;
-    const taxable = rate ? (s.tax.inclusive ? amt / (1 + rate / 100) : amt) : amt;
-    const g = groups.get(rate) ?? { rate, taxable: 0, gst: 0 };
-    g.taxable += taxable;
-    g.gst += rate ? (s.tax.inclusive ? amt - taxable : (amt * rate) / 100) : 0;
-    groups.set(rate, g);
+    gross.set(rate, (gross.get(rate) ?? 0) + l.price * l.qty);
   }
-  const rates = [...groups.values()].map((g) => ({ rate: g.rate, taxable: r2(g.taxable), gst: r2(g.gst) })).sort((a, b) => a.rate - b.rate);
+  const igst = Boolean(taxOn && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
+  const rates: TaxLine[] = [];
+  let shipLeft = shipping;
+  const groups = [...gross.entries()].sort((a, b) => a[0] - b[0]);
+  groups.forEach(([rate, amt], i) => {
+    // Shipping share for this rate (last group takes the remainder so the paise add up).
+    const ship = !taxOn || !items ? 0 : i === groups.length - 1 ? shipLeft : r2((shipping * amt) / items);
+    shipLeft = r2(shipLeft - ship);
+    const value = amt + ship;
+    const taxable = rate ? (s.tax.inclusive ? value / (1 + rate / 100) : value) : value;
+    const gst = rate ? (s.tax.inclusive ? value - taxable : (value * rate) / 100) : 0;
+    const t = r2(taxable), g = r2(gst);
+    const cgst = rate && !igst ? r2((t * rate) / 200) : 0;
+    rates.push({ rate, taxable: t, gst: g, ship: r2(ship), ...(rate && !igst ? { cgst, sgst: r2(g - cgst) } : {}) });
+  });
   const gst = r2(rates.reduce((n, g) => n + g.gst, 0));
   const taxable = r2(rates.reduce((n, g) => n + g.taxable, 0));
   const taxed = rates.filter((g) => g.rate > 0);
-  const shipping = shippingFor(items, lines.reduce((n, l) => n + l.qty, 0), s.storefront.shipping, method);
-  const igst = Boolean(taxed.length && buyerState && s.tax.gstin.slice(0, 2) !== buyerState);
-  const total = r2((s.tax.inclusive ? items : items + gst) + shipping);
-  return { items, shipping, rate: taxed.length === 1 ? taxed[0].rate : 0, inclusive: s.tax.inclusive, taxable, gst, igst, total, rates, method };
+  const total = r2((s.tax.inclusive || !taxOn ? items + shipping : items + shipping + gst));
+  return { items, shipping, rate: taxed.length === 1 ? taxed[0].rate : 0, inclusive: s.tax.inclusive, taxable, gst, igst, total, rates, method, shipTaxed: taxOn };
 }
 
 /** GST split for an order total under the store's tax settings. */
@@ -392,3 +416,6 @@ export function orderTax(total: number, tax: StoreTax) {
   const gst = tax.inclusive ? Math.round((total - taxable) * 100) / 100 : Math.round(((total * rate) / 100) * 100) / 100;
   return { rate, taxable, gst, total: tax.inclusive ? total : Math.round((total + gst) * 100) / 100 };
 }
+
+/** Internal QA / test stores (handle "qa-…" or "test-…") stay out of the sitemap and search results. */
+export const isTestStore = (handle: string) => /^(qa|test)[-_]/i.test(handle);

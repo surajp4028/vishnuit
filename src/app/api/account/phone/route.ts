@@ -1,3 +1,4 @@
+import { mainSiteOnly } from "@/lib/server/hosts";
 import { randomInt } from "node:crypto";
 import { headers } from "next/headers";
 import { exec, queryOne } from "@/lib/server/db";
@@ -13,6 +14,8 @@ import { consumeToken, createToken, getUser, normPhone, publicUser, type User } 
  * payments move into this account — the OTP proves the person owns that number.
  */
 export async function POST(req: Request) {
+  const notHere = await mainSiteOnly(); // account changes only on vishnuit.co.in, never from a store's own domain
+  if (notHere) return notHere;
   const u = await getUser();
   if (!u) return Response.json({ error: "Please log in." }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;

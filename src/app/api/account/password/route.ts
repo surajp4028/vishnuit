@@ -1,8 +1,11 @@
+import { mainSiteOnly } from "@/lib/server/hosts";
 import { exec, queryOne } from "@/lib/server/db";
 import { checkPassword, getUser, hashPassword, startSession, type User } from "@/lib/server/users";
 
 /** Change (or set, for OTP / Pay Now accounts) the password. */
 export async function POST(req: Request) {
+  const notHere = await mainSiteOnly(); // account changes only on vishnuit.co.in, never from a store's own domain
+  if (notHere) return notHere;
   const u = await getUser();
   if (!u) return Response.json({ error: "Please log in." }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as Record<string, string>;

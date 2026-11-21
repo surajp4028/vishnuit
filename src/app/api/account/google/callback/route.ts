@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/safe-next";
 import { cookies } from "next/headers";
 import { after } from "next/server";
 import sharp from "sharp";
@@ -71,8 +72,8 @@ export async function GET(req: Request) {
     const code = randomBytes(24).toString("base64url");
     // Target = domain + a slice of the code, so two shoppers logging in at once don't cancel each other.
     await createToken("handoff", `${saved.to.split(":")[0]}#${code.slice(0, 10)}`, owner.id, 2, code);
-    const q = new URLSearchParams({ c: code, next: saved.next });
+    const q = new URLSearchParams({ c: code, next: safeNextPath(saved.next, "/") });
     return Response.redirect(`${storeOrigin(saved.to)}/api/account/handoff?${q}`, 302);
   }
-  return Response.redirect(new URL(saved.next, url.origin), 302);
+  return Response.redirect(new URL(safeNextPath(saved.next, "/account"), url.origin), 302);
 }

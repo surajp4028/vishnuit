@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getStoreByHandle, getStoreCategories, getStoreProducts, imgUrl, storeBase, storeAbsUrl } from "@/lib/server/catalog";
+import { getStoreByHandle, isTestStore, getStoreCategories, getStoreProducts, imgUrl, storeBase, storeAbsUrl } from "@/lib/server/catalog";
 import { CartProvider } from "@/components/catalog/cart";
 import { StoreHeader, WhatsAppFloat } from "@/components/catalog/chrome";
 import { StoreFooter } from "@/components/catalog/footer";
@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
     openGraph: { type: "website", siteName: s.name, title: s.name, description, url: storeAbsUrl(s) },
     twitter: { card: "summary_large_image", title: s.name, description },
     alternates: { canonical: storeAbsUrl(s) },
+    ...(isTestStore(s.handle) ? { robots: { index: false, follow: false } } : {}),
   };
 }
 
@@ -58,7 +59,7 @@ export default async function StoreLayout({ children, params }: { children: Reac
         <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}><StoreHeader base={base} handle={s.handle} name={s.name} logo={logo} categories={cats} allPick={allPick} /></Suspense>
         <main>{children}</main>
         <StoreFooter store={s} base={base} logo={logo} categories={cats} />
-        <WhatsAppFloat number={s.contact.whatsapp ?? ""} store={s.name} />
+        <WhatsAppFloat number={s.storefront.wa.on ? s.storefront.wa.number || s.contact.whatsapp || "" : ""} store={s.name} />
       </div>
     </CartProvider>
   );

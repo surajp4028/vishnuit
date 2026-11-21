@@ -84,6 +84,9 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
   const soldOut = stock === 0 || allOut;
   const off = p.compare_price && p.compare_price > price ? Math.round((1 - price / p.compare_price) * 100) : 0;
 
+  // Picking a size with less stock than the chosen quantity pulls the quantity down.
+  useEffect(() => { if (stock != null && stock > 0) setQty((q) => Math.min(q, stock)); }, [stock]);
+
   // Price a value would give: the cheapest variant with that value that also fits what is already picked in the other options.
   function priceFor(oi: number, v: string): number | null {
     const hits = p.variants.filter((x) => {
@@ -111,7 +114,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
       return null;
     }
     setErr("");
-    return { id: p.id, slug: p.slug, name: p.name, image, variant: key, price, qty, gst: p.gst_rate ?? null };
+    return { id: p.id, slug: p.slug, name: p.name, image, variant: key, price, qty: stock != null && stock > 0 ? Math.min(qty, stock) : qty, gst: p.gst_rate ?? null, max: stock };
   }
   const addToBag = () => { const l = line(); if (l) { add(l); setAdded(true); setTimeout(() => setAdded(false), 1800); } };
   const buyNow = () => { const l = line(); if (l) { add(l); router.push(`${base}/cart`); } };
@@ -120,7 +123,7 @@ export function ProductBuy({ p, image, base, whatsapp, storeName }: { p: P; imag
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <p className="font-display text-[1.75rem] font-extrabold tracking-tight">{rupee(price)}</p>
-        {off > 0 && <><p className="text-base text-muted">MRP <span className="line-through">{rupee(p.compare_price!)}</span></p><p className="text-base font-bold text-[#ff905a]">({off}% OFF)</p></>}
+        {off > 0 && <><p className="text-base text-muted">MRP <span className="line-through">{rupee(p.compare_price!)}</span></p><p className="text-base font-bold text-[#ff3f6c]">({off}% OFF)</p></>}
       </div>
       <p className="mt-0.5 text-xs font-medium text-emerald-600">Inclusive of all taxes</p>
 

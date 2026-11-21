@@ -31,7 +31,7 @@ export async function GET(req: Request) {
   const before = url.searchParams.get("before");
   const where = ["store_id=?"]; const p: unknown[] = [a.store.id];
   if (kind && /^[a-z]+$/.test(kind)) { where.push("kind=?"); p.push(kind); }
-  else where.push("kind<>'video'"); // the photo picker never lists videos
+  else where.push("kind NOT LIKE 'video%'"); // the photo picker never lists videos (or half-finished uploads)
   if (before) { where.push("created_at<?"); p.push(before); }
   const rows = await query<Row>(`SELECT s3_key, kind, bytes, width, height, created_at FROM store_media WHERE ${where.join(" AND ")} ORDER BY created_at DESC, id DESC LIMIT 60`, p);
   const u = await storageUsage(a.store);
