@@ -37,59 +37,95 @@ export default async function OrderInvoice({ params, searchParams }: { params: P
   const date = new Date(String(o.created_at)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   const logo = imgUrl(s.logo_key);
 
+  const method = o.pay_method === "cod" ? "Cash on delivery" : o.pay_method === "razorpay" ? "Online (Razorpay)" : "UPI";
+  const stamp = paid ? "PAID" : o.pay_method === "cod" ? "CASH ON DELIVERY" : "PAYMENT PENDING";
+  const ink = "text-[#0a0f1f]", mute = "text-[#5b6475]";
+
+  // Same look as the Vishnu IT invoices: thin brand line, big INVOICE, boxed stamp, BILLED TO / PAYMENT, green total when paid.
   return (
     <main className="min-h-dvh bg-[#f3f5f9] px-3 py-6 text-[#0a0f1f] sm:px-4 sm:py-8 print:bg-white print:p-0">
-      <style>{`@page{size:A4;margin:14mm} @media print{.no-print{display:none!important}}`}</style>
-      <div className="no-print mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3"><p className="text-sm text-[#5b6475]">Order #{orderNo}</p><PrintButton /></div>
-      <article className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-[0_30px_80px_-40px_rgba(10,15,31,.35)] sm:p-10 print:max-w-none print:rounded-none print:p-0 print:shadow-none">
-        <header className="flex flex-wrap items-start justify-between gap-6 border-b border-[#e6e9f0] pb-6">
-          <div className="min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {logo ? <img src={logo} alt={s.name} className="h-12 w-auto max-w-[180px] object-contain" /> : <p className="font-display text-2xl font-extrabold">{s.name}</p>}
-            <p className="mt-3 text-sm font-semibold">{s.tax.legalName || s.name}</p>
-            <p className="mt-0.5 max-w-xs text-sm leading-relaxed whitespace-pre-line text-[#5b6475]">{s.contact.address}{s.contact.phone ? `\n${s.contact.phone}` : ""}{s.contact.email ? ` · ${s.contact.email}` : ""}</p>
-            {s.tax.gstin && <p className="mt-1 text-sm font-semibold">GSTIN: {s.tax.gstin}</p>}
+      <style>{`@page{size:A4;margin:12mm} @media print{.no-print{display:none!important} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`}</style>
+      <div className="no-print mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3"><p className={`text-sm ${mute}`}>Invoice {s.tax.invoicePrefix}-{orderNo}</p><PrintButton /></div>
+      <article className="mx-auto max-w-3xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_-40px_rgba(10,15,31,.35)] print:max-w-none print:rounded-none print:shadow-none">
+        {/* thin brand line: blue → purple → green (same on every invoice, web and PDF) */}
+        <div className="h-1 bg-[linear-gradient(90deg,#3b82f6_0%,#8b5cf6_50%,#10b981_100%)]" />
+        <div className="p-6 sm:p-11">
+          <header className="flex flex-wrap items-start justify-between gap-6 border-b border-[#e6e9f0] pb-6">
+            <div className="min-w-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {logo ? <img src={logo} alt={s.name} className="h-12 w-auto max-w-[180px] object-contain" /> : <p className="font-display text-2xl font-extrabold">{s.name}</p>}
+              <p className="mt-3 text-[15px] font-bold">{s.tax.legalName || s.name}</p>
+              {s.contact.address && <p className={`mt-0.5 max-w-xs text-[13px] leading-relaxed whitespace-pre-line ${mute}`}>{s.contact.address}</p>}
+              <p className={`text-[13px] ${mute}`}>{[s.contact.phone, s.contact.email].filter(Boolean).join("  |  ")}</p>
+              {s.tax.gstin && <p className={`mt-1 text-[13px] font-bold ${mute}`}>GSTIN: {s.tax.gstin}</p>}
+            </div>
+            <div className="text-right">
+              <p className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{rates.length ? "TAX INVOICE" : "INVOICE"}</p>
+              <p className="mt-2 text-sm">No. <b>{s.tax.invoicePrefix}-{orderNo}</b></p>
+              <p className="text-sm">Date <b>{date}</b></p>
+              <span className={`mt-3 inline-block rounded-full border-[1.5px] px-5 py-1 text-[11px] font-extrabold tracking-[3px] ${paid ? "border-[#057857] bg-[#057857]/[.06] text-[#057857]" : "border-[#d4a017] bg-[#d4a017]/[.06] text-[#a67c00]"}`}>{stamp}</span>
+            </div>
+          </header>
+
+          <section className="grid gap-6 py-6 sm:grid-cols-2">
+            <div>
+              <p className={`text-[11px] font-bold tracking-[2px] ${mute}`}>BILLED TO</p>
+              {o.buyer_company ? <p className="mt-2 text-[15px] font-bold">{String(o.buyer_company)}</p> : null}
+              <p className={o.buyer_company ? "text-sm font-medium" : "mt-2 text-[15px] font-bold"}>{String(o.name)}</p>
+              {o.buyer_gstin ? <p className="mt-0.5 text-[13px] font-bold">GSTIN: {String(o.buyer_gstin)}</p> : null}
+              <p className={`mt-0.5 text-[13px] leading-relaxed whitespace-pre-line ${mute}`}>{String(o.address ?? "")}</p>
+              <p className={`text-[13px] ${mute}`}>{[String(o.phone ?? ""), o.email ? String(o.email) : ""].filter(Boolean).join("  |  ")}</p>
+            </div>
+            <div className="sm:text-right">
+              <p className={`text-[11px] font-bold tracking-[2px] ${mute}`}>PAYMENT</p>
+              <p className="mt-2 text-sm">Method: <b className="uppercase">{method}</b></p>
+              {o.utr ? <p className="text-sm">Ref: <span className="font-mono">{String(o.utr)}</span></p> : null}
+              <p className={`text-[13px] ${mute}`}>Order ID: <span className="font-mono">{orderNo}</span></p>
+              {o.state ? <p className={`mt-2 text-[13px] ${mute}`}>Place of supply: <b className={ink}>{stateName(String(o.state))} ({String(o.state)})</b></p> : null}
+            </div>
+          </section>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse text-sm">
+              <thead>
+                <tr className={`bg-[#f5f7fb] text-left text-[11px] font-bold tracking-[1.5px] ${mute}`}>
+                  <th className="px-3 py-3">DESCRIPTION</th>{showHsn && <th className="px-3 py-3">HSN</th>}{showRate && <th className="px-3 py-3 text-center">GST</th>}<th className="px-3 py-3 text-center">QTY</th><th className="px-3 py-3 text-right">AMOUNT</th>
+                </tr>
+              </thead>
+              <tbody>{items.map((i, k) => (
+                <tr key={k} className="border-b border-[#e6e9f0] align-top">
+                  <td className="px-3 py-3.5"><p className="font-bold">{i.name}</p><p className={`text-[12px] ${mute}`}>{i.variant ? `${i.variant}  |  ` : ""}{money(i.price)} × {i.qty}</p></td>
+                  {showHsn && <td className="px-3 py-3.5">{i.hsn || s.tax.hsn || "—"}</td>}
+                  {showRate && <td className="px-3 py-3.5 text-center">{i.gst_rate ?? s.tax.rate}%</td>}
+                  <td className="px-3 py-3.5 text-center">{i.qty}</td>
+                  <td className="px-3 py-3.5 text-right font-bold">{money(i.price * i.qty)}</td>
+                </tr>
+              ))}</tbody>
+            </table>
           </div>
-          <div className="text-right">
-            <p className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{rates.length ? "TAX INVOICE" : "INVOICE"}</p>
-            <p className="mt-2 text-sm text-[#5b6475]">No. <b className="text-[#0a0f1f]">{s.tax.invoicePrefix}-{orderNo}</b></p>
-            <p className="text-sm text-[#5b6475]">Date <b className="text-[#0a0f1f]">{date}</b></p>
-            <span className={`mt-3 inline-block rounded-full border-2 px-4 py-1 text-xs font-extrabold tracking-[3px] ${paid ? "border-emerald-600 text-emerald-600" : "border-amber-500 text-amber-600"}`}>{paid ? "PAID" : o.pay_method === "cod" ? "CASH ON DELIVERY" : "PAYMENT PENDING"}</span>
-          </div>
-        </header>
-        <section className="grid gap-5 py-6 sm:grid-cols-2">
-          <div><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">BILL / SHIP TO{o.state ? ` · PLACE OF SUPPLY: ${stateName(String(o.state)).toUpperCase()} (${String(o.state)})` : ""}</p>{o.buyer_company ? <p className="mt-2 font-semibold">{String(o.buyer_company)}</p> : null}<p className={o.buyer_company ? "text-sm font-medium" : "mt-2 font-semibold"}>{String(o.name)}</p>{o.buyer_gstin ? <p className="mt-0.5 text-sm font-semibold">GSTIN: {String(o.buyer_gstin)}</p> : null}<p className="text-sm whitespace-pre-line text-[#5b6475]">{String(o.address ?? "")}{"\n"}{String(o.phone)}{o.email ? ` · ${o.email}` : ""}</p></div>
-          <div className="sm:text-right"><p className="text-xs font-bold tracking-[2px] text-[#5b6475]">PAYMENT</p><p className="mt-2 text-sm">{o.pay_method === "cod" ? "Cash on delivery" : o.pay_method === "razorpay" ? "Online (Razorpay)" : "UPI"}</p>{o.utr ? <p className="text-sm text-[#5b6475]">Ref: <span className="font-mono">{String(o.utr)}</span></p> : null}</div>
-        </section>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] border-collapse text-sm">
-            <thead><tr className="bg-[#f5f7fb] text-left text-[11px] tracking-[1.5px] text-[#5b6475]"><th className="rounded-l-xl px-3 py-3">ITEM</th>{showHsn && <th className="px-3 py-3">HSN</th>}{showRate && <th className="px-3 py-3 text-center">GST</th>}<th className="px-3 py-3 text-center">QTY</th><th className="px-3 py-3 text-right">RATE</th><th className="rounded-r-xl px-3 py-3 text-right">AMOUNT</th></tr></thead>
-            <tbody>{items.map((i, k) => (
-              <tr key={k} className="border-b border-[#e6e9f0]"><td className="px-3 py-3.5 font-medium">{i.name}{i.variant ? <span className="text-[#5b6475]"> · {i.variant}</span> : null}</td>{showHsn && <td className="px-3 py-3.5">{i.hsn || s.tax.hsn || "—"}</td>}{showRate && <td className="px-3 py-3.5 text-center">{i.gst_rate ?? s.tax.rate}%</td>}<td className="px-3 py-3.5 text-center">{i.qty}</td><td className="px-3 py-3.5 text-right">{money(i.price)}</td><td className="px-3 py-3.5 text-right font-semibold">{money(i.price * i.qty)}</td></tr>
-            ))}</tbody>
-          </table>
-        </div>
-        <div className="mt-5 flex justify-end">
-          <div className="w-full max-w-xs space-y-1.5 text-sm">
-            {rates.length ? (<>
-              <div className="flex justify-between text-[#5b6475]"><span>Taxable value</span><span>{money(tx.taxable)}</span></div>
+
+          <div className="mt-5 flex justify-end">
+            <div className={`w-full max-w-[300px] space-y-1.5 text-sm ${mute}`}>
+              <div className="flex justify-between"><span>Subtotal</span><span>{money(q ? q.items : subtotal)}</span></div>
+              {rates.length > 0 && <div className="flex justify-between"><span>Taxable value</span><span>{money(tx.taxable)}</span></div>}
               {rates.map((g) => tx.igst ? (
-                <div key={g.rate} className="flex justify-between text-[#5b6475]"><span>IGST @ {g.rate}%</span><span>{money(g.gst)}</span></div>
+                <div key={g.rate} className="flex justify-between"><span>IGST @ {g.rate}%</span><span>{money(g.gst)}</span></div>
               ) : (
                 <div key={g.rate} className="space-y-1.5">
-                  <div className="flex justify-between text-[#5b6475]"><span>CGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
-                  <div className="flex justify-between text-[#5b6475]"><span>SGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
+                  <div className="flex justify-between"><span>CGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
+                  <div className="flex justify-between"><span>SGST @ {g.rate / 2}%</span><span>{money(g.gst / 2)}</span></div>
                 </div>
               ))}
-            </>) : <div className="flex justify-between text-[#5b6475]"><span>Items</span><span>{money(q ? q.items : subtotal)}</span></div>}
-            {tx.shipping > 0 && <div className="flex justify-between text-[#5b6475]"><span>Shipping</span><span>{money(tx.shipping)}</span></div>}
-            <div className="mt-2 flex justify-between rounded-xl bg-[#0a0f1f] px-4 py-3 text-base font-bold text-white"><span>{paid ? "Total paid" : "Total"}</span><span>{money(tx.total)}</span></div>
+              {tx.shipping > 0 && <div className="flex justify-between"><span>Shipping</span><span>{money(tx.shipping)}</span></div>}
+              <div className="mt-2 flex justify-between rounded-xl bg-[#0a0f1f] px-4 py-3 text-base font-bold text-white"><span>{paid ? "Amount paid" : "Total due"}</span><span>{money(tx.total)}</span></div>
+            </div>
           </div>
+
+          <footer className={`mt-12 border-t border-[#e6e9f0] pt-5 text-[12px] leading-relaxed ${mute}`}>
+            <p>Thank you for shopping with {s.name}! This is a computer-generated invoice and does not require a signature.</p>
+            <p className="mt-0.5">Sold by {s.tax.legalName || s.name}{s.contact.email ? `. Questions? ${s.contact.email}` : ""}{s.contact.phone ? `  |  ${s.contact.phone}` : ""}  ·  Store powered by Vishnu IT Solutions</p>
+          </footer>
         </div>
-        <footer className="mt-10 border-t border-[#e6e9f0] pt-5 text-xs leading-relaxed text-[#5b6475]">
-          <p>Sold by {s.tax.legalName || s.name}. This is a computer-generated invoice and does not require a signature.</p>
-          <p className="mt-1">Store powered by Vishnu IT Solutions · vishnuit.co.in</p>
-        </footer>
       </article>
     </main>
   );

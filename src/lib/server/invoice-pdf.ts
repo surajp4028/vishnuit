@@ -32,10 +32,19 @@ export async function renderInvoicePdf(d: InvoiceData) {
     page.drawText(clean, { x: o.right ? x - font.widthOfTextAtSize(clean, size) : x, y, size, font, color: o.color ?? C.ink });
   };
 
-  // top bar
-  page.drawRectangle({ x: 0, y: 835, width: W * 0.6, height: 7, color: C.ink });
-  page.drawRectangle({ x: W * 0.6, y: 835, width: W * 0.25, height: 7, color: C.blue });
-  page.drawRectangle({ x: W * 0.85, y: 835, width: W * 0.15, height: 7, color: C.gold });
+  // Thin brand line across the top: blue → purple → green (pdf-lib has no gradients, so it's drawn in thin slices).
+  {
+    // Same line as the web invoices: #3b82f6 → #8b5cf6 (50%) → #10b981.
+    const stops: [number, [number, number, number]][] = [[0, [0.231, 0.51, 0.965]], [0.5, [0.545, 0.361, 0.965]], [1, [0.063, 0.725, 0.506]]];
+    const N = 160, sw = W / N;
+    for (let i = 0; i < N; i++) {
+      const p = i / (N - 1);
+      const k = stops.findIndex(([at]) => at >= p);
+      const [a0, c0] = stops[Math.max(0, k - 1)], [a1, c1] = stops[Math.max(0, k)];
+      const f = a1 === a0 ? 0 : (p - a0) / (a1 - a0);
+      page.drawRectangle({ x: i * sw, y: 837.8, width: sw + 0.4, height: 4.1, color: rgb(c0[0] + (c1[0] - c0[0]) * f, c0[1] + (c1[1] - c0[1]) * f, c0[2] + (c1[2] - c0[2]) * f) });
+    }
+  }
 
   try {
     const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/vishnuit-vishnu-logo-white.png")));
@@ -53,7 +62,7 @@ export async function renderInvoicePdf(d: InvoiceData) {
   text(`Date ${d.date}`, R, 752, { right: true, size: 10 });
   const stamp = d.paid ? "PAID" : "PENDING";
   const sw = bold.widthOfTextAtSize(stamp, 9) + 26;
-  page.drawRectangle({ x: R - sw, y: 722, width: sw, height: 20, borderColor: d.paid ? C.green : C.gold, borderWidth: 1.4, color: rgb(1, 1, 1) });
+  page.drawRectangle({ x: R - sw, y: 722, width: sw, height: 20, borderColor: d.paid ? C.green : C.gold, borderWidth: 1.4, color: rgb(1, 1, 1), opacity: 1 });
   text(stamp, R - 13, 728.5, { font: bold, size: 9, color: d.paid ? C.green : C.gold, right: true });
 
   page.drawLine({ start: { x: L, y: 690 }, end: { x: R, y: 690 }, thickness: 0.8, color: C.line });
@@ -94,8 +103,8 @@ export async function renderInvoicePdf(d: InvoiceData) {
     row("Subtotal", money(d.amount));
   }
   const boxY = ty - 26;
-  page.drawRectangle({ x: R - 190, y: boxY, width: 190, height: 32, color: d.paid ? C.green : C.ink });
-  text(d.paid ? "Total paid" : "Total due", R - 176, boxY + 11, { font: bold, size: 11.5, color: rgb(1, 1, 1) });
+  page.drawRectangle({ x: R - 190, y: boxY, width: 190, height: 32, color: C.ink });
+  text(d.paid ? "Amount paid" : "Total due", R - 176, boxY + 11, { font: bold, size: 11.5, color: rgb(1, 1, 1) });
   text(money(d.amount), R - 14, boxY + 11, { font: bold, size: 11.5, color: rgb(1, 1, 1), right: true });
 
   page.drawLine({ start: { x: L, y: 92 }, end: { x: R, y: 92 }, thickness: 0.8, color: C.line });

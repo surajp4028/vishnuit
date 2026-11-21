@@ -27,12 +27,14 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
 
   return (
     <main className="min-h-dvh bg-[#f3f5f9] px-4 py-8 text-[#0a0f1f] print:bg-white print:p-0">
-      <style>{`@page{size:A4;margin:14mm} @media print{.no-print{display:none!important}}`}</style>
+      <style>{`@page{size:A4;margin:14mm} @media print{.no-print{display:none!important} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`}</style>
       <div className="no-print mx-auto mb-5 flex max-w-3xl items-center justify-between gap-3">
         <p className="text-sm text-[#5b6475]">Invoice {no}</p>
         <PrintButton />
       </div>
-      <article className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-[0_30px_80px_-40px_rgba(10,15,31,.35)] md:p-12 print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+      <article className="mx-auto max-w-3xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_-40px_rgba(10,15,31,.35)] print:max-w-none print:rounded-none print:shadow-none">
+        <div className="h-1 bg-[linear-gradient(90deg,#3b82f6_0%,#8b5cf6_50%,#10b981_100%)]" />
+        <div className="p-8 md:p-12 print:p-0 print:pt-6">
         <header className="flex flex-wrap items-start justify-between gap-6 border-b border-[#e6e9f0] pb-8">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,6 +93,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
           <p>Thank you for your business! This is a computer-generated invoice and does not require a signature.</p>
           <p className="mt-1">Payments are processed securely by Razorpay. For any questions, contact {c.email} or {c.phone}.</p>
         </footer>
+        </div>
       </article>
     </main>
   );
