@@ -18,7 +18,8 @@ export type MyOrder = { order_no: string; store: string; handle: string; subtota
 
 const d = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-export function AccountDashboard({ user: initial, memberSince, payments, initialTab, showStoreCard, showStoreTab, store, orders }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab; showStoreCard: boolean; showStoreTab: boolean; store: { name: string; handle: string } | null; orders: MyOrder[] }) {
+export function AccountDashboard({ user: initial, memberSince, payments, initialTab, showStoreCard, showStoreTab, store, orders }: { user: U; memberSince: string; payments: AccountPayment[]; initialTab: Tab; showStoreCard: boolean; showStoreTab: boolean; store: { name: string; handle: string; domain?: string | null } | null; orders: MyOrder[] }) {
+  const sellerHref = store?.domain ? "/api/account/jump?to=store&next=/seller" : "/seller";
   const [tab, setTab] = useState<Tab>(initialTab);
   const [user, setUser] = useState(initial);
   const paid = payments.filter((p) => p.status === "paid");
@@ -50,7 +51,7 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
               <Icon className="size-4" /> {label}
             </button>
           ))}
-          {showStoreTab && <Link href={store ? "/seller" : "/account/store"} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d4a017]/50 bg-[#d4a017]/10 px-4 py-2.5 text-sm font-semibold text-[#8a6a0c] dark:text-[#f5c542]">
+          {showStoreTab && <Link href={store ? sellerHref : "/account/store"} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d4a017]/50 bg-[#d4a017]/10 px-4 py-2.5 text-sm font-semibold text-[#8a6a0c] dark:text-[#f5c542]">
             <Store className="size-4" /> {store ? "My Store" : "Create Store"} <ArrowRight className="size-3.5" />
           </Link>}
         </div>
@@ -67,9 +68,15 @@ export function AccountDashboard({ user: initial, memberSince, payments, initial
                   <div>
                     <span className="inline-flex items-center gap-2 rounded-full bg-[#f5c542]/15 px-3 py-1 text-xs font-bold tracking-widest text-[#f5c542]"><Store className="size-3.5" /> {store ? "YOUR STORE" : "NEW"}</span>
                     <h2 className="mt-3 font-display text-2xl font-extrabold">{store ? store.name : "Launch your own online store"}</h2>
-                    <p className="mt-1.5 max-w-lg text-sm text-white/70">{store ? `vishnuit.co.in/catalog/@${store.handle}` : "List your products, get your own store link at vishnuit.co.in/catalog/@yourname and take orders on WhatsApp, UPI or COD — free for up to 15 products."}</p>
+                    {store ? (
+                      <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+                        {store.domain && <a href={`https://${store.domain}`} target="_blank" rel="noopener" className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 font-semibold hover:bg-white/20"><span className="text-emerald-300">🔒</span><span className="truncate">{store.domain}</span><span className="rounded-full bg-emerald-400/20 px-1.5 text-[10px] font-bold text-emerald-200">your domain</span></a>}
+                        <a href={`/catalog/@${store.handle}`} target="_blank" rel="noopener" className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-semibold hover:bg-white/15"><span className="truncate">vishnuit.co.in/catalog/@{store.handle}</span></a>
+                        {!store.domain && <a href="/seller/domain" className="inline-flex items-center rounded-full px-2 py-1.5 font-semibold text-[#f5c542] hover:underline">+ Connect your domain</a>}
+                      </div>
+                    ) : <p className="mt-1.5 max-w-lg text-sm text-white/70">List your products, get your own store link at vishnuit.co.in/catalog/@yourname and take orders on WhatsApp, UPI or COD — free for up to 15 products.</p>}
                   </div>
-                  <a href={store ? "/seller" : "/account/store"} className="shrink-0 rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-black">{store ? "Manage store" : "Create my store"}</a>
+                  <a href={store ? sellerHref : "/account/store"} className="shrink-0 rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-black">{store ? (store.domain ? `Manage on ${store.domain}` : "Manage store") : "Create my store"}</a>
                 </div>
               </div>}
               {paid[0] && (

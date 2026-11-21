@@ -42,6 +42,9 @@ export function DomainManager({ handle, initial, paid, endpoint = "/api/store/do
     if (r.ok) setInfo(r.data);
   }, [endpoint]);
   useEffect(() => { if (initial) check(); }, [initial, check]);
+  // Already browsing the dashboard on the store's own domain? Then there's nothing to jump to.
+  const [here, setHere] = useState("");
+  useEffect(() => setHere(window.location.hostname.replace(/^www\./, "")), []);
 
   async function connect() {
     setErr(""); setBusy("save");
@@ -98,6 +101,17 @@ export function DomainManager({ handle, initial, paid, endpoint = "/api/store/do
               </div>
               {info.status && <p className="mt-4 text-sm text-muted">{info.status.message}</p>}
             </div>
+
+            {info.status?.state === "live" && !compact && here !== info.domain?.replace(/^www\./, "") && (
+              <div className={cn(card, "flex flex-col gap-4 bg-gradient-to-br from-emerald-500/[.07] to-transparent p-5 sm:flex-row sm:items-center sm:p-6")}>
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-500/15 text-emerald-600"><Lock className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-lg font-bold">Use your dashboard on {info.domain}</p>
+                  <p className="text-sm text-muted">Manage everything at <b className="text-foreground">{info.domain}/seller</b> — you&apos;ll be signed in automatically. Plan payments still open on vishnuit.co.in.</p>
+                </div>
+                <a href="/api/account/jump?to=store&next=/seller" className={cn(btnDark, "shrink-0 px-6")}>Log in on {info.domain} →</a>
+              </div>
+            )}
 
             {info.status?.state !== "live" && info.records && (
               <div className={cn(card, "p-5 sm:p-6")}>

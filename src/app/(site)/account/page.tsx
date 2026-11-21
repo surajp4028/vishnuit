@@ -26,7 +26,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       payments={rows.map((r) => ({ ...r, amount: Number(r.amount), created_at: String(r.created_at), paid_at: r.paid_at ? String(r.paid_at) : null }))}
       showStoreCard={cfg.features.accountCard && (!!store || cfg.features.newStores)}
       showStoreTab={cfg.features.accountTab && (!!store || cfg.features.newStores)}
-      store={store ? { name: store.name, handle: store.handle } : null}
+      store={store ? { name: store.name, handle: store.handle, domain: store.domain && store.domain_ok ? store.domain : null } : null}
       orders={myOrders.map((o) => ({
         order_no: String(o.order_no), store: String(o.store_name), handle: String(o.handle), subtotal: Number(o.subtotal), status: String(o.status),
         pay_method: String(o.pay_method), pay_status: String(o.pay_status), created_at: String(o.created_at),

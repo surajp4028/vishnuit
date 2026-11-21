@@ -1,5 +1,8 @@
 import { FileText } from "lucide-react";
 import { query } from "@/lib/server/db";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { isMainHost } from "@/lib/server/domains";
 import { effectivePlan, GRACE_DAYS } from "@/lib/server/catalog";
 import { requireSeller } from "@/lib/server/seller";
 import { UpgradeButton } from "@/components/seller/upgrade-button";
@@ -11,6 +14,9 @@ export const metadata = { title: "Plan & billing" };
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 
 export default async function SellerBilling() {
+  // Plan payments go through Razorpay, which only accepts our registered website — so billing always runs on vishnuit.co.in.
+  const host = ((await headers()).get("host") ?? "").toLowerCase();
+  if (host && !isMainHost(host)) redirect("/api/account/jump?to=main&next=/seller/billing");
   const { user, store, cfg } = await requireSeller();
   const eff = effectivePlan(store);
   const plan = cfg.plans[eff];
