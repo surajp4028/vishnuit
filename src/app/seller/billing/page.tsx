@@ -1,7 +1,6 @@
 import { FileText } from "lucide-react";
 import { query } from "@/lib/server/db";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { isMainHost } from "@/lib/server/domains";
 import { effectivePlan, GRACE_DAYS } from "@/lib/server/catalog";
 import { requireSeller } from "@/lib/server/seller";
@@ -13,11 +12,13 @@ import { StorageBar } from "@/components/store/ui";
 export const metadata = { title: "Plan & billing" };
 const inr = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 
-export default async function SellerBilling() {
-  // Plan payments go through Razorpay, which only accepts our registered website — so billing always runs on vishnuit.co.in.
-  const host = ((await headers()).get("host") ?? "").toLowerCase();
-  if (host && !isMainHost(host)) redirect("/api/account/jump?to=main&next=/seller/billing");
+export default async function SellerBilling({ searchParams }: { searchParams: Promise<{ payment?: string }> }) {
   const { user, store, cfg } = await requireSeller();
+  const { payment } = await searchParams;
+  // On the store's own domain the page stays here, but paying happens on vishnuit.co.in's payment page
+  // (Razorpay only accepts our registered website); it sends the seller back here with ?payment=success|failed.
+  const host = ((await headers()).get("host") ?? "").toLowerCase();
+  const payUrl = host && !isMainHost(host) ? `/api/account/jump?to=main&next=${encodeURIComponent(`/catalog/payment/${store.code}`)}` : undefined;
   const eff = effectivePlan(store);
   const plan = cfg.plans[eff];
   const exp = store.plan_expires_at ? new Date(store.plan_expires_at) : null;
@@ -29,6 +30,8 @@ export default async function SellerBilling() {
   return (
     <div className="space-y-5">
       <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">Plan & billing</h1>
+      {payment === "success" && <p className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">Payment successful — your plan is updated. The GST invoice is in Billing history below.</p>}
+      {payment === "failed" && <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-600">Payment didn&apos;t go through. No money was taken for a failed payment — you can try again any time.</p>}
       <section className="relative overflow-hidden rounded-[1.6rem] bg-[#0a0f1f] p-6 text-white md:p-8">
         <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(212,160,23,.35),transparent)]" />
         <p className="relative text-xs font-bold tracking-[3px] text-white/50">CURRENT PLAN</p>
@@ -36,7 +39,7 @@ export default async function SellerBilling() {
         <p className="relative mt-1 text-sm text-white/65">{plan.limit ? `Up to ${plan.limit} products` : "Unlimited products"} · {fmtBytes(plan.storageMb * 1024 * 1024)} storage · {plan.razorpay ? "Online payments (Razorpay) included" : "COD & UPI payments"}</p>
         {exp && <p className={`relative mt-3 text-sm font-semibold ${inGrace ? "text-amber-300" : "text-white/80"}`}>{inGrace ? `Expired on ${fmtDate(exp)} — renew within ${GRACE_DAYS} days to keep these limits` : `Valid till ${fmtDate(exp)} (${left} day${left === 1 ? "" : "s"} left)`}</p>}
         <StorageBar usage={{ ...usage, label: `${fmtBytes(usage.used)} of ${fmtBytes(usage.limit)}` }} className="relative mt-5 max-w-sm [&_.text-muted]:text-white/60 [&_.bg-foreground\/10]:bg-white/15" />
-        <div className="relative mt-6"><UpgradeButton plans={cfg.plans} current={eff} storePlan={store.plan} expiresAt={exp && !inGrace ? exp.toISOString() : null} label={eff === "free" ? "Upgrade plan" : "Renew or change plan"} /></div>
+        <div className="relative mt-6"><UpgradeButton payUrl={payUrl} plans={cfg.plans} current={eff} storePlan={store.plan} expiresAt={exp && !inGrace ? exp.toISOString() : null} label={eff === "free" ? "Upgrade plan" : "Renew or change plan"} /></div>
       </section>
       <section className="grid gap-3 sm:grid-cols-3">
         {(["starter", "growth", "premium"] as const).map((k) => (

@@ -12,7 +12,12 @@ const gb = (mb?: number) => (!mb ? "" : mb >= 1024 ? `${+(mb / 1024).toFixed(1)}
 type Quote = { planName: string; years: number; unit: number; base: number; discount: number; coupon: string | null; taxable: number; gstRate: number; gst: number; total: number };
 
 /** Upgrade / renew: pick plan + 1–4 years, apply coupon, see GST, pay with Razorpay. */
-export function PlanSheet({ plans, current, storePlan, expiresAt, onClose }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; storePlan?: PlanKey; expiresAt?: string | null; onClose: () => void }) {
+/**
+ * inline: render as a card on a page (the payment page for stores on their own domain) instead of a popup.
+ * returnUrl: after the payment succeeds or fails, send the seller back here (?payment=success|failed).
+ */
+export function PlanSheet({ plans, current, storePlan, expiresAt, onClose, inline, returnUrl }: { plans: Record<PlanKey, PlanDef>; current: PlanKey; storePlan?: PlanKey; expiresAt?: string | null; onClose: () => void; inline?: boolean; returnUrl?: string }) {
+  const back = (result: "success" | "failed") => { if (returnUrl) window.location.href = `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}payment=${result}`; };
   const paid = (["starter", "growth", "premium"] as PlanKey[]);
   const [plan, setPlan] = useState<PlanKey>(current === "free" ? "growth" : current);
   const [years, setYears] = useState(1);
@@ -46,19 +51,19 @@ export function PlanSheet({ plans, current, storePlan, expiresAt, onClose }: { p
       handler: async (res: Record<string, string>) => {
         const v = await fetch("/api/payments/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(res) });
         setBusy(false);
-        if (v.ok) setDone(true); else setErr("Payment received but not confirmed yet — it will update shortly. Contact us if it doesn't.");
+        if (v.ok) { setDone(true); if (returnUrl) setTimeout(() => back("success"), 2200); } else setErr("Payment received but not confirmed yet — it will update shortly. Contact us if it doesn't.");
       },
       modal: { ondismiss: () => setBusy(false) },
     });
-    rzp.on("payment.failed", (x) => { setBusy(false); setErr(x.error?.description || "Payment failed."); });
+    rzp.on("payment.failed", (x) => { setBusy(false); setErr(x.error?.description || "Payment failed."); if (returnUrl) setTimeout(() => back("failed"), 2500); });
     rzp.open();
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col bg-background text-foreground sm:items-center sm:justify-center sm:bg-black/50 sm:p-6">
-      <div className="flex h-full w-full flex-col bg-background sm:h-auto sm:max-h-[94dvh] sm:max-w-2xl sm:rounded-[2rem] sm:border sm:border-border">
+    <div className={inline ? "text-foreground" : "fixed inset-0 z-[80] flex flex-col bg-background text-foreground sm:items-center sm:justify-center sm:bg-black/50 sm:p-6"}>
+      <div className={inline ? "flex flex-col overflow-hidden rounded-[2rem] border border-border bg-background shadow-[0_30px_80px_-40px_rgba(15,23,42,.35)]" : "flex h-full w-full flex-col bg-background sm:h-auto sm:max-h-[94dvh] sm:max-w-2xl sm:rounded-[2rem] sm:border sm:border-border"}>
         <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <button onClick={() => (done ? window.location.reload() : onClose())} aria-label="Close" className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className="size-5 sm:hidden" /><X className="hidden size-5 sm:block" /></button>
+          <button onClick={() => (returnUrl ? (window.location.href = returnUrl) : done ? window.location.reload() : onClose())} aria-label={returnUrl ? "Back to my dashboard" : "Close"} className="grid size-10 place-items-center rounded-full hover:bg-foreground/5"><ChevronLeft className={cn("size-5", !returnUrl && "sm:hidden")} />{!returnUrl && <X className="hidden size-5 sm:block" />}</button>
           <h2 className="flex-1 font-display text-lg font-bold">{current === "free" ? "Upgrade your store" : "Renew or change plan"}</h2>
         </header>
         {done ? (
@@ -66,11 +71,12 @@ export function PlanSheet({ plans, current, storePlan, expiresAt, onClose }: { p
             <div className="grid size-20 place-items-center rounded-full bg-emerald-500/10 text-emerald-500"><Check className="size-10" /></div>
             <h3 className="mt-6 font-display text-2xl font-extrabold">You&apos;re on {quote?.planName}! 🎉</h3>
             <p className="mt-2 text-sm text-muted">Your new limits are live. The GST invoice is in My account → Payments.</p>
-            <button onClick={() => window.location.reload()} className={cn(btnDark, "mt-8")}>Back to my store</button>
+            {returnUrl && <p className="mt-1 text-xs text-muted">Taking you back to your dashboard…</p>}
+            <button onClick={() => (returnUrl ? back("success") : window.location.reload())} className={cn(btnDark, "mt-8")}>Back to my store</button>
           </div>
         ) : (
           <>
-            <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-6">
+            <div className={cn("flex-1 space-y-6 px-4 py-5 sm:px-6", !inline && "overflow-y-auto")}>
               <div className="grid gap-3">
                 {paid.map((k) => {
                   const p = plans[k];
